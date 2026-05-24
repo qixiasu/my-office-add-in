@@ -6,10 +6,12 @@
 /* global console, document, Excel, Office */
 
 var { getColumnLetter, escapeFormulaText, buildConcatFormula } = require("../utils/concat-utils");
+var { fixGarbledText } = require("../utils/encoding-utils");
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.Excel) {
     document.getElementById("concatBtn").onclick = runConcat;
+    document.getElementById("fixGarbledBtn").onclick = runFixGarbled;
   }
 });
 
@@ -94,4 +96,62 @@ async function runConcat() {
   }
 
   isProcessing = false;
+}
+
+async function runFixGarbled() {
+  var statusEl = document.getElementById("fixStatus");
+
+  statusEl.textContent = "处理中...";
+  statusEl.style.color = "green";
+
+  try {
+    await Excel.run(async (context) => {
+      var sheet = context.workbook.worksheets.getActiveWorksheet();
+      var usedRange = sheet.getUsedRange();
+      usedRange.load(["rowCount", "columnCount", "values"]);
+      await context.sync();
+
+      var rowCount = usedRange.rowCount;
+      var colCount = usedRange.columnCount;
+
+      if (rowCount === 0 || colCount === 0) {
+        statusEl.textContent = "错误: 没有数据";
+        statusEl.style.color = "red";
+        return;
+      }
+
+      if (rowCount > MAX_ROWS) {
+        statusEl.textContent =
+          "错误: 数据量过大（" + rowCount + " 行），单次最多支持 " + MAX_ROWS + " 行。";
+        statusEl.style.color = "red";
+        return;
+      }
+
+      var values = usedRange.values;
+      var fixedCount = 0;
+      var totalCells = rowCount * colCount;
+
+      for (var r = 0; r < rowCount; r++) {
+        for (var c = 0; c < colCount; c++) {
+          var cellValue = values[r][c];
+          if (typeof cellValue === "string" && cellValue !== "") {
+            var fixed = fixGarbledText(cellValue);
+            if (fixed !== cellValue) {
+              values[r][c] = fixed;
+              fixedCount++;
+            }
+          }
+        }
+      }
+
+      usedRange.values = values;
+      await context.sync();
+
+      statusEl.textContent =
+        "完成! 共处理 " + totalCells + " 个单元格，修复 " + fixedCount + " 个";
+    });
+  } catch (error) {
+    statusEl.textContent = "错误: " + error.message;
+    statusEl.style.color = "red";
+  }
 }
