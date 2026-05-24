@@ -105,6 +105,7 @@ async function runConcat() {
 
 async function runVlookup() {
   if (isProcessing) return;
+  isProcessing = true;
 
   var statusEl = document.getElementById("vlookupStatus");
   statusEl.textContent = "正在打开配置窗口...";
@@ -117,6 +118,7 @@ async function runVlookup() {
       if (asyncResult.status === Office.AsyncResultStatus.Failed) {
         statusEl.textContent = "错误: 无法打开配置窗口";
         statusEl.style.color = "red";
+        isProcessing = false;
         return;
       }
       var dialog = asyncResult.value;
@@ -127,10 +129,12 @@ async function runVlookup() {
           config = JSON.parse(arg.message);
         } catch (e) {
           statusEl.textContent = "";
+          isProcessing = false;
           return;
         }
         if (config.type !== "vlookup") {
           statusEl.textContent = "";
+          isProcessing = false;
           return;
         }
         executeVlookupFromConfig(config, statusEl);
@@ -138,6 +142,7 @@ async function runVlookup() {
       dialog.addEventHandler(Office.EventType.DialogEventReceived, function () {
         statusEl.textContent = "已取消";
         statusEl.style.color = "gray";
+        isProcessing = false;
       });
     }
   );
@@ -186,7 +191,7 @@ async function executeVlookupFromConfig(config, statusEl) {
 
         for (var c = 0; c < returnColCount; c++) {
           worksheet
-            .getRange(getColumnLetter(insertPos) + ":" + getColumnLetter(insertPos))
+            .getRange(getColumnLetter(insertPos + c) + ":" + getColumnLetter(insertPos + c))
             .insert(Excel.InsertShiftDirection.right);
         }
         await context.sync();
@@ -235,7 +240,7 @@ async function executeVlookupFromConfig(config, statusEl) {
 
         for (var c2 = 0; c2 < returnColCount2; c2++) {
           worksheet
-            .getRange(getColumnLetter(insertPos2) + ":" + getColumnLetter(insertPos2))
+            .getRange(getColumnLetter(insertPos2 + c2) + ":" + getColumnLetter(insertPos2 + c2))
             .insert(Excel.InsertShiftDirection.right);
         }
         await context.sync();

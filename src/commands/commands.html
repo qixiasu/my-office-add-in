@@ -283,7 +283,7 @@
 
                         for (var c = 0; c < returnColCount; c++) {
                             worksheet
-                                .getRange(getColumnLetter(insertPos) + ":" + getColumnLetter(insertPos))
+                                .getRange(getColumnLetter(insertPos + c) + ":" + getColumnLetter(insertPos + c))
                                 .insert(Excel.InsertShiftDirection.right);
                         }
 
@@ -332,7 +332,7 @@
 
                             for (var c2 = 0; c2 < returnColCount2; c2++) {
                                 worksheet
-                                    .getRange(getColumnLetter(insertPos2) + ":" + getColumnLetter(insertPos2))
+                                    .getRange(getColumnLetter(insertPos2 + c2) + ":" + getColumnLetter(insertPos2 + c2))
                                     .insert(Excel.InsertShiftDirection.right);
                             }
 
