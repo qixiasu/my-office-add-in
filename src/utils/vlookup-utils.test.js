@@ -154,6 +154,12 @@ describe("staticLookup", function () {
     expect(result).toEqual([["李四", 6000]]);
   });
 
+  it("returns #N/A for null lookup in approximate mode", function () {
+    var numTable = [[100, "low"], [200, "mid"]];
+    var result = staticLookup([null], numTable, 0, [1], 1);
+    expect(result).toEqual([["#N/A"]]);
+  });
+
   it("approximate match finds largest value <= lookup", function () {
     var numTable = [
       [100, "low"],

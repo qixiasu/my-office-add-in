@@ -74,12 +74,20 @@ function staticLookup(lookupValues, lookupTable, matchColIndex, returnColIndices
   }
 
   for (var i = 0; i < lookupValues.length; i++) {
+    var row = [];
     var val = lookupValues[i];
     if (val === null || val === undefined) {
       val = "";
     }
+    // Null/undefined in approximate mode → #N/A (avoid Number("") → 0)
+    if (matchMode !== 0 && (lookupValues[i] === null || lookupValues[i] === undefined)) {
+      for (var q = 0; q < returnColIndices.length; q++) {
+        row.push("#N/A");
+      }
+      results.push(row);
+      continue;
+    }
     var valStr = String(val);
-    var row = [];
 
     if (matchMode === 0) {
       var matchedRow = index[valStr];
@@ -93,6 +101,8 @@ function staticLookup(lookupValues, lookupTable, matchColIndex, returnColIndices
         }
       }
     } else {
+      // Approximate match: find largest value <= lookup
+      // Assumes lookupTable is sorted ascending on match column (same as Excel VLOOKUP)
       var bestRow = -1;
       for (var m = 0; m < lookupTable.length; m++) {
         var tableVal = lookupTable[m][matchColIndex];
