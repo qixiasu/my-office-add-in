@@ -1,0 +1,215 @@
+<!-- CSV import dialog for ribbon button -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        input[type="text"] {
+            width: 80px;
+            padding: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        #fileInfo {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #666;
+        }
+        .row {
+            margin-bottom: 16px;
+        }
+        .buttons {
+            margin-top: 20px;
+            text-align: right;
+        }
+        button {
+            padding: 6px 20px;
+            cursor: pointer;
+        }
+        #importBtn {
+            margin-left: 8px;
+        }
+        #importBtn:disabled {
+            cursor: default;
+            opacity: 0.5;
+        }
+        #status {
+            margin-top: 12px;
+            font-size: 13px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h3 style="margin-top: 0;">导入 CSV 文件</h3>
+    <div class="row">
+        <label for="fileInput">选择文件：</label>
+        <input type="file" id="fileInput" accept=".csv,.tsv,.txt" />
+        <div id="fileInfo"></div>
+    </div>
+    <div class="row">
+        <label for="delimiter">分隔符：</label>
+        <input type="text" id="delimiter" value="," />
+    </div>
+    <div id="status"></div>
+    <div class="buttons">
+        <button id="cancelBtn">取消</button>
+        <button id="importBtn" disabled>导入</button>
+    </div>
+    <script type="text/javascript">
+        var MAX_ROWS = 1050000;
+        var selectedFile = null;
+
+        Office.onReady(function () {
+            document.getElementById("fileInput").onchange = function (e) {
+                selectedFile = e.target.files[0];
+                document.getElementById("fileInfo").textContent = selectedFile ? selectedFile.name : "";
+                document.getElementById("importBtn").disabled = !selectedFile;
+            };
+
+            document.getElementById("cancelBtn").onclick = function () {
+                Office.context.ui.messageParent("");
+            };
+
+            document.getElementById("importBtn").onclick = function () {
+                if (!selectedFile) return;
+
+                var delimiter = document.getElementById("delimiter").value || ",";
+                var importBtn = document.getElementById("importBtn");
+                var cancelBtn = document.getElementById("cancelBtn");
+                var statusEl = document.getElementById("status");
+
+                importBtn.disabled = true;
+                cancelBtn.disabled = true;
+                statusEl.textContent = "正在读取文件...";
+                statusEl.style.color = "green";
+
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var text = e.target.result;
+                    var rows = parseCSV(text, delimiter);
+
+                    if (rows.length === 0) {
+                        statusEl.textContent = "错误: 文件为空";
+                        statusEl.style.color = "red";
+                        importBtn.disabled = false;
+                        cancelBtn.disabled = false;
+                        return;
+                    }
+
+                    if (rows.length > MAX_ROWS) {
+                        statusEl.textContent = "错误: 数据量过大（" + rows.length + " 行），最多支持 " + MAX_ROWS + " 行";
+                        statusEl.style.color = "red";
+                        importBtn.disabled = false;
+                        cancelBtn.disabled = false;
+                        return;
+                    }
+
+                    statusEl.textContent = "正在发送 " + rows.length + " 行数据...";
+
+                    // Pad all rows to same column count
+                    var colCount = rows[0].length;
+                    for (var r = 0; r < rows.length; r++) {
+                        while (rows[r].length < colCount) {
+                            rows[r].push("");
+                        }
+                    }
+
+                    // Send parsed data to parent page (dialog cannot use Excel.run directly)
+                    Office.context.ui.messageParent(JSON.stringify({
+                        type: "import",
+                        rows: rows,
+                        filename: selectedFile.name,
+                        delimiter: delimiter
+                    }));
+                };
+
+                reader.onerror = function () {
+                    statusEl.textContent = "错误: 文件读取失败";
+                    statusEl.style.color = "red";
+                    importBtn.disabled = false;
+                    cancelBtn.disabled = false;
+                };
+
+                reader.readAsText(selectedFile, "UTF-8");
+            };
+        });
+
+        // Inline parseCSV (same logic as csv-utils.js, duplicated for standalone dialog)
+        function parseCSV(text, delimiter) {
+            if (!text || text.length === 0) return [];
+
+            var sep = delimiter || ",";
+
+            if (text.charCodeAt(0) === 0xfeff) {
+                text = text.slice(1);
+            }
+
+            var rows = [];
+            var row = [];
+            var field = "";
+            var inQuotes = false;
+
+            for (var i = 0; i < text.length; i++) {
+                var ch = text[i];
+
+                if (inQuotes) {
+                    if (ch === '"') {
+                        if (text[i + 1] === '"') {
+                            field += '"';
+                            i++;
+                        } else {
+                            inQuotes = false;
+                        }
+                    } else {
+                        field += ch;
+                    }
+                } else {
+                    if (ch === '"' && field === "") {
+                        inQuotes = true;
+                    } else if (ch === sep) {
+                        row.push(field);
+                        field = "";
+                    } else if (ch === "\n") {
+                        row.push(field);
+                        field = "";
+                        if (row.length > 0 || rows.length > 0) {
+                            rows.push(row);
+                        }
+                        row = [];
+                    } else if (ch === "\r") {
+                        if (text[i + 1] === "\n") i++;
+                        row.push(field);
+                        field = "";
+                        if (row.length > 0 || rows.length > 0) {
+                            rows.push(row);
+                        }
+                        row = [];
+                    } else {
+                        field += ch;
+                    }
+                }
+            }
+
+            row.push(field);
+            if (row.length > 1 || row[0] !== "" || rows.length === 0) {
+                rows.push(row);
+            }
+
+            return rows;
+        }
+    </script>
+</body>
+</html>
