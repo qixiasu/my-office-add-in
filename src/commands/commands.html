@@ -132,62 +132,6 @@
                 }
             );
         });
-
-        Office.actions.associate("fixGarbledText", function fixGarbledText(event) {
-            Excel.run(function (context) {
-                var sheet = context.workbook.worksheets.getActiveWorksheet();
-                var usedRange = sheet.getUsedRange();
-                usedRange.load(["rowCount", "columnCount", "values"]);
-                return context.sync().then(function () {
-                    var rowCount = usedRange.rowCount;
-                    var colCount = usedRange.columnCount;
-
-                    if (rowCount === 0 || colCount === 0) {
-                        Office.context.ui.messageBox("没有数据");
-                        throw new Error("cancel");
-                    }
-
-                    if (rowCount > 1050000) {
-                        Office.context.ui.messageBox(
-                            "数据量过大（" + rowCount + " 行），单次最多支持 1050000 行。"
-                        );
-                        throw new Error("cancel");
-                    }
-
-                    var values = usedRange.values;
-                    var fixedCount = 0;
-                    var totalCells = rowCount * colCount;
-
-                    for (var r = 0; r < rowCount; r++) {
-                        for (var c = 0; c < colCount; c++) {
-                            var cellValue = values[r][c];
-                            if (typeof cellValue === "string" && cellValue !== "") {
-                                var fixed = window.fixGarbledText(cellValue);
-                                if (fixed !== cellValue) {
-                                    values[r][c] = fixed;
-                                    fixedCount++;
-                                }
-                            }
-                        }
-                    }
-
-                    // Write back all values at once
-                    usedRange.values = values;
-                    return context.sync().then(function () {
-                        Office.context.ui.messageBox(
-                            "修复完成，共处理 " + totalCells + " 个单元格，修复 " + fixedCount + " 个"
-                        );
-                    });
-                });
-            }).then(function () {
-                event.completed();
-            }).catch(function (error) {
-                if (error.message !== "cancel") {
-                    Office.context.ui.messageBox("操作失败: " + error.message);
-                }
-                event.completed();
-            });
-        });
     </script>
 </head>
 

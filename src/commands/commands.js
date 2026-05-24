@@ -3,9 +3,6 @@
  * See LICENSE in the project root for license information.
  */
 
-/* global Office, Excel, window */
+/* global Office, Excel */
 
-var { fixGarbledText } = require("../utils/encoding-utils");
-
-// Expose to global scope for inline script in commands.html
-window.fixGarbledText = fixGarbledText;
+// Function commands are registered in commands.html inline script

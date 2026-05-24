@@ -26,9 +26,6 @@ module.exports = async (env, options) => {
     },
     resolve: {
       extensions: [".html", ".js"],
-      fallback: {
-        buffer: require.resolve("buffer/"),
-      },
     },
     module: {
       rules: [

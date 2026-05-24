@@ -35,12 +35,13 @@
         </div>
         <p id="status" style="margin-top: 20px; color: green;"></p>
         <hr style="width:100%; margin: 30px 0;" />
-        <h2 class="ms-font-l">修复 UTF-8 CSV 中文乱码</h2>
-        <p class="ms-font-m">打开 CSV 文件后中文显示乱码？点击下方按钮一键修复</p>
-        <div role="button" id="fixGarbledBtn" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
-            <span class="ms-Button-label">修复乱码</span>
+        <h2 class="ms-font-l">导入 UTF-8 CSV 文件</h2>
+        <p class="ms-font-m">直接打开中文 CSV 会乱码？用此功能正确导入</p>
+        <input type="file" id="csvFileInput" accept=".csv,.txt" style="display:none;" />
+        <div role="button" id="importCsvBtn" class="ms-welcome__action ms-Button ms-Button--hero ms-font-xl">
+            <span class="ms-Button-label">导入CSV</span>
         </div>
-        <p id="fixStatus" style="margin-top: 20px; color: green;"></p>
+        <p id="importStatus" style="margin-top: 20px; color: green;"></p>
     </main>
 </body>
 
