@@ -9,10 +9,133 @@
 
     <!-- Office JavaScript API -->
     <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <!-- Register function commands immediately after office.js loads, before polyfills -->
+    <script type="text/javascript">
+        // Signal that the function file is ready to initialize
+        Office.onReady(function (info) {
+            // Office.js is ready
+        });
+
+        // Inline utility functions (self-contained, no module dependencies)
+        function getColumnLetter(colIndex) {
+            var letter = "";
+            var remaining = colIndex;
+            do {
+                letter = String.fromCharCode(65 + (remaining % 26)) + letter;
+                remaining = Math.floor(remaining / 26) - 1;
+            } while (remaining >= 0);
+            return letter;
+        }
+
+        function escapeFormulaText(text) {
+            return text.replace(/"/g, '""');
+        }
+
+        function buildConcatFormula(firstColLetter, secondColLetter, connector) {
+            var escaped = escapeFormulaText(connector);
+            return "=IF(" + firstColLetter + "1&" + secondColLetter + '1="","",' +
+                firstColLetter + '1&"' + escaped + '"&' + secondColLetter + "1)";
+        }
+
+        var MAX_ROWS = 1050000;
+
+        // Core concat logic, extracted so it can be called with a user-provided connector
+        function performConcat(event, connector) {
+            Excel.run(function (context) {
+                var range = context.workbook.getSelectedRange();
+                range.load(["address", "columnCount", "columnIndex"]);
+                return context.sync().then(function () {
+                    if (range.columnCount < 2) {
+                        Office.context.ui.messageBox("请至少选择两列");
+                        throw new Error("cancel");
+                    }
+
+                    var worksheet = context.workbook.worksheets.getActiveWorksheet();
+                    var colIndex = range.columnIndex;
+                    var firstColLetter = getColumnLetter(colIndex);
+                    var secondColLetter = getColumnLetter(colIndex + 1);
+
+                    var usedInSelection = range.getUsedRange();
+                    usedInSelection.load("rowCount");
+                    return context.sync().then(function () {
+                        var rowCount = usedInSelection.rowCount;
+
+                        if (rowCount === 0) {
+                            Office.context.ui.messageBox("没有数据");
+                            throw new Error("cancel");
+                        }
+
+                        if (rowCount > MAX_ROWS) {
+                            Office.context.ui.messageBox(
+                                "数据量过大（" + rowCount + " 行），单次最多支持 " + MAX_ROWS + " 行。"
+                            );
+                            throw new Error("cancel");
+                        }
+
+                        var targetColLetter = getColumnLetter(colIndex + 2);
+                        worksheet
+                            .getRange(targetColLetter + ":" + targetColLetter)
+                            .insert(Excel.InsertShiftDirection.right);
+                        return context.sync().then(function () {
+                            var formula = buildConcatFormula(firstColLetter, secondColLetter, connector);
+
+                            var startCell = worksheet.getRange(targetColLetter + "1");
+                            startCell.formulas = [[formula]];
+                            return context.sync().then(function () {
+                                if (rowCount > 1) {
+                                    var fillRange = worksheet.getRange(
+                                        targetColLetter + "1:" + targetColLetter + rowCount
+                                    );
+                                    startCell.autoFill(fillRange, Excel.AutoFillType.fillDefault);
+                                    return context.sync();
+                                }
+                            }).then(function () {
+                                Office.context.ui.messageBox(
+                                    "完成! 已在第 " + targetColLetter + " 列写入 " + rowCount + " 行公式"
+                                );
+                            });
+                        });
+                    });
+                });
+            }).then(function () {
+                event.completed();
+            }).catch(function (error) {
+                if (error.message !== "cancel") {
+                    Office.context.ui.messageBox("操作失败: " + error.message);
+                }
+                event.completed();
+            });
+        }
+
+        Office.actions.associate("concatenateColumns", function concatenateColumns(event) {
+            var dialogUrl = window.location.origin + "/connector-dialog.html";
+            Office.context.ui.displayDialogAsync(
+                dialogUrl,
+                { height: 30, width: 20, displayInIframe: true },
+                function (asyncResult) {
+                    if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                        // Dialog failed, fallback to default connector
+                        performConcat(event, "_");
+                        return;
+                    }
+                    var dialog = asyncResult.value;
+                    dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
+                        dialog.close();
+                        var connector = arg.message || "_";
+                        performConcat(event, connector);
+                    });
+                    dialog.addEventHandler(Office.EventType.DialogEventReceived, function () {
+                        // Dialog closed without input, cancel operation
+                        event.completed();
+                    });
+                }
+            );
+        });
+    </script>
 </head>
 
 <body>
-  
 </body>
 
 </html>

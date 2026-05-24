@@ -76,9 +76,15 @@ module.exports = async (env, options) => {
         ],
       }),
       new HtmlWebpackPlugin({
+        filename: "connector-dialog.html",
+        template: "./src/commands/connector-dialog.html",
+        inject: false,
+      }),
+      new HtmlWebpackPlugin({
         filename: "commands.html",
         template: "./src/commands/commands.html",
         chunks: ["polyfill", "commands"],
+        scriptLoading: "blocking",
       }),
     ],
     devServer: {
