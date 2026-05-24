@@ -32,6 +32,23 @@
             return text.replace(/"/g, '""');
         }
 
+        function getColNum(id) {
+            var num = 0;
+            for (var i = 0; i < id.length; i++) {
+                var ch = id.charCodeAt(i);
+                if (ch >= 65 && ch <= 90) {
+                    num = num * 26 + (ch - 65);
+                } else {
+                    break;
+                }
+            }
+            return num;
+        }
+
+        function getRowNum(id) {
+            return parseInt(id.replace(/[^0-9]/g, ""), 10) || 1;
+        }
+
         function buildConcatFormula(firstColLetter, secondColLetter, connector) {
             var escaped = escapeFormulaText(connector);
             return "=IF(" + firstColLetter + "1&" + secondColLetter + '1="","",' +
@@ -147,10 +164,47 @@
                     var dialog = asyncResult.value;
                     dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
                         dialog.close();
-                        if (arg.message) {
-                            Office.context.ui.messageBox(arg.message);
+                        var msg;
+                        try {
+                            msg = JSON.parse(arg.message);
+                        } catch (e) {
+                            Office.context.ui.messageBox("数据解析失败");
+                            event.completed();
+                            return;
                         }
-                        event.completed();
+                        if (msg.type !== "import" || !msg.rows || !msg.rows.length) {
+                            event.completed();
+                            return;
+                        }
+                        Excel.run(function (context) {
+                            var sheet = context.workbook.worksheets.getActiveWorksheet();
+                            var startRange = context.workbook.getSelectedRange();
+                            startRange.load("address");
+                            return context.sync().then(function () {
+                                var addr = startRange.address.split("!").pop();
+                                var startCol = getColNum(addr);
+                                var startRow = getRowNum(addr);
+                                var colCount = msg.rows[0].length;
+                                var rowCount = msg.rows.length;
+                                var endCol = startCol + colCount - 1;
+                                var endRow = startRow + rowCount - 1;
+
+                                var targetRange = sheet.getRange(
+                                    getColumnLetter(startCol) + startRow + ":" +
+                                    getColumnLetter(endCol) + endRow
+                                );
+                                targetRange.values = msg.rows;
+                                return context.sync().then(function () {
+                                    Office.context.ui.messageBox(
+                                        "导入完成! " + msg.filename + " → " + rowCount + " 行 × " + colCount + " 列"
+                                    );
+                                });
+                            });
+                        }).catch(function (error) {
+                            Office.context.ui.messageBox("导入失败: " + error.message);
+                        }).then(function () {
+                            event.completed();
+                        });
                     });
                     dialog.addEventHandler(Office.EventType.DialogEventReceived, function () {
                         event.completed();

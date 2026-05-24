@@ -73,17 +73,15 @@ module.exports = async (env, options) => {
               }
             },
           },
+          {
+            from: "src/commands/connector-dialog.html",
+            to: "connector-dialog.html",
+          },
+          {
+            from: "src/commands/csv-import-dialog.html",
+            to: "csv-import-dialog.html",
+          },
         ],
-      }),
-      new HtmlWebpackPlugin({
-        filename: "connector-dialog.html",
-        template: "./src/commands/connector-dialog.html",
-        inject: false,
-      }),
-      new HtmlWebpackPlugin({
-        filename: "csv-import-dialog.html",
-        template: "./src/commands/csv-import-dialog.html",
-        inject: false,
       }),
       new HtmlWebpackPlugin({
         filename: "commands.html",
@@ -101,6 +99,13 @@ module.exports = async (env, options) => {
         options: env.WEBPACK_BUILD || options.https !== undefined ? options.https : await getHttpsOptions(),
       },
       port: process.env.npm_package_config_dev_server_port || 3000,
+      static: [
+        {
+          directory: require("path").resolve(__dirname, "src/commands"),
+          publicPath: "/",
+          serveIndex: false,
+        },
+      ],
     },
   };
 

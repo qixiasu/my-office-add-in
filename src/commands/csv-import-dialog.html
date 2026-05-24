@@ -117,7 +117,7 @@
                         return;
                     }
 
-                    statusEl.textContent = "正在写入 " + rows.length + " 行...";
+                    statusEl.textContent = "正在发送 " + rows.length + " 行数据...";
 
                     // Pad all rows to same column count
                     var colCount = rows[0].length;
@@ -127,32 +127,13 @@
                         }
                     }
 
-                    Excel.run(function (context) {
-                        var sheet = context.workbook.worksheets.getActiveWorksheet();
-                        var startRange = context.workbook.getSelectedRange();
-                        startRange.load("address");
-                        return context.sync().then(function () {
-                            var addr = startRange.address.split("!").pop();
-                            var startCol = getColNum(addr);
-                            var startRow = getRowNum(addr);
-                            var endCol = startCol + colCount - 1;
-                            var endRow = startRow + rows.length - 1;
-
-                            var targetRange = sheet.getRange(
-                                getColumnLetter(startCol) + startRow + ":" +
-                                getColumnLetter(endCol) + endRow
-                            );
-
-                            targetRange.values = rows;
-                            return context.sync().then(function () {
-                                Office.context.ui.messageParent(
-                                    "导入完成! " + selectedFile.name + " → " + rows.length + " 行 × " + colCount + " 列"
-                                );
-                            });
-                        });
-                    }).catch(function (error) {
-                        Office.context.ui.messageParent("导入失败: " + error.message);
-                    });
+                    // Send parsed data to parent page (dialog cannot use Excel.run directly)
+                    Office.context.ui.messageParent(JSON.stringify({
+                        type: "import",
+                        rows: rows,
+                        filename: selectedFile.name,
+                        delimiter: delimiter
+                    }));
                 };
 
                 reader.onerror = function () {
@@ -228,33 +209,6 @@
             }
 
             return rows;
-        }
-
-        function getColumnLetter(colIndex) {
-            var letter = "";
-            var remaining = colIndex;
-            do {
-                letter = String.fromCharCode(65 + (remaining % 26)) + letter;
-                remaining = Math.floor(remaining / 26) - 1;
-            } while (remaining >= 0);
-            return letter;
-        }
-
-        function getColNum(id) {
-            var num = 0;
-            for (var i = 0; i < id.length; i++) {
-                var ch = id.charCodeAt(i);
-                if (ch >= 65 && ch <= 90) {
-                    num = num * 26 + (ch - 65);
-                } else {
-                    break;
-                }
-            }
-            return num;
-        }
-
-        function getRowNum(id) {
-            return parseInt(id.replace(/[^0-9]/g, ""), 10) || 1;
         }
     </script>
 </body>
