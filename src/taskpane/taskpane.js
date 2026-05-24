@@ -7,6 +7,7 @@
 
 var { getColumnLetter, escapeFormulaText, buildConcatFormula } = require("../utils/concat-utils");
 var { parseCSV } = require("../utils/csv-utils");
+var { buildColRange, buildIndexMatchFormula, staticLookup } = require("../utils/vlookup-utils");
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.Excel) {
@@ -15,6 +16,7 @@ Office.onReady((info) => {
       document.getElementById("csvFileInput").click();
     };
     document.getElementById("csvFileInput").onchange = handleCsvFile;
+    document.getElementById("vlookupBtn").onclick = runVlookup;
   }
 });
 
@@ -92,6 +94,162 @@ async function runConcat() {
 
       statusEl.textContent =
         "完成! 已在第 " + targetColLetter + " 列写入 " + rowCount + " 行公式";
+    });
+  } catch (error) {
+    statusEl.textContent = "错误: " + error.message;
+    statusEl.style.color = "red";
+  }
+
+  isProcessing = false;
+}
+
+async function runVlookup() {
+  if (isProcessing) return;
+
+  var statusEl = document.getElementById("vlookupStatus");
+  statusEl.textContent = "正在打开配置窗口...";
+  statusEl.style.color = "green";
+
+  Office.context.ui.displayDialogAsync(
+    window.location.origin + "/vlookup-dialog.html",
+    { height: 60, width: 35, displayInIframe: true },
+    function (asyncResult) {
+      if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+        statusEl.textContent = "错误: 无法打开配置窗口";
+        statusEl.style.color = "red";
+        return;
+      }
+      var dialog = asyncResult.value;
+      dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
+        dialog.close();
+        var config;
+        try {
+          config = JSON.parse(arg.message);
+        } catch (e) {
+          statusEl.textContent = "";
+          return;
+        }
+        if (config.type !== "vlookup") {
+          statusEl.textContent = "";
+          return;
+        }
+        executeVlookupFromConfig(config, statusEl);
+      });
+      dialog.addEventHandler(Office.EventType.DialogEventReceived, function () {
+        statusEl.textContent = "已取消";
+        statusEl.style.color = "gray";
+      });
+    }
+  );
+}
+
+async function executeVlookupFromConfig(config, statusEl) {
+  isProcessing = true;
+  statusEl.textContent = "处理中...";
+  statusEl.style.color = "green";
+
+  try {
+    await Excel.run(async (context) => {
+      var selectedRange = context.workbook.getSelectedRange();
+      selectedRange.load(["columnCount", "rowCount", "columnIndex", "rowIndex"]);
+      await context.sync();
+
+      if (selectedRange.rowCount === 0) {
+        statusEl.textContent = "错误: 没有数据";
+        statusEl.style.color = "red";
+        return;
+      }
+
+      if (selectedRange.rowCount > MAX_ROWS) {
+        statusEl.textContent =
+          "错误: 数据量过大（" + selectedRange.rowCount + " 行），单次最多支持 " + MAX_ROWS + " 行。";
+        statusEl.style.color = "red";
+        return;
+      }
+
+      var worksheet = context.workbook.worksheets.getActiveWorksheet();
+      var dataStartCol = selectedRange.columnIndex;
+      var dataStartRow = selectedRange.rowIndex;
+      var dataStartRow1 = dataStartRow + 1;  // 1-based for cell addresses
+      var dataRowCount = selectedRange.rowCount;
+      var dataColLetter = getColumnLetter(dataStartCol);
+
+      var lookupColRange = buildColRange(config.parsed, config.matchColIndex);
+      var returnColRanges = [];
+      for (var i = 0; i < config.returnColIndices.length; i++) {
+        returnColRanges.push(buildColRange(config.parsed, config.returnColIndices[i]));
+      }
+
+      if (config.outputType === "formula") {
+        var insertPos = dataStartCol + selectedRange.columnCount;
+        var returnColCount = config.returnColIndices.length;
+
+        for (var c = 0; c < returnColCount; c++) {
+          worksheet
+            .getRange(getColumnLetter(insertPos) + ":" + getColumnLetter(insertPos))
+            .insert(Excel.InsertShiftDirection.right);
+        }
+        await context.sync();
+
+        for (var r = 0; r < returnColCount; r++) {
+          var formulaCol = getColumnLetter(insertPos + r);
+          var lookupCellRef = dataColLetter + dataStartRow1;
+          var formula = buildIndexMatchFormula(lookupCellRef, lookupColRange, returnColRanges[r], config.matchMode);
+
+          var startCell = worksheet.getRange(formulaCol + dataStartRow1);
+          startCell.formulas = [[formula]];
+
+          if (dataRowCount > 1) {
+            var fillRange = worksheet.getRange(
+              formulaCol + dataStartRow1 + ":" + formulaCol + (dataStartRow1 + dataRowCount - 1)
+            );
+            startCell.autoFill(fillRange, Excel.AutoFillType.fillDefault);
+            await context.sync();
+          }
+        }
+
+        statusEl.textContent =
+          "完成! 已在 " + returnColCount + " 列写入 " + dataRowCount + " 行 INDEX/MATCH 公式";
+      } else {
+        // Static mode
+        var dataRange = selectedRange.getUsedRange();
+        dataRange.load("values");
+        await context.sync();
+        var dataValues = dataRange.values;
+
+        var lookupValues = [];
+        for (var j = 0; j < dataValues.length; j++) {
+          lookupValues.push(dataValues[j][0]);
+        }
+
+        var results = staticLookup(
+          lookupValues,
+          config.lookupTable,
+          config.matchColIndex,
+          config.returnColIndices,
+          config.matchMode
+        );
+
+        var insertPos2 = dataStartCol + selectedRange.columnCount;
+        var returnColCount2 = config.returnColIndices.length;
+
+        for (var c2 = 0; c2 < returnColCount2; c2++) {
+          worksheet
+            .getRange(getColumnLetter(insertPos2) + ":" + getColumnLetter(insertPos2))
+            .insert(Excel.InsertShiftDirection.right);
+        }
+        await context.sync();
+
+        var targetRange = worksheet.getRange(
+          getColumnLetter(insertPos2) + dataStartRow1 + ":" +
+          getColumnLetter(insertPos2 + returnColCount2 - 1) + (dataStartRow1 + results.length - 1)
+        );
+        targetRange.values = results;
+        await context.sync();
+
+        statusEl.textContent =
+          "完成! 已写入 " + results.length + " 行 × " + returnColCount2 + " 列静态值";
+      }
     });
   } catch (error) {
     statusEl.textContent = "错误: " + error.message;
