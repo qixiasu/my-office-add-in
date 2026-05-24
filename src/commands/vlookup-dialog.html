@@ -326,6 +326,22 @@
         }
 
         Office.onReady(function () {
+            // Pre-fill lookup range with current selection
+            try {
+                Excel.run(function (context) {
+                    var selectedRange = context.workbook.getSelectedRange();
+                    selectedRange.load("address");
+                    return context.sync().then(function () {
+                        document.getElementById("lookupRange").value = selectedRange.address;
+                        refreshColumns();
+                    });
+                }).catch(function () {
+                    // Silently ignore - user can type range manually
+                });
+            } catch (e) {
+                // Silently ignore
+            }
+
             document.getElementById("lookupRange").oninput = refreshColumns;
             document.getElementById("headerRow").onchange = refreshColumns;
 
