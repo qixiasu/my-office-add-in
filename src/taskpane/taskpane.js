@@ -160,11 +160,14 @@ async function importCSV(text, filename) {
       }
 
       // Write to worksheet starting at the selected cell
-      var addr = startRange.address.split("!").pop().replace(/[^A-Z]/g, "");
+      var addr = startRange.address.split("!").pop(); // e.g., "A1" or "A1:B2"
+      var startCol = getColNum(addr);  // column index of start
+      var startRow = getRowNum(addr);  // row number of start
+      var endCol = startCol + colCount - 1;
+      var endRow = startRow + rowCount - 1;
       var targetRange = sheet.getRange(
-        addr.split(":")[0] + ":" +
-        getColumnLetter(getColNum(addr) + colCount - 1) +
-        (getRowNum(addr) + rowCount - 1)
+        getColumnLetter(startCol) + startRow + ":" +
+        getColumnLetter(endCol) + endRow
       );
 
       targetRange.values = rows;
