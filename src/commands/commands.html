@@ -132,6 +132,32 @@
                 }
             );
         });
+
+        Office.actions.associate("importCSV", function importCSV(event) {
+            var dialogUrl = window.location.origin + "/csv-import-dialog.html";
+            Office.context.ui.displayDialogAsync(
+                dialogUrl,
+                { height: 50, width: 30, displayInIframe: true },
+                function (asyncResult) {
+                    if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                        Office.context.ui.messageBox("无法打开导入对话框");
+                        event.completed();
+                        return;
+                    }
+                    var dialog = asyncResult.value;
+                    dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
+                        dialog.close();
+                        if (arg.message) {
+                            Office.context.ui.messageBox(arg.message);
+                        }
+                        event.completed();
+                    });
+                    dialog.addEventHandler(Office.EventType.DialogEventReceived, function () {
+                        event.completed();
+                    });
+                }
+            );
+        });
     </script>
 </head>
 

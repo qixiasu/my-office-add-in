@@ -81,6 +81,11 @@ module.exports = async (env, options) => {
         inject: false,
       }),
       new HtmlWebpackPlugin({
+        filename: "csv-import-dialog.html",
+        template: "./src/commands/csv-import-dialog.html",
+        inject: false,
+      }),
+      new HtmlWebpackPlugin({
         filename: "commands.html",
         template: "./src/commands/commands.html",
         chunks: ["polyfill", "commands"],
