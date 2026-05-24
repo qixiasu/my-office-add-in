@@ -41,6 +41,7 @@
     <div class="row">
         <label for="lookupRange">查找表区域：</label>
         <input type="text" id="lookupRange" placeholder="例如: Sheet2!A1:D500 或 A1:D500" />
+        <button id="refreshSelectionBtn" style="padding: 4px 12px; font-size: 13px;">刷新选择</button>
         <div class="info">输入包含表头的完整查找表区域</div>
     </div>
 
@@ -361,27 +362,74 @@
             container.appendChild(table);
         }
 
+        function getPreselectedRange() {
+            var params = new URLSearchParams(window.location.search);
+            return params.get("preselected") || "";
+        }
+
+        function refreshSelection() {
+            document.getElementById("status").textContent = "正在更新选区...";
+            document.getElementById("status").style.color = "green";
+
+            // Gather current dialog state to preserve when re-opening
+            var cbs = document.querySelectorAll("#returnCols input[type='checkbox']");
+            var checkedCols = [];
+            for (var i = 0; i < cbs.length; i++) {
+                if (cbs[i].checked) { checkedCols.push(cbs[i].value); }
+            }
+
+            var state = {
+                headerRow: document.getElementById("headerRow").value,
+                matchCol: document.getElementById("matchCol").value,
+                returnCols: checkedCols.join(","),
+                matchMode: document.querySelector("input[name='matchMode']:checked").value,
+                outputType: document.querySelector("input[name='outputType']:checked").value
+            };
+
+            Office.context.ui.messageParent(JSON.stringify({
+                type: "refreshSelection",
+                state: state
+            }));
+        }
+
+        function restoreState() {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get("headerRow")) { document.getElementById("headerRow").value = params.get("headerRow"); }
+            if (params.get("outputType")) {
+                var otRadio = document.querySelector("input[name='outputType'][value='" + params.get("outputType") + "']");
+                if (otRadio) { otRadio.checked = true; }
+            }
+            if (params.get("matchMode") !== null) {
+                var mmRadio = document.querySelector("input[name='matchMode'][value='" + params.get("matchMode") + "']");
+                if (mmRadio) { mmRadio.checked = true; }
+            }
+            if (params.get("matchCol") !== null) {
+                var mc = document.getElementById("matchCol");
+                if (mc.options.length > 0) { mc.value = params.get("matchCol"); }
+            }
+            if (params.get("returnCols")) {
+                var cols = params.get("returnCols").split(",");
+                var cbs = document.querySelectorAll("#returnCols input[type='checkbox']");
+                for (var i = 0; i < cbs.length; i++) {
+                    cbs[i].checked = (cols.indexOf(cbs[i].value) >= 0);
+                }
+            }
+        }
+
         Office.onReady(function () {
-            // Pre-fill lookup range with current selection
-            try {
-                Excel.run(function (context) {
-                    var selectedRange = context.workbook.getSelectedRange();
-                    selectedRange.load("address");
-                    return context.sync().then(function () {
-                        document.getElementById("lookupRange").value = selectedRange.address;
-                        refreshColumns();
-                    });
-                }).catch(function () {
-                    // Silently ignore - user can type range manually
-                });
-            } catch (e) {
-                // Silently ignore
+            // Pre-fill lookup range from preselected range passed via URL query param
+            var preselected = getPreselectedRange();
+            if (preselected) {
+                document.getElementById("lookupRange").value = preselected;
+                refreshColumns();
+                restoreState();  // Restore other settings after columns are built
             }
 
             document.getElementById("lookupRange").oninput = refreshColumns;
             document.getElementById("headerRow").onchange = refreshColumns;
 
             document.getElementById("readHeadersBtn").onclick = readHeaders;
+            document.getElementById("refreshSelectionBtn").onclick = refreshSelection;
 
             document.getElementById("selectAllBtn").onclick = function () {
                 var cbs = document.querySelectorAll("#returnCols input[type='checkbox']");
@@ -456,40 +504,8 @@
                 };
 
                 if (outputType === "static") {
-                    try {
-                        Excel.run(function (context) {
-                            var sheet;
-                            if (parsed.sheet) {
-                                sheet = context.workbook.worksheets.getItem(parsed.sheet);
-                            } else {
-                                sheet = context.workbook.worksheets.getActiveWorksheet();
-                            }
-                            var dataRange = sheet.getRangeByIndexes(
-                                parsed.startRow - 1,
-                                parsed.startCol,
-                                parsed.rowCount,
-                                parsed.colCount
-                            );
-                            dataRange.load("values");
-                            return context.sync().then(function () {
-                                var data = dataRange.values;
-                                var headerOffset = config.headerRow - parsed.startRow;
-                                if (headerOffset >= 0 && headerOffset < data.length) {
-                                    data.splice(headerOffset, 1);
-                                }
-                                config.lookupTable = data;
-                                Office.context.ui.messageParent(JSON.stringify(config));
-                            });
-                        }).catch(function (error) {
-                            statusEl.textContent = "读取查找表失败: " + error.message;
-                            statusEl.style.color = "red";
-                            execBtn.disabled = false;
-                        });
-                    } catch (e) {
-                        statusEl.textContent = "无法连接 Excel";
-                        statusEl.style.color = "red";
-                        execBtn.disabled = false;
-                    }
+                    // Send config without lookup table; parent will read it from Excel
+                    Office.context.ui.messageParent(JSON.stringify(config));
                 } else {
                     Office.context.ui.messageParent(JSON.stringify(config));
                 }

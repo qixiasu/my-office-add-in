@@ -214,37 +214,81 @@
         });
 
         Office.actions.associate("enhancedVlookup", function enhancedVlookup(event) {
-            var dialogUrl = window.location.origin + "/vlookup-dialog.html";
-            Office.context.ui.displayDialogAsync(
-                dialogUrl,
-                { height: 60, width: 35, displayInIframe: true },
-                function (asyncResult) {
-                    if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-                        Office.context.ui.messageBox("无法打开增强查找对话框");
-                        event.completed();
-                        return;
+            // Get selected range address BEFORE opening dialog (dialog runs in Commands host, not main Excel window)
+            Excel.run(function (context) {
+                var selectedRange = context.workbook.getSelectedRange();
+                selectedRange.load("address");
+                return context.sync().then(function () {
+                    var preselectedAddress = selectedRange.address || "";
+                    var dialogUrl = window.location.origin + "/vlookup-dialog.html";
+                    if (preselectedAddress) {
+                        dialogUrl += "?preselected=" + encodeURIComponent(preselectedAddress);
                     }
-                    var dialog = asyncResult.value;
-                    dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
-                        dialog.close();
-                        var config;
-                        try {
-                            config = JSON.parse(arg.message);
-                        } catch (e) {
-                            event.completed();
+                    openVlookupDialog(dialogUrl, event);
+                });
+            }).catch(function () {
+                // Fallback: open dialog without preselected range
+                openVlookupDialog(window.location.origin + "/vlookup-dialog.html", event);
+            });
+
+            function openVlookupDialog(dialogUrl, ev) {
+                Office.context.ui.displayDialogAsync(
+                    dialogUrl,
+                    { height: 60, width: 35, displayInIframe: true },
+                    function (asyncResult) {
+                        if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                            Office.context.ui.messageBox("无法打开增强查找对话框");
+                            ev.completed();
                             return;
                         }
-                        if (config.type !== "vlookup") {
-                            event.completed();
-                            return;
-                        }
-                        performEnhancedVlookup(event, config);
-                    });
-                    dialog.addEventHandler(Office.EventType.DialogEventReceived, function () {
-                        event.completed();
-                    });
-                }
-            );
+                        var dialog = asyncResult.value;
+
+                        dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
+                            var msg;
+                            try {
+                                msg = JSON.parse(arg.message);
+                            } catch (e) {
+                                ev.completed();
+                                return;
+                            }
+
+                            // Handle non-vlookup messages without closing dialog
+                            if (msg.type !== "vlookup") {
+                                if (msg.type === "refreshSelection") {
+                                    // Close current dialog, get selection, re-open with preserved state
+                                    dialog.close();
+                                    var savedState = msg.state || {};
+                                    Excel.run(function (context) {
+                                        var sel = context.workbook.getSelectedRange();
+                                        sel.load("address");
+                                        return context.sync().then(function () {
+                                            var newAddr = sel.address || "";
+                                            var reopenUrl = window.location.origin + "/vlookup-dialog.html";
+                                            reopenUrl += "?preselected=" + encodeURIComponent(newAddr);
+                                            if (savedState.headerRow) { reopenUrl += "&headerRow=" + encodeURIComponent(savedState.headerRow); }
+                                            if (savedState.matchCol !== undefined) { reopenUrl += "&matchCol=" + encodeURIComponent(savedState.matchCol); }
+                                            if (savedState.returnCols) { reopenUrl += "&returnCols=" + encodeURIComponent(savedState.returnCols); }
+                                            if (savedState.matchMode !== undefined) { reopenUrl += "&matchMode=" + encodeURIComponent(savedState.matchMode); }
+                                            if (savedState.outputType) { reopenUrl += "&outputType=" + encodeURIComponent(savedState.outputType); }
+                                            openVlookupDialog(reopenUrl, ev);
+                                        });
+                                    }).catch(function (err) {
+                                        Office.context.ui.messageBox("获取选区失败: " + (err.message || "未知错误"));
+                                        ev.completed();
+                                    });
+                                }
+                                return;
+                            }
+
+                            dialog.close();
+                            performEnhancedVlookup(ev, msg);
+                        });
+                        dialog.addEventHandler(Office.EventType.DialogEventReceived, function () {
+                            ev.completed();
+                        });
+                    }
+                );
+            }
         });
 
         function performEnhancedVlookup(event, config) {
@@ -310,18 +354,39 @@
                             });
                         });
                     } else {
-                        var dataRange = selectedRange.getUsedRange();
-                        dataRange.load("values");
+                        // Read lookup table from the specified sheet (parent can access Excel APIs)
+                        var lookupSheet;
+                        if (config.parsed.sheet) {
+                            lookupSheet = context.workbook.worksheets.getItem(config.parsed.sheet);
+                        } else {
+                            lookupSheet = context.workbook.worksheets.getActiveWorksheet();
+                        }
+                        var lookupDataRange = lookupSheet.getRangeByIndexes(
+                            config.parsed.startRow - 1,
+                            config.parsed.startCol,
+                            config.parsed.rowCount,
+                            config.parsed.colCount
+                        );
+
+                        var valuesRange = selectedRange.getUsedRange();
+                        lookupDataRange.load("values");
+                        valuesRange.load("values");
                         return context.sync().then(function () {
-                            var dataValues = dataRange.values;
+                            var valuesData = valuesRange.values;
+                            var lookupData = lookupDataRange.values;
+                            var headerOffset = config.headerRow - config.parsed.startRow;
+                            if (headerOffset >= 0 && headerOffset < lookupData.length) {
+                                lookupData.splice(headerOffset, 1);
+                            }
+
                             var lookupValues = [];
-                            for (var r2 = 0; r2 < dataValues.length; r2++) {
-                                lookupValues.push(dataValues[r2][0]);
+                            for (var r2 = 0; r2 < valuesData.length; r2++) {
+                                lookupValues.push(valuesData[r2][0]);
                             }
 
                             var results = staticLookupInline(
                                 lookupValues,
-                                config.lookupTable,
+                                lookupData,
                                 config.matchColIndex,
                                 config.returnColIndices,
                                 config.matchMode
