@@ -212,6 +212,212 @@
                 }
             );
         });
+
+        Office.actions.associate("enhancedVlookup", function enhancedVlookup(event) {
+            var dialogUrl = window.location.origin + "/vlookup-dialog.html";
+            Office.context.ui.displayDialogAsync(
+                dialogUrl,
+                { height: 60, width: 35, displayInIframe: true },
+                function (asyncResult) {
+                    if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                        Office.context.ui.messageBox("无法打开增强查找对话框");
+                        event.completed();
+                        return;
+                    }
+                    var dialog = asyncResult.value;
+                    dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
+                        dialog.close();
+                        var config;
+                        try {
+                            config = JSON.parse(arg.message);
+                        } catch (e) {
+                            event.completed();
+                            return;
+                        }
+                        if (config.type !== "vlookup") {
+                            event.completed();
+                            return;
+                        }
+                        performEnhancedVlookup(event, config);
+                    });
+                    dialog.addEventHandler(Office.EventType.DialogEventReceived, function () {
+                        event.completed();
+                    });
+                }
+            );
+        });
+
+        function performEnhancedVlookup(event, config) {
+            Excel.run(function (context) {
+                var selectedRange = context.workbook.getSelectedRange();
+                selectedRange.load(["address", "columnCount", "rowCount", "columnIndex", "rowIndex"]);
+                return context.sync().then(function () {
+                    if (selectedRange.rowCount === 0) {
+                        Office.context.ui.messageBox("没有数据");
+                        throw new Error("cancel");
+                    }
+
+                    if (selectedRange.rowCount > MAX_ROWS) {
+                        Office.context.ui.messageBox(
+                            "数据量过大（" + selectedRange.rowCount + " 行），单次最多支持 " + MAX_ROWS + " 行。"
+                        );
+                        throw new Error("cancel");
+                    }
+
+                    var worksheet = context.workbook.worksheets.getActiveWorksheet();
+                    var dataStartCol = selectedRange.columnIndex;
+                    var dataStartRow = selectedRange.rowIndex;
+                    var dataRowCount = selectedRange.rowCount;
+                    var dataColLetter = getColumnLetter(dataStartCol);
+
+                    var lookupColRange = buildColRangeInline(config.parsed, config.matchColIndex);
+                    var returnColRanges = [];
+                    for (var i = 0; i < config.returnColIndices.length; i++) {
+                        returnColRanges.push(buildColRangeInline(config.parsed, config.returnColIndices[i]));
+                    }
+
+                    if (config.outputType === "formula") {
+                        var returnColCount = config.returnColIndices.length;
+                        var insertPos = dataStartCol + selectedRange.columnCount;
+
+                        for (var c = 0; c < returnColCount; c++) {
+                            worksheet
+                                .getRange(getColumnLetter(insertPos) + ":" + getColumnLetter(insertPos))
+                                .insert(Excel.InsertShiftDirection.right);
+                        }
+
+                        return context.sync().then(function () {
+                            for (var r = 0; r < returnColCount; r++) {
+                                var formulaCol = getColumnLetter(insertPos + r);
+                                var lookupCellRef = dataColLetter + dataStartRow;
+                                var formula = "=INDEX(" + returnColRanges[r] + ", MATCH(" + lookupCellRef + ", " + lookupColRange + ", " + config.matchMode + "))";
+
+                                var startCell = worksheet.getRange(formulaCol + dataStartRow);
+                                startCell.formulas = [[formula]];
+
+                                if (dataRowCount > 1) {
+                                    var fillRange = worksheet.getRange(
+                                        formulaCol + dataStartRow + ":" + formulaCol + (dataStartRow + dataRowCount - 1)
+                                    );
+                                    startCell.autoFill(fillRange, Excel.AutoFillType.fillDefault);
+                                }
+                            }
+                            return context.sync().then(function () {
+                                Office.context.ui.messageBox(
+                                    "完成! 已在 " + returnColCount + " 列写入 " + dataRowCount + " 行 INDEX/MATCH 公式"
+                                );
+                            });
+                        });
+                    } else {
+                        var dataRange = selectedRange.getUsedRange();
+                        dataRange.load("values");
+                        return context.sync().then(function () {
+                            var dataValues = dataRange.values;
+                            var lookupValues = [];
+                            for (var r2 = 0; r2 < dataValues.length; r2++) {
+                                lookupValues.push(dataValues[r2][0]);
+                            }
+
+                            var results = staticLookupInline(
+                                lookupValues,
+                                config.lookupTable,
+                                config.matchColIndex,
+                                config.returnColIndices,
+                                config.matchMode
+                            );
+
+                            var returnColCount2 = config.returnColIndices.length;
+                            var insertPos2 = dataStartCol + selectedRange.columnCount;
+
+                            for (var c2 = 0; c2 < returnColCount2; c2++) {
+                                worksheet
+                                    .getRange(getColumnLetter(insertPos2) + ":" + getColumnLetter(insertPos2))
+                                    .insert(Excel.InsertShiftDirection.right);
+                            }
+
+                            return context.sync().then(function () {
+                                var targetRange = worksheet.getRange(
+                                    getColumnLetter(insertPos2) + dataStartRow + ":" +
+                                    getColumnLetter(insertPos2 + returnColCount2 - 1) + (dataStartRow + results.length - 1)
+                                );
+                                targetRange.values = results;
+                                return context.sync().then(function () {
+                                    Office.context.ui.messageBox(
+                                        "完成! 已写入 " + results.length + " 行 × " + returnColCount2 + " 列静态值"
+                                    );
+                                });
+                            });
+                        });
+                    }
+                });
+            }).then(function () {
+                event.completed();
+            }).catch(function (error) {
+                if (error.message !== "cancel") {
+                    Office.context.ui.messageBox("操作失败: " + error.message);
+                }
+                event.completed();
+            });
+        }
+
+        function buildColRangeInline(parsed, colIndex) {
+            var colLetter = getColumnLetter(parsed.startCol + colIndex);
+            var prefix = parsed.sheet ? parsed.sheet + "!" : "";
+            return prefix + "$" + colLetter + "$" + parsed.startRow + ":" + "$" + colLetter + "$" + parsed.endRow;
+        }
+
+        function staticLookupInline(lookupValues, lookupTable, matchColIndex, returnColIndices, matchMode) {
+            var results = [];
+            var index = {};
+            if (matchMode === 0) {
+                for (var r = 0; r < lookupTable.length; r++) {
+                    var key = lookupTable[r][matchColIndex];
+                    if (key === null || key === undefined) { key = ""; }
+                    key = String(key);
+                    index[key] = r;
+                }
+            }
+            for (var i = 0; i < lookupValues.length; i++) {
+                var val = lookupValues[i];
+                if (val === null || val === undefined) { val = ""; }
+                if (matchMode !== 0 && (lookupValues[i] === null || lookupValues[i] === undefined)) {
+                    var rowNA = [];
+                    for (var q = 0; q < returnColIndices.length; q++) { rowNA.push("#N/A"); }
+                    results.push(rowNA);
+                    continue;
+                }
+                var valStr = String(val);
+                var row = [];
+                if (matchMode === 0) {
+                    var matchedRow = index[valStr];
+                    if (matchedRow !== undefined) {
+                        for (var j = 0; j < returnColIndices.length; j++) {
+                            row.push(lookupTable[matchedRow][returnColIndices[j]]);
+                        }
+                    } else {
+                        for (var k = 0; k < returnColIndices.length; k++) { row.push("#N/A"); }
+                    }
+                } else {
+                    var bestRow = -1;
+                    for (var m = 0; m < lookupTable.length; m++) {
+                        var tableVal = lookupTable[m][matchColIndex];
+                        if (tableVal === null || tableVal === undefined) continue;
+                        if (Number(tableVal) <= Number(val)) { bestRow = m; }
+                        else { break; }
+                    }
+                    if (bestRow >= 0) {
+                        for (var n = 0; n < returnColIndices.length; n++) {
+                            row.push(lookupTable[bestRow][returnColIndices[n]]);
+                        }
+                    } else {
+                        for (var p = 0; p < returnColIndices.length; p++) { row.push("#N/A"); }
+                    }
+                }
+                results.push(row);
+            }
+            return results;
+        }
+
     </script>
 </head>
 
