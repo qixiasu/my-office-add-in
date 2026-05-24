@@ -33,20 +33,6 @@
         #status { margin-top: 12px; font-size: 13px; }
         .info { font-size: 12px; color: #666; margin-top: 2px; }
         .section-title { font-weight: 600; margin-bottom: 4px; }
-        .toggle-tabs { margin-bottom: 16px; }
-        .toggle-tabs button {
-            padding: 6px 16px;
-            cursor: pointer;
-            font-size: 13px;
-            border: 1px solid #aaa;
-            background: #f5f5f5;
-            margin-right: 4px;
-        }
-        .toggle-tabs button.active {
-            background: #0078d4;
-            color: #fff;
-            border-color: #0078d4;
-        }
         .lookup-value-row { margin-bottom: 14px; }
         .lookup-value-row input { background: #f0f0f0; }
     </style>
@@ -54,14 +40,10 @@
 <body>
     <h3>增强查找</h3>
 
-    <div class="toggle-tabs">
-        <button id="tabLookupValue" class="active">刷新查找值</button>
-        <button id="tabLookupTable">刷新查找表</button>
-    </div>
-
     <div class="row lookup-value-row">
         <label for="lookupValue">查找值区域：</label>
         <input type="text" id="lookupValue" readonly style="background:#f0f0f0;" />
+        <button id="refreshLookupValueBtn" style="padding: 4px 12px; font-size: 13px;">刷新选择</button>
         <div class="info">自动取自当前选区第一列</div>
     </div>
 
@@ -121,7 +103,6 @@
 
     <script type="text/javascript">
         var MAX_ROWS = 1050000;
-        var refreshTarget = "lookupValue"; // "lookupValue" or "lookupTable"
 
         // Inline utility functions (standalone dialog, no module system)
         function getColumnLetter(colIndex) {
@@ -390,13 +371,6 @@
             container.appendChild(table);
         }
 
-        function setRefreshTarget(target) {
-            refreshTarget = target;
-            document.getElementById("tabLookupValue").classList.toggle("active", target === "lookupValue");
-            document.getElementById("tabLookupTable").classList.toggle("active", target === "lookupTable");
-        }
-
-
         function extractFirstColAddress(rangeStr) {
             try {
                 var parsed = parseRangeAddress(rangeStr);
@@ -432,8 +406,7 @@
                     returnCols: checkedCols.join(","),
                     matchMode: document.querySelector("input[name='matchMode']:checked").value,
                     outputType: document.querySelector("input[name='outputType']:checked").value,
-                    lookupValue: document.getElementById("lookupValue").value,
-                    refreshTarget: refreshTarget
+                    lookupValue: document.getElementById("lookupValue").value
                 }
             }));
         }
@@ -460,19 +433,12 @@
                     cbs[i].checked = (cols.indexOf(cbs[i].value) >= 0);
                 }
             }
-            if (params.get("refreshTarget")) {
-                setRefreshTarget(params.get("refreshTarget"));
-            }
             if (params.get("lookupValue")) {
                 document.getElementById("lookupValue").value = params.get("lookupValue");
             }
         }
 
         Office.onReady(function () {
-            document.getElementById("tabLookupValue").onclick = function() { setRefreshTarget("lookupValue"); };
-            document.getElementById("tabLookupTable").onclick = function() { setRefreshTarget("lookupTable"); };
-
-            // Pre-fill lookup range from preselected range passed via URL query param
             var preselected = getPreselectedRange();
             if (preselected) {
                 document.getElementById("lookupRange").value = preselected;
@@ -486,6 +452,7 @@
 
             document.getElementById("readHeadersBtn").onclick = readHeaders;
             document.getElementById("refreshSelectionBtn").onclick = refreshSelection;
+            document.getElementById("refreshLookupValueBtn").onclick = refreshSelection;
 
             document.getElementById("selectAllBtn").onclick = function () {
                 var cbs = document.querySelectorAll("#returnCols input[type='checkbox']");

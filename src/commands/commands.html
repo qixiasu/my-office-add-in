@@ -270,6 +270,7 @@
                                             if (savedState.returnCols) { reopenUrl += "&returnCols=" + encodeURIComponent(savedState.returnCols); }
                                             if (savedState.matchMode !== undefined) { reopenUrl += "&matchMode=" + encodeURIComponent(savedState.matchMode); }
                                             if (savedState.outputType) { reopenUrl += "&outputType=" + encodeURIComponent(savedState.outputType); }
+                                            if (savedState.lookupValue) { reopenUrl += "&lookupValue=" + encodeURIComponent(savedState.lookupValue); }
                                             openVlookupDialog(reopenUrl, ev);
                                         });
                                     }).catch(function (err) {
