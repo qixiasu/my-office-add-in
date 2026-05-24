@@ -64,6 +64,21 @@
                     <FunctionName>concatenateColumns</FunctionName>
                   </Action>
                 </Control>
+                <Control xsi:type="Button" id="FixGarbledButton">
+                  <Label resid="FixGarbledButton.Label"/>
+                  <Supertip>
+                    <Title resid="FixGarbledButton.Label"/>
+                    <Description resid="FixGarbledButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>fixGarbledText</FunctionName>
+                  </Action>
+                </Control>
               </Group>
               <Label resid="CustomTab.Label"/>
             </CustomTab>
@@ -89,10 +104,12 @@
         <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
         <bt:String id="TaskpaneButton.Label" DefaultValue="显示面板"/>
         <bt:String id="ConcatenateButton.Label" DefaultValue="连接列"/>
+        <bt:String id="FixGarbledButton.Label" DefaultValue="修复乱码"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="打开任务面板"/>
+        <bt:String id="FixGarbledButton.Tooltip" DefaultValue="修复因 UTF-8 编码被误读为 GBK 导致的中文乱码"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
