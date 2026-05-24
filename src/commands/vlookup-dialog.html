@@ -111,6 +111,7 @@
             while (i < ref.length) {
                 var ch = ref.charCodeAt(i);
                 if (ch >= 65 && ch <= 90) { col = col * 26 + (ch - 64); i++; }
+                else if (ch >= 97 && ch <= 122) { col = col * 26 + (ch - 96); i++; }
                 else { break; }
             }
             var row = parseInt(ref.substring(i), 10) || 1;
@@ -151,6 +152,14 @@
             var returnColsEl = document.getElementById("returnCols");
             var execBtn = document.getElementById("execBtn");
 
+            // Save current selections before rebuilding
+            var oldMatchCol = matchColEl.value;
+            var oldChecked = {};
+            var oldCheckboxes = document.querySelectorAll("#returnCols input[type='checkbox']");
+            for (var ci = 0; ci < oldCheckboxes.length; ci++) {
+                oldChecked[oldCheckboxes[ci].value] = oldCheckboxes[ci].checked;
+            }
+
             matchColEl.innerHTML = "";
             returnColsEl.innerHTML = "";
 
@@ -175,13 +184,11 @@
             for (var i = 0; i < parsed.colCount; i++) {
                 var letter = getColumnLetter(parsed.startCol + i);
 
-                // Match column dropdown
                 var opt = document.createElement("option");
                 opt.value = i;
                 opt.textContent = letter;
                 matchColEl.appendChild(opt);
 
-                // Return column checkboxes
                 var wrapper = document.createElement("div");
                 wrapper.style.display = "inline-block";
                 wrapper.style.marginRight = "16px";
@@ -191,6 +198,10 @@
                 cb.type = "checkbox";
                 cb.value = i;
                 cb.id = "retCol_" + i;
+                // Restore previous checked state
+                if (oldChecked[i] === true) {
+                    cb.checked = true;
+                }
 
                 var lbl = document.createElement("label");
                 lbl.htmlFor = "retCol_" + i;
@@ -201,6 +212,14 @@
                 wrapper.appendChild(cb);
                 wrapper.appendChild(lbl);
                 returnColsEl.appendChild(wrapper);
+            }
+
+            // Restore previous match column selection if still valid
+            if (oldMatchCol !== undefined && oldMatchCol !== "") {
+                var oldVal = parseInt(oldMatchCol, 10);
+                if (oldVal >= 0 && oldVal < parsed.colCount) {
+                    matchColEl.value = oldMatchCol;
+                }
             }
 
             execBtn.disabled = false;
@@ -243,6 +262,9 @@
                 return;
             }
 
+            var readBtn = document.getElementById("readHeadersBtn");
+            readBtn.disabled = true;
+
             document.getElementById("status").textContent = "正在读取表头...";
             document.getElementById("status").style.color = "green";
 
@@ -264,7 +286,8 @@
                     headerRange.load("values");
                     return context.sync().then(function () {
                         var headers = headerRange.values[0];
-                        updateHeaderLabels(headers);
+                        var capturedStartCol = parsed.startCol;
+                        updateHeaderLabels(headers, capturedStartCol);
 
                         var previewRows = Math.min(5, parsed.rowCount);
                         var previewRange = sheet.getRangeByIndexes(
@@ -278,25 +301,28 @@
                             showPreview(previewRange.values, headers);
                             document.getElementById("status").textContent = "表头读取成功，共 " + parsed.colCount + " 列";
                             document.getElementById("status").style.color = "green";
+                            readBtn.disabled = false;
                         });
                     });
                 }).catch(function (error) {
                     document.getElementById("status").textContent = "读取失败: " + error.message + "（可手动配置）";
                     document.getElementById("status").style.color = "red";
+                    readBtn.disabled = false;
                 });
             } catch (e) {
                 document.getElementById("status").textContent = "无法连接 Excel（可手动配置列号）";
                 document.getElementById("status").style.color = "red";
+                readBtn.disabled = false;
             }
         }
 
-        function updateHeaderLabels(headers) {
+        function updateHeaderLabels(headers, startCol) {
             var labels = document.querySelectorAll("#returnCols label");
             for (var i = 0; i < labels.length && i < headers.length; i++) {
                 var headerText = headers[i];
                 if (headerText === null || headerText === undefined) headerText = "";
                 headerText = String(headerText);
-                var letter = getColumnLetter(parseRangeAddress(document.getElementById("lookupRange").value.trim()).startCol + i);
+                var letter = getColumnLetter(startCol + i);
                 labels[i].textContent = letter + " - " + (headerText || "(空)");
             }
         }
@@ -305,24 +331,34 @@
             var section = document.getElementById("previewSection");
             section.style.display = "block";
 
-            var html = "<table><thead><tr>";
+            var table = document.createElement("table");
+            var thead = document.createElement("thead");
+            var headerRow = document.createElement("tr");
             for (var i = 0; i < headers.length; i++) {
-                html += "<th>" + (headers[i] || "") + "</th>";
+                var th = document.createElement("th");
+                th.textContent = headers[i] || "";
+                headerRow.appendChild(th);
             }
-            html += "</tr></thead><tbody>";
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
 
+            var tbody = document.createElement("tbody");
             for (var r = 0; r < values.length; r++) {
-                html += "<tr>";
+                var tr = document.createElement("tr");
                 for (var c = 0; c < values[r].length; c++) {
+                    var td = document.createElement("td");
                     var v = values[r][c];
                     if (v === null || v === undefined) v = "";
-                    html += "<td>" + String(v) + "</td>";
+                    td.textContent = String(v);
+                    tr.appendChild(td);
                 }
-                html += "</tr>";
+                tbody.appendChild(tr);
             }
-            html += "</tbody></table>";
+            table.appendChild(tbody);
 
-            document.getElementById("previewTable").innerHTML = html;
+            var container = document.getElementById("previewTable");
+            container.innerHTML = "";
+            container.appendChild(table);
         }
 
         Office.onReady(function () {
@@ -372,7 +408,14 @@
                     return;
                 }
 
-                var parsed = parseRangeAddress(rangeStr);
+                var parsed;
+                try {
+                    parsed = parseRangeAddress(rangeStr);
+                } catch (e) {
+                    statusEl.textContent = "区域地址格式无效";
+                    statusEl.style.color = "red";
+                    return;
+                }
 
                 var returnCols = getCheckedReturnCols();
                 if (returnCols.length === 0) {
