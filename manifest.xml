@@ -33,6 +33,22 @@
                   <bt:Image size="32" resid="Icon.32x32"/>
                   <bt:Image size="80" resid="Icon.80x80"/>
                 </Icon>
+                <Control xsi:type="Button" id="TaskpaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>ButtonId1</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
                 <Control xsi:type="Button" id="ConcatenateButton">
                   <Label resid="ConcatenateButton.Label"/>
                   <Supertip>
@@ -42,6 +58,7 @@
                   <Icon>
                     <bt:Image size="16" resid="ConcatenateIcon.16x16"/>
                     <bt:Image size="32" resid="ConcatenateIcon.32x32"/>
+                    <bt:Image size="80" resid="ConcatenateIcon.80x80"/>
                   </Icon>
                   <Action xsi:type="ExecuteFunction">
                     <FunctionName>concatenateColumns</FunctionName>
@@ -60,16 +77,20 @@
         <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
       <bt:Image id="ConcatenateIcon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
         <bt:Image id="ConcatenateIcon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
+        <bt:Image id="ConcatenateIcon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="显示面板"/>
         <bt:String id="ConcatenateButton.Label" DefaultValue="连接列"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="打开任务面板"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
