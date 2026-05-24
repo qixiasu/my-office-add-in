@@ -1,0 +1,129 @@
+var { getColumnLetter } = require("./concat-utils");
+
+var SEPA = "!";
+var ABS = "$";
+
+function parseRangeAddress(address) {
+  var sheet = "";
+  var rangePart = address;
+
+  var bangIdx = address.indexOf(SEPA);
+  if (bangIdx !== -1) {
+    sheet = address.substring(0, bangIdx);
+    rangePart = address.substring(bangIdx + 1);
+  }
+
+  var parts = rangePart.split(":");
+  var start = parseCellRef(parts[0]);
+  var end = parseCellRef(parts[1] || parts[0]);
+
+  return {
+    sheet: sheet,
+    startCol: start.col,
+    startRow: start.row,
+    endCol: end.col,
+    endRow: end.row,
+    colCount: end.col - start.col + 1,
+    rowCount: end.row - start.row + 1
+  };
+}
+
+function parseCellRef(ref) {
+  var col = 0;
+  var row = 0;
+  var i = 0;
+
+  while (i < ref.length) {
+    var ch = ref.charCodeAt(i);
+    if (ch >= 65 && ch <= 90) {
+      col = col * 26 + (ch - 64);
+      i++;
+    } else {
+      break;
+    }
+  }
+
+  row = parseInt(ref.substring(i), 10) || 1;
+  return { col: col - 1, row: row };
+}
+
+function buildColRange(parsed, colIndex) {
+  var colLetter = getColumnLetter(parsed.startCol + colIndex);
+  var prefix = parsed.sheet ? parsed.sheet + SEPA : "";
+  var colAbs = ABS + colLetter + ABS;
+  return prefix + colAbs + parsed.startRow + ":" + colAbs + parsed.endRow;
+}
+
+function buildIndexMatchFormula(lookupCellRef, lookupColRange, returnColRange, matchMode) {
+  return "=INDEX(" + returnColRange + ", MATCH(" + lookupCellRef + ", " + lookupColRange + ", " + matchMode + "))";
+}
+
+function staticLookup(lookupValues, lookupTable, matchColIndex, returnColIndices, matchMode) {
+  var results = [];
+
+  var index = {};
+  if (matchMode === 0) {
+    for (var r = 0; r < lookupTable.length; r++) {
+      var key = lookupTable[r][matchColIndex];
+      if (key === null || key === undefined) {
+        key = "";
+      }
+      key = String(key);
+      index[key] = r;
+    }
+  }
+
+  for (var i = 0; i < lookupValues.length; i++) {
+    var val = lookupValues[i];
+    if (val === null || val === undefined) {
+      val = "";
+    }
+    var valStr = String(val);
+    var row = [];
+
+    if (matchMode === 0) {
+      var matchedRow = index[valStr];
+      if (matchedRow !== undefined) {
+        for (var j = 0; j < returnColIndices.length; j++) {
+          row.push(lookupTable[matchedRow][returnColIndices[j]]);
+        }
+      } else {
+        for (var k = 0; k < returnColIndices.length; k++) {
+          row.push("#N/A");
+        }
+      }
+    } else {
+      var bestRow = -1;
+      for (var m = 0; m < lookupTable.length; m++) {
+        var tableVal = lookupTable[m][matchColIndex];
+        if (tableVal === null || tableVal === undefined) continue;
+        if (Number(tableVal) <= Number(val)) {
+          bestRow = m;
+        } else {
+          break;
+        }
+      }
+      if (bestRow >= 0) {
+        for (var n = 0; n < returnColIndices.length; n++) {
+          row.push(lookupTable[bestRow][returnColIndices[n]]);
+        }
+      } else {
+        for (var p = 0; p < returnColIndices.length; p++) {
+          row.push("#N/A");
+        }
+      }
+    }
+
+    results.push(row);
+  }
+
+  return results;
+}
+
+module.exports = {
+  parseRangeAddress: parseRangeAddress,
+  parseCellRef: parseCellRef,
+  buildColRange: buildColRange,
+  buildIndexMatchFormula: buildIndexMatchFormula,
+  staticLookup: staticLookup
+};
