@@ -71,4 +71,33 @@ describe("parseCSV", function () {
       ["上海, 浦东新区", "200"],
     ]);
   });
+
+  it("supports tab delimiter", function () {
+    var result = parseCSV("a\tb\tc\nd\te\tf", "\t");
+    expect(result).toEqual([
+      ["a", "b", "c"],
+      ["d", "e", "f"],
+    ]);
+  });
+
+  it("supports semicolon delimiter", function () {
+    var result = parseCSV("a;b;c\nd;e;f", ";");
+    expect(result).toEqual([
+      ["a", "b", "c"],
+      ["d", "e", "f"],
+    ]);
+  });
+
+  it("supports pipe delimiter", function () {
+    var result = parseCSV("a|b|c\nd|e|f", "|");
+    expect(result).toEqual([
+      ["a", "b", "c"],
+      ["d", "e", "f"],
+    ]);
+  });
+
+  it("defaults to comma when no delimiter specified", function () {
+    var result = parseCSV("a,b,c");
+    expect(result).toEqual([["a", "b", "c"]]);
+  });
 });

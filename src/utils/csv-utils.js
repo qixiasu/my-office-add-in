@@ -1,13 +1,17 @@
 /**
- * Parse CSV text into a 2D array.
- * Follows RFC 4180: handles quoted fields, embedded commas,
+ * Parse delimiter-separated text into a 2D array.
+ * Follows RFC 4180: handles quoted fields, embedded delimiters,
  * embedded newlines, and doubled quotes.
  * Strips UTF-8 BOM if present.
+ * @param {string} text - Raw file content
+ * @param {string} delimiter - Field delimiter (default ",")
  */
-function parseCSV(text) {
+function parseCSV(text, delimiter) {
   if (!text || text.length === 0) {
     return [];
   }
+
+  var sep = delimiter || ",";
 
   // Strip UTF-8 BOM
   if (text.charCodeAt(0) === 0xfeff) {
@@ -37,7 +41,7 @@ function parseCSV(text) {
     } else {
       if (ch === '"' && field === "") {
         inQuotes = true;
-      } else if (ch === ",") {
+      } else if (ch === sep) {
         row.push(field);
         field = "";
       } else if (ch === "\n") {
@@ -48,7 +52,6 @@ function parseCSV(text) {
         }
         row = [];
       } else if (ch === "\r") {
-        // Handle \r\n as a single newline
         if (text[i + 1] === "\n") {
           i++;
         }

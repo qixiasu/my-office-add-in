@@ -125,7 +125,8 @@ async function importCSV(text, filename) {
   var statusEl = document.getElementById("importStatus");
 
   try {
-    var rows = parseCSV(text);
+    var delimiter = document.getElementById("csvDelimiter").value || ",";
+    var rows = parseCSV(text, delimiter);
 
     if (rows.length === 0) {
       statusEl.textContent = "错误: CSV 文件为空";
