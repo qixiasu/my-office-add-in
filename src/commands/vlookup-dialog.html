@@ -1,0 +1,441 @@
+<!-- Enhanced VLOOKUP dialog for ribbon button -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            padding: 20px;
+            margin: 0;
+            font-size: 14px;
+        }
+        h3 { margin-top: 0; }
+        .row { margin-bottom: 14px; }
+        label { display: block; margin-bottom: 4px; font-weight: 600; }
+        input[type="text"] { width: 200px; padding: 6px; font-size: 14px; box-sizing: border-box; }
+        input[type="number"] { width: 80px; padding: 6px; font-size: 14px; }
+        select { padding: 6px; font-size: 14px; }
+        .inline { display: inline-block; margin-right: 12px; }
+        .checks { border: 1px solid #ccc; padding: 10px; max-height: 160px; overflow-y: auto; }
+        .checks label { display: block; font-weight: normal; margin-bottom: 4px; }
+        .checks label input { margin-right: 6px; }
+        .preview { border: 1px solid #ccc; padding: 10px; max-height: 120px; overflow: auto; }
+        .preview table { border-collapse: collapse; font-size: 12px; }
+        .preview th, .preview td { border: 1px solid #ddd; padding: 4px 8px; text-align: left; }
+        .preview th { background: #f0f0f0; }
+        .buttons { margin-top: 20px; text-align: right; }
+        button { padding: 6px 20px; cursor: pointer; font-size: 14px; }
+        #execBtn { margin-left: 8px; }
+        #execBtn:disabled { cursor: default; opacity: 0.5; }
+        #status { margin-top: 12px; font-size: 13px; }
+        .info { font-size: 12px; color: #666; margin-top: 2px; }
+        .section-title { font-weight: 600; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <h3>增强查找</h3>
+
+    <div class="row">
+        <label for="lookupRange">查找表区域：</label>
+        <input type="text" id="lookupRange" placeholder="例如: Sheet2!A1:D500 或 A1:D500" />
+        <div class="info">输入包含表头的完整查找表区域</div>
+    </div>
+
+    <div class="row">
+        <label for="headerRow">表头行号：</label>
+        <input type="number" id="headerRow" value="1" min="1" style="width: 80px;" />
+        <button id="readHeadersBtn" style="padding: 4px 12px; font-size: 13px;">读取表头</button>
+    </div>
+
+    <div class="row">
+        <label for="matchCol">匹配列：</label>
+        <select id="matchCol"></select>
+        <div class="info">选择查找表中用于匹配的列（即"根据哪一列查找"）</div>
+    </div>
+
+    <div class="row">
+        <div class="section-title">返回列（勾选需要的列）：</div>
+        <button id="selectAllBtn" style="padding: 2px 8px; font-size: 12px;">全选</button>
+        <button id="deselectAllBtn" style="padding: 2px 8px; font-size: 12px;">取消全选</button>
+        <div class="checks" id="returnCols"></div>
+    </div>
+
+    <div class="row">
+        <span class="inline">
+            <label>匹配模式：</label>
+            <label style="font-weight: normal;"><input type="radio" name="matchMode" value="0" checked /> 精确匹配</label>
+            <label style="font-weight: normal; margin-left: 8px;"><input type="radio" name="matchMode" value="1" /> 近似匹配</label>
+        </span>
+    </div>
+
+    <div class="row">
+        <span class="inline">
+            <label>输出类型：</label>
+            <label style="font-weight: normal;"><input type="radio" name="outputType" value="formula" checked /> 公式</label>
+            <label style="font-weight: normal; margin-left: 8px;"><input type="radio" name="outputType" value="static" /> 静态值</label>
+        </span>
+    </div>
+
+    <div class="row" id="previewSection" style="display: none;">
+        <div class="section-title">数据预览：</div>
+        <div class="preview" id="previewTable"></div>
+    </div>
+
+    <div id="status"></div>
+
+    <div class="buttons">
+        <button id="cancelBtn">取消</button>
+        <button id="execBtn" disabled>执行查找</button>
+    </div>
+
+    <script type="text/javascript">
+        var MAX_ROWS = 1050000;
+
+        // Inline utility functions (standalone dialog, no module system)
+        function getColumnLetter(colIndex) {
+            var letter = "";
+            var remaining = colIndex;
+            do {
+                letter = String.fromCharCode(65 + (remaining % 26)) + letter;
+                remaining = Math.floor(remaining / 26) - 1;
+            } while (remaining >= 0);
+            return letter;
+        }
+
+        function parseCellRef(ref) {
+            var col = 0;
+            var i = 0;
+            while (i < ref.length) {
+                var ch = ref.charCodeAt(i);
+                if (ch >= 65 && ch <= 90) { col = col * 26 + (ch - 64); i++; }
+                else { break; }
+            }
+            var row = parseInt(ref.substring(i), 10) || 1;
+            return { col: col - 1, row: row };
+        }
+
+        function parseRangeAddress(address) {
+            var sheet = "";
+            var rangePart = address;
+            var bangIdx = address.indexOf("!");
+            if (bangIdx !== -1) {
+                sheet = address.substring(0, bangIdx);
+                rangePart = address.substring(bangIdx + 1);
+            }
+            var parts = rangePart.split(":");
+            var start = parseCellRef(parts[0]);
+            var end = parseCellRef(parts[1] || parts[0]);
+            return {
+                sheet: sheet,
+                startCol: start.col,
+                startRow: start.row,
+                endCol: end.col,
+                endRow: end.row,
+                colCount: end.col - start.col + 1,
+                rowCount: end.row - start.row + 1
+            };
+        }
+
+        function buildColRange(parsed, colIndex) {
+            var colLetter = getColumnLetter(parsed.startCol + colIndex);
+            var prefix = parsed.sheet ? parsed.sheet + "!" : "";
+            return prefix + "$" + colLetter + "$" + parsed.startRow + ":" + "$" + colLetter + "$" + parsed.endRow;
+        }
+
+        function refreshColumns() {
+            var rangeStr = document.getElementById("lookupRange").value.trim();
+            var matchColEl = document.getElementById("matchCol");
+            var returnColsEl = document.getElementById("returnCols");
+            var execBtn = document.getElementById("execBtn");
+
+            matchColEl.innerHTML = "";
+            returnColsEl.innerHTML = "";
+
+            if (!rangeStr) {
+                execBtn.disabled = true;
+                return;
+            }
+
+            var parsed;
+            try {
+                parsed = parseRangeAddress(rangeStr);
+            } catch (e) {
+                execBtn.disabled = true;
+                return;
+            }
+
+            if (parsed.colCount < 1) {
+                execBtn.disabled = true;
+                return;
+            }
+
+            for (var i = 0; i < parsed.colCount; i++) {
+                var letter = getColumnLetter(parsed.startCol + i);
+
+                // Match column dropdown
+                var opt = document.createElement("option");
+                opt.value = i;
+                opt.textContent = letter;
+                matchColEl.appendChild(opt);
+
+                // Return column checkboxes
+                var wrapper = document.createElement("div");
+                wrapper.style.display = "inline-block";
+                wrapper.style.marginRight = "16px";
+                wrapper.style.marginBottom = "4px";
+
+                var cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.value = i;
+                cb.id = "retCol_" + i;
+
+                var lbl = document.createElement("label");
+                lbl.htmlFor = "retCol_" + i;
+                lbl.textContent = letter;
+                lbl.style.display = "inline";
+                lbl.style.marginLeft = "4px";
+
+                wrapper.appendChild(cb);
+                wrapper.appendChild(lbl);
+                returnColsEl.appendChild(wrapper);
+            }
+
+            execBtn.disabled = false;
+        }
+
+        function getCheckedReturnCols() {
+            var checkboxes = document.querySelectorAll("#returnCols input[type='checkbox']");
+            var indices = [];
+            for (var i = 0; i < checkboxes.length; i++) {
+                if (checkboxes[i].checked) {
+                    indices.push(parseInt(checkboxes[i].value, 10));
+                }
+            }
+            return indices;
+        }
+
+        function readHeaders() {
+            var rangeStr = document.getElementById("lookupRange").value.trim();
+            var headerRow = parseInt(document.getElementById("headerRow").value, 10) || 1;
+
+            if (!rangeStr) {
+                document.getElementById("status").textContent = "请先输入查找表区域";
+                document.getElementById("status").style.color = "red";
+                return;
+            }
+
+            var parsed;
+            try {
+                parsed = parseRangeAddress(rangeStr);
+            } catch (e) {
+                document.getElementById("status").textContent = "区域地址格式无效";
+                document.getElementById("status").style.color = "red";
+                return;
+            }
+
+            var headerRowOffset = headerRow - parsed.startRow;
+            if (headerRowOffset < 0 || headerRowOffset >= parsed.rowCount) {
+                document.getElementById("status").textContent = "表头行号超出查找表范围";
+                document.getElementById("status").style.color = "red";
+                return;
+            }
+
+            document.getElementById("status").textContent = "正在读取表头...";
+            document.getElementById("status").style.color = "green";
+
+            try {
+                Excel.run(function (context) {
+                    var sheet;
+                    if (parsed.sheet) {
+                        sheet = context.workbook.worksheets.getItem(parsed.sheet);
+                    } else {
+                        sheet = context.workbook.worksheets.getActiveWorksheet();
+                    }
+
+                    var headerRange = sheet.getRangeByIndexes(
+                        headerRow - 1,
+                        parsed.startCol,
+                        1,
+                        parsed.colCount
+                    );
+                    headerRange.load("values");
+                    return context.sync().then(function () {
+                        var headers = headerRange.values[0];
+                        updateHeaderLabels(headers);
+
+                        var previewRows = Math.min(5, parsed.rowCount);
+                        var previewRange = sheet.getRangeByIndexes(
+                            parsed.startRow - 1,
+                            parsed.startCol,
+                            previewRows,
+                            parsed.colCount
+                        );
+                        previewRange.load("values");
+                        return context.sync().then(function () {
+                            showPreview(previewRange.values, headers);
+                            document.getElementById("status").textContent = "表头读取成功，共 " + parsed.colCount + " 列";
+                            document.getElementById("status").style.color = "green";
+                        });
+                    });
+                }).catch(function (error) {
+                    document.getElementById("status").textContent = "读取失败: " + error.message + "（可手动配置）";
+                    document.getElementById("status").style.color = "red";
+                });
+            } catch (e) {
+                document.getElementById("status").textContent = "无法连接 Excel（可手动配置列号）";
+                document.getElementById("status").style.color = "red";
+            }
+        }
+
+        function updateHeaderLabels(headers) {
+            var labels = document.querySelectorAll("#returnCols label");
+            for (var i = 0; i < labels.length && i < headers.length; i++) {
+                var headerText = headers[i];
+                if (headerText === null || headerText === undefined) headerText = "";
+                headerText = String(headerText);
+                var letter = getColumnLetter(parseRangeAddress(document.getElementById("lookupRange").value.trim()).startCol + i);
+                labels[i].textContent = letter + " - " + (headerText || "(空)");
+            }
+        }
+
+        function showPreview(values, headers) {
+            var section = document.getElementById("previewSection");
+            section.style.display = "block";
+
+            var html = "<table><thead><tr>";
+            for (var i = 0; i < headers.length; i++) {
+                html += "<th>" + (headers[i] || "") + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (var r = 0; r < values.length; r++) {
+                html += "<tr>";
+                for (var c = 0; c < values[r].length; c++) {
+                    var v = values[r][c];
+                    if (v === null || v === undefined) v = "";
+                    html += "<td>" + String(v) + "</td>";
+                }
+                html += "</tr>";
+            }
+            html += "</tbody></table>";
+
+            document.getElementById("previewTable").innerHTML = html;
+        }
+
+        Office.onReady(function () {
+            document.getElementById("lookupRange").oninput = refreshColumns;
+            document.getElementById("headerRow").onchange = refreshColumns;
+
+            document.getElementById("readHeadersBtn").onclick = readHeaders;
+
+            document.getElementById("selectAllBtn").onclick = function () {
+                var cbs = document.querySelectorAll("#returnCols input[type='checkbox']");
+                for (var i = 0; i < cbs.length; i++) { cbs[i].checked = true; }
+            };
+
+            document.getElementById("deselectAllBtn").onclick = function () {
+                var cbs = document.querySelectorAll("#returnCols input[type='checkbox']");
+                for (var i = 0; i < cbs.length; i++) { cbs[i].checked = false; }
+            };
+
+            document.getElementById("cancelBtn").onclick = function () {
+                Office.context.ui.messageParent("");
+            };
+
+            document.getElementById("execBtn").onclick = function () {
+                var statusEl = document.getElementById("status");
+                var execBtn = document.getElementById("execBtn");
+
+                var rangeStr = document.getElementById("lookupRange").value.trim();
+                if (!rangeStr) {
+                    statusEl.textContent = "请输入查找表区域";
+                    statusEl.style.color = "red";
+                    return;
+                }
+
+                var parsed = parseRangeAddress(rangeStr);
+
+                var returnCols = getCheckedReturnCols();
+                if (returnCols.length === 0) {
+                    statusEl.textContent = "请至少勾选一列作为返回列";
+                    statusEl.style.color = "red";
+                    return;
+                }
+
+                var matchColIndex = parseInt(document.getElementById("matchCol").value, 10);
+                var matchMode = parseInt(document.querySelector("input[name='matchMode']:checked").value, 10);
+                var outputType = document.querySelector("input[name='outputType']:checked").value;
+
+                if (isNaN(matchColIndex)) {
+                    statusEl.textContent = "请选择匹配列";
+                    statusEl.style.color = "red";
+                    return;
+                }
+
+                if (parsed.rowCount > MAX_ROWS) {
+                    statusEl.textContent = "数据量过大（" + parsed.rowCount + " 行），最多支持 " + MAX_ROWS + " 行";
+                    statusEl.style.color = "red";
+                    return;
+                }
+
+                execBtn.disabled = true;
+                statusEl.textContent = "正在处理...";
+                statusEl.style.color = "green";
+
+                var config = {
+                    type: "vlookup",
+                    outputType: outputType,
+                    matchMode: matchMode,
+                    lookupRange: rangeStr,
+                    parsed: parsed,
+                    matchColIndex: matchColIndex,
+                    returnColIndices: returnCols,
+                    headerRow: parseInt(document.getElementById("headerRow").value, 10) || 1
+                };
+
+                if (outputType === "static") {
+                    try {
+                        Excel.run(function (context) {
+                            var sheet;
+                            if (parsed.sheet) {
+                                sheet = context.workbook.worksheets.getItem(parsed.sheet);
+                            } else {
+                                sheet = context.workbook.worksheets.getActiveWorksheet();
+                            }
+                            var dataRange = sheet.getRangeByIndexes(
+                                parsed.startRow - 1,
+                                parsed.startCol,
+                                parsed.rowCount,
+                                parsed.colCount
+                            );
+                            dataRange.load("values");
+                            return context.sync().then(function () {
+                                var data = dataRange.values;
+                                var headerOffset = config.headerRow - parsed.startRow;
+                                if (headerOffset >= 0 && headerOffset < data.length) {
+                                    data.splice(headerOffset, 1);
+                                }
+                                config.lookupTable = data;
+                                Office.context.ui.messageParent(JSON.stringify(config));
+                            });
+                        }).catch(function (error) {
+                            statusEl.textContent = "读取查找表失败: " + error.message;
+                            statusEl.style.color = "red";
+                            execBtn.disabled = false;
+                        });
+                    } catch (e) {
+                        statusEl.textContent = "无法连接 Excel";
+                        statusEl.style.color = "red";
+                        execBtn.disabled = false;
+                    }
+                } else {
+                    Office.context.ui.messageParent(JSON.stringify(config));
+                }
+            };
+        });
+    </script>
+</body>
+</html>
