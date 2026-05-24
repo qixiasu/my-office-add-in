@@ -267,6 +267,7 @@
                     var worksheet = context.workbook.worksheets.getActiveWorksheet();
                     var dataStartCol = selectedRange.columnIndex;
                     var dataStartRow = selectedRange.rowIndex;
+                    var dataStartRow1 = dataStartRow + 1;  // 1-based for cell addresses
                     var dataRowCount = selectedRange.rowCount;
                     var dataColLetter = getColumnLetter(dataStartCol);
 
@@ -289,15 +290,15 @@
                         return context.sync().then(function () {
                             for (var r = 0; r < returnColCount; r++) {
                                 var formulaCol = getColumnLetter(insertPos + r);
-                                var lookupCellRef = dataColLetter + dataStartRow;
+                                var lookupCellRef = dataColLetter + dataStartRow1;
                                 var formula = "=INDEX(" + returnColRanges[r] + ", MATCH(" + lookupCellRef + ", " + lookupColRange + ", " + config.matchMode + "))";
 
-                                var startCell = worksheet.getRange(formulaCol + dataStartRow);
+                                var startCell = worksheet.getRange(formulaCol + dataStartRow1);
                                 startCell.formulas = [[formula]];
 
                                 if (dataRowCount > 1) {
                                     var fillRange = worksheet.getRange(
-                                        formulaCol + dataStartRow + ":" + formulaCol + (dataStartRow + dataRowCount - 1)
+                                        formulaCol + dataStartRow1 + ":" + formulaCol + (dataStartRow1 + dataRowCount - 1)
                                     );
                                     startCell.autoFill(fillRange, Excel.AutoFillType.fillDefault);
                                 }
@@ -337,8 +338,8 @@
 
                             return context.sync().then(function () {
                                 var targetRange = worksheet.getRange(
-                                    getColumnLetter(insertPos2) + dataStartRow + ":" +
-                                    getColumnLetter(insertPos2 + returnColCount2 - 1) + (dataStartRow + results.length - 1)
+                                    getColumnLetter(insertPos2) + dataStartRow1 + ":" +
+                                    getColumnLetter(insertPos2 + returnColCount2 - 1) + (dataStartRow1 + results.length - 1)
                                 );
                                 targetRange.values = results;
                                 return context.sync().then(function () {
