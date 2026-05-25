@@ -449,6 +449,7 @@
                             var actualEndRow = actualStartRow + actualRowCount - 1;
                             var firstCol = getColumnLetter(config.parsed.startCol);
                             var lastCol = getColumnLetter(config.parsed.endCol);
+                            var exactRangeAddr = firstCol + actualStartRow + ":" + lastCol + actualEndRow;
                             var exactRange = lookupSheet.getRange(exactRangeAddr);
                             exactRange.load("values");
                             return context.sync().then(function () {
