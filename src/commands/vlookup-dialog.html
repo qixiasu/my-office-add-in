@@ -85,7 +85,7 @@
         <span class="inline">
             <label>输出类型：</label>
             <label style="font-weight: normal;"><input type="radio" name="outputType" value="formula" checked /> 公式</label>
-            <label style="font-weight: normal; margin-left: 8px;"><input type="radio" name="outputType" value="static" /> 静态值</label>
+            <label style="font-weight: normal; margin-left: 8px;"><input type="radio" name="outputType" value="static" /> 静态值（大数据推荐）</label>
         </span>
     </div>
 
@@ -120,10 +120,13 @@
             var i = 0;
             while (i < ref.length) {
                 var ch = ref.charCodeAt(i);
-                if (ch >= 65 && ch <= 90) { col = col * 26 + (ch - 64); i++; }
+                if (ch === 36) { i++; }  // Skip $
+                else if (ch >= 65 && ch <= 90) { col = col * 26 + (ch - 64); i++; }
                 else if (ch >= 97 && ch <= 122) { col = col * 26 + (ch - 96); i++; }
                 else { break; }
             }
+            // Skip any remaining $ between column and row
+            while (i < ref.length && ref.charCodeAt(i) === 36) { i++; }
             var row = parseInt(ref.substring(i), 10) || 1;
             return { col: col - 1, row: row };
         }
@@ -176,6 +179,12 @@
             if (!rangeStr) {
                 execBtn.disabled = true;
                 return;
+            }
+
+            // Auto-populate lookupValue from first column of lookup table (only if empty)
+            var lookupValueEl = document.getElementById("lookupValue");
+            if (!lookupValueEl.value.trim()) {
+                lookupValueEl.value = extractFirstColAddress(rangeStr);
             }
 
             var parsed;
@@ -387,7 +396,7 @@
             return params.get("preselected") || "";
         }
 
-        function refreshSelection() {
+        function refreshSelection(target) {
             document.getElementById("status").textContent = "正在更新选区...";
             document.getElementById("status").style.color = "green";
 
@@ -400,13 +409,15 @@
 
             Office.context.ui.messageParent(JSON.stringify({
                 type: "refreshSelection",
+                target: target,
                 state: {
                     headerRow: document.getElementById("headerRow").value,
                     matchCol: document.getElementById("matchCol").value,
                     returnCols: checkedCols.join(","),
                     matchMode: document.querySelector("input[name='matchMode']:checked").value,
                     outputType: document.querySelector("input[name='outputType']:checked").value,
-                    lookupValue: document.getElementById("lookupValue").value
+                    lookupValue: document.getElementById("lookupValue").value,
+                    lookupTable: document.getElementById("lookupRange").value
                 }
             }));
         }
@@ -436,23 +447,46 @@
             if (params.get("lookupValue")) {
                 document.getElementById("lookupValue").value = params.get("lookupValue");
             }
+            if (params.get("lookupTable")) {
+                document.getElementById("lookupRange").value = params.get("lookupTable");
+            }
         }
 
         Office.onReady(function () {
-            var preselected = getPreselectedRange();
-            if (preselected) {
-                document.getElementById("lookupRange").value = preselected;
-                document.getElementById("lookupValue").value = extractFirstColAddress(preselected);
+            var params = new URLSearchParams(window.location.search);
+
+            var hasExplicitLookupValue = !!params.get("lookupValue");
+            var hasExplicitLookupTable = !!params.get("lookupTable");
+
+            if (hasExplicitLookupValue) {
+                document.getElementById("lookupValue").value = params.get("lookupValue");
+            }
+
+            if (hasExplicitLookupTable) {
+                document.getElementById("lookupRange").value = params.get("lookupTable");
+                if (!hasExplicitLookupValue) {
+                    document.getElementById("lookupValue").value = extractFirstColAddress(params.get("lookupTable"));
+                }
+            } else if (params.get("preselected")) {
+                document.getElementById("lookupRange").value = params.get("preselected");
+                if (!hasExplicitLookupValue) {
+                    document.getElementById("lookupValue").value = extractFirstColAddress(params.get("preselected"));
+                }
+            }
+
+            // Always restore other settings after setting the ranges
+            restoreState();
+
+            if (params.get("lookupTable") || params.get("preselected")) {
                 refreshColumns();
-                restoreState();  // Restore other settings after columns are built
             }
 
             document.getElementById("lookupRange").oninput = refreshColumns;
             document.getElementById("headerRow").onchange = refreshColumns;
 
             document.getElementById("readHeadersBtn").onclick = readHeaders;
-            document.getElementById("refreshSelectionBtn").onclick = refreshSelection;
-            document.getElementById("refreshLookupValueBtn").onclick = refreshSelection;
+            document.getElementById("refreshSelectionBtn").onclick = function() { refreshSelection("lookupTable"); };
+            document.getElementById("refreshLookupValueBtn").onclick = function() { refreshSelection("lookupValue"); };
 
             document.getElementById("selectAllBtn").onclick = function () {
                 var cbs = document.querySelectorAll("#returnCols input[type='checkbox']");
@@ -515,11 +549,13 @@
                 statusEl.textContent = "正在处理...";
                 statusEl.style.color = "green";
 
+                var lookupValueStr = document.getElementById("lookupValue").value.trim();
                 var config = {
                     type: "vlookup",
                     outputType: outputType,
                     matchMode: matchMode,
                     lookupRange: rangeStr,
+                    lookupValue: lookupValueStr,
                     parsed: parsed,
                     matchColIndex: matchColIndex,
                     returnColIndices: returnCols,

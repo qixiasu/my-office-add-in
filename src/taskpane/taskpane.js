@@ -153,30 +153,41 @@ async function executeVlookupFromConfig(config, statusEl) {
   statusEl.textContent = "处理中...";
   statusEl.style.color = "green";
 
+  function resolveDataRange(context) {
+    // dataRange should always come from the user's current selection
+    // (the cells that contain the values to look up)
+    // config.lookupValue specifies which column to use for matching, not how many rows to process
+    var range = context.workbook.getSelectedRange();
+    range.load(["columnCount", "rowCount", "columnIndex", "rowIndex"]);
+    return context.sync().then(function () { return range; });
+  }
+
   try {
     await Excel.run(async (context) => {
-      var selectedRange = context.workbook.getSelectedRange();
-      selectedRange.load(["columnCount", "rowCount", "columnIndex", "rowIndex"]);
-      await context.sync();
+      var dataRange = await resolveDataRange(context);
 
-      if (selectedRange.rowCount === 0) {
+      if (dataRange.rowCount === 0) {
         statusEl.textContent = "错误: 没有数据";
         statusEl.style.color = "red";
         return;
       }
 
-      if (selectedRange.rowCount > MAX_ROWS) {
+      if (dataRange.rowCount > MAX_ROWS) {
         statusEl.textContent =
-          "错误: 数据量过大（" + selectedRange.rowCount + " 行），单次最多支持 " + MAX_ROWS + " 行。";
+          "错误: 数据量过大（" + dataRange.rowCount + " 行），单次最多支持 " + MAX_ROWS + " 行。";
         statusEl.style.color = "red";
         return;
       }
 
       var worksheet = context.workbook.worksheets.getActiveWorksheet();
-      var dataStartCol = selectedRange.columnIndex;
-      var dataStartRow = selectedRange.rowIndex;
-      var dataStartRow1 = dataStartRow + 1;  // 1-based for cell addresses
-      var dataRowCount = selectedRange.rowCount;
+
+      // Parse lookupValue to find the actual lookup value column and row
+      var lookupValueStr = config.lookupValue || "";
+      var lvParsed = parseRangeAddress(lookupValueStr);
+      var dataStartCol = lvParsed.startCol;  // 0-based column index
+      var dataStartRow = lvParsed.startRow;   // 1-based row number from address
+      var dataStartRow1 = dataStartRow;        // 1-based for cell addresses (startRow is already 1-based)
+      var dataRowCount = lvParsed.rowCount;    // Use lookupValue row count for formulas
       var dataColLetter = getColumnLetter(dataStartCol);
 
       var lookupColRange = buildColRange(config.parsed, config.matchColIndex);
@@ -186,7 +197,7 @@ async function executeVlookupFromConfig(config, statusEl) {
       }
 
       if (config.outputType === "formula") {
-        var insertPos = dataStartCol + selectedRange.columnCount;
+        var insertPos = dataStartCol + 1;
         var returnColCount = config.returnColIndices.length;
 
         for (var c = 0; c < returnColCount; c++) {
@@ -196,31 +207,32 @@ async function executeVlookupFromConfig(config, statusEl) {
         }
         await context.sync();
 
-        for (var r = 0; r < returnColCount; r++) {
-          var formulaCol = getColumnLetter(insertPos + r);
-          var lookupCellRef = dataColLetter + dataStartRow1;
-          var formula = buildIndexMatchFormula(lookupCellRef, lookupColRange, returnColRanges[r], config.matchMode);
-
-          var startCell = worksheet.getRange(formulaCol + dataStartRow1);
-          startCell.formulas = [[formula]];
-
-          if (dataRowCount > 1) {
-            var fillRange = worksheet.getRange(
-              formulaCol + dataStartRow1 + ":" + formulaCol + (dataStartRow1 + dataRowCount - 1)
-            );
-            startCell.autoFill(fillRange, Excel.AutoFillType.fillDefault);
-            await context.sync();
+        // Build 2D formulas array - avoids autoFill issues by writing all formulas at once
+        var formulas2D = [];
+        for (var row = 0; row < dataRowCount; row++) {
+          var rowFormulas = [];
+          for (var col = 0; col < returnColCount; col++) {
+            var lookupCellRef = dataColLetter + (dataStartRow1 + row);
+            rowFormulas.push(buildIndexMatchFormula(lookupCellRef, lookupColRange, returnColRanges[col], config.matchMode));
           }
+          formulas2D.push(rowFormulas);
         }
+
+        var outputRange = worksheet.getRange(
+          getColumnLetter(insertPos) + dataStartRow1 + ":" +
+          getColumnLetter(insertPos + returnColCount - 1) + (dataStartRow1 + dataRowCount - 1)
+        );
+        outputRange.formulas = formulas2D;
+        await context.sync();
 
         statusEl.textContent =
           "完成! 已在 " + returnColCount + " 列写入 " + dataRowCount + " 行 INDEX/MATCH 公式";
       } else {
         // Static mode
-        var dataRange = selectedRange.getUsedRange();
-        dataRange.load("values");
+        var valuesRange = dataRange.getUsedRange();
+        valuesRange.load("values");
         await context.sync();
-        var dataValues = dataRange.values;
+        var dataValues = valuesRange.values;
 
         var lookupValues = [];
         for (var j = 0; j < dataValues.length; j++) {
@@ -235,7 +247,7 @@ async function executeVlookupFromConfig(config, statusEl) {
           config.matchMode
         );
 
-        var insertPos2 = dataStartCol + selectedRange.columnCount;
+        var insertPos2 = dataStartCol + 1;
         var returnColCount2 = config.returnColIndices.length;
 
         for (var c2 = 0; c2 < returnColCount2; c2++) {

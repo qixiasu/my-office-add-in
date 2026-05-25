@@ -30,12 +30,13 @@ function parseRangeAddress(address) {
 
 function parseCellRef(ref) {
   var col = 0;
-  var row = 0;
   var i = 0;
 
   while (i < ref.length) {
     var ch = ref.charCodeAt(i);
-    if (ch >= 65 && ch <= 90) {
+    if (ch === 36) {
+      i++;
+    } else if (ch >= 65 && ch <= 90) {
       col = col * 26 + (ch - 64);
       i++;
     } else {
@@ -43,7 +44,12 @@ function parseCellRef(ref) {
     }
   }
 
-  row = parseInt(ref.substring(i), 10) || 1;
+  // Skip any remaining $ between column and row
+  while (i < ref.length && ref.charCodeAt(i) === 36) {
+    i++;
+  }
+
+  var row = parseInt(ref.substring(i), 10) || 1;
   return { col: col - 1, row: row };
 }
 
