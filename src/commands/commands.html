@@ -332,8 +332,6 @@
                         throw new Error("cancel");
                     }
 
-                    var worksheet = context.workbook.worksheets.getActiveWorksheet();
-
                     // Parse lookupValue to find the actual lookup value column and row
                     var lookupValueStr = config.lookupValue || "";
                     var lvParsed = parseRangeAddressInline(lookupValueStr);
@@ -342,6 +340,16 @@
                     var dataStartRow1 = dataStartRow;        // 1-based for cell addresses (startRow is already 1-based)
                     var dataRowCount = dataRange.rowCount;    // Use actual selected range row count
                     var dataColLetter = getColumnLetter(dataStartCol);
+
+                    // Use the lookup value's sheet for writing results, not the active worksheet
+                    // This ensures cross-sheet lookups write results to the correct location
+                    var worksheet;
+                    if (lvParsed.sheet) {
+                        worksheet = context.workbook.worksheets.getItem(lvParsed.sheet);
+                    } else {
+                        worksheet = context.workbook.worksheets.getActiveWorksheet();
+                    }
+                    worksheet.activate();  // Activate the target sheet so user sees the write operation
 
                     var lookupColRange = buildColRangeInline(config.parsed, config.matchColIndex);
                     var returnColRanges = [];
