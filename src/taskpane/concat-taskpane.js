@@ -67,6 +67,7 @@ function runConcat() {
     range.load(["address", "columnCount", "columnIndex"]);
     return context.sync().then(function () {
       if (range.columnCount < 2) {
+        executeBtn.disabled = false;
         setStatus("错误: 请至少选择两列", "error");
         return;
       }
@@ -82,11 +83,13 @@ function runConcat() {
         var rowCount = usedInSelection.rowCount;
 
         if (rowCount === 0) {
+          executeBtn.disabled = false;
           setStatus("错误: 没有数据", "error");
           return;
         }
 
         if (rowCount > MAX_ROWS) {
+          executeBtn.disabled = false;
           setStatus(
             "错误: 数据量过大（" + rowCount + " 行），单次最多支持 " + MAX_ROWS + " 行。",
             "error"
