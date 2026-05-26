@@ -34,16 +34,14 @@ function buildConcatFormula(firstColLetter, secondColLetter, connector) {
 Office.onReady(function (info) {
   if (info.host === Office.HostType.Excel) {
     var connectorInput = document.getElementById("connector");
+    var executeBtn = document.getElementById("executeBtn");
 
     // 自动聚焦输入框
     connectorInput.focus();
 
-    // Enter 键触发执行
-    connectorInput.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        runConcat();
-      }
+    // 按钮点击触发执行
+    executeBtn.addEventListener("click", function() {
+      runConcat();
     });
   }
 });
@@ -51,6 +49,7 @@ Office.onReady(function (info) {
 function runConcat() {
   var statusEl = document.getElementById("status");
   var connectorInput = document.getElementById("connector");
+  var executeBtn = document.getElementById("executeBtn");
   var connector = connectorInput.value || "_";
 
   function setStatus(message, type) {
@@ -59,6 +58,8 @@ function runConcat() {
     el.className = "status-message status-" + type;
   }
 
+  // 禁用按钮，显示加载状态
+  executeBtn.disabled = true;
   setStatus("处理中...", "loading");
 
   Excel.run(function (context) {
@@ -115,11 +116,13 @@ function runConcat() {
               "完成! 已在第 " + targetColLetter + " 列写入 " + rowCount + " 行公式",
               "success"
             );
+            executeBtn.disabled = false;
           });
         });
       });
     });
   }).catch(function (error) {
     setStatus("错误: " + error.message, "error");
+    executeBtn.disabled = false;
   });
 }
