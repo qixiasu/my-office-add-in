@@ -17,22 +17,32 @@
 
     <!-- Template styles -->
     <link href="taskpane.css" rel="stylesheet" type="text/css" />
+    <link href="concat-taskpane.css" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="ms-font-m ms-welcome ms-Fabric">
-    <header class="ms-welcome__header ms-bgColor-neutralLighter">
-        <h1 class="ms-font-su">连接列工具</h1>
-    </header>
-    <main id="app-body" class="ms-welcome__main">
-        <h2 class="ms-font-l">选中 Excel 中的两列</h2>
-        <p class="ms-font-m">输入连接符后按 Enter 键执行合并</p>
-        <div style="margin: 20px 0;">
-            <label for="connector" class="ms-font-m">连接符：</label>
-            <input type="text" id="connector" value="_" autofocus
-                   style="width: 150px; height: 30px; font-size: 16px; margin-top: 8px;"/>
+    <div class="concat-container">
+        <h1 class="concat-title">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#0078d4">
+                <path d="M14 3a1 1 0 0 1 1 1v5.586l2.707 2.707A1 1 0 0 1 17 14.414V15a1 1 0 0 1-2 0v-1a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1a1 1 0 0 1-2 0v-.586a1 1 0 0 1 .293-.707L11 9.586V4a1 1 0 0 1 1-1h2z"/>
+            </svg>
+            连接列工具
+        </h1>
+
+        <div class="guide-card">
+            <p>
+                <span class="guide-step">1. 选中 Excel 中要连接的两列</span><br>
+                <span class="guide-step">2. 输入连接符，按 Enter 执行</span>
+            </p>
         </div>
-        <p id="status" style="margin-top: 20px; color: green;"></p>
-    </main>
+
+        <div class="concat-form-group">
+            <label for="connector" class="concat-label">连接符</label>
+            <input type="text" id="connector" class="concat-input" value="_" autofocus />
+        </div>
+
+        <div id="status" class="status-message status-idle">状态：等待操作...</div>
+    </div>
 </body>
 
 </html>
