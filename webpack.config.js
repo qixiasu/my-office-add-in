@@ -20,6 +20,7 @@ module.exports = async (env, options) => {
       polyfill: ["core-js/stable", "regenerator-runtime/runtime"],
       taskpane: ["./src/taskpane/taskpane.js", "./src/taskpane/taskpane.html"],
       commands: "./src/commands/commands.js",
+      "concat-taskpane": ["./src/taskpane/concat-taskpane.js", "./src/taskpane/concat-taskpane.html"],
     },
     output: {
       clean: true,
@@ -92,6 +93,11 @@ module.exports = async (env, options) => {
         template: "./src/commands/commands.html",
         chunks: ["polyfill", "commands"],
         scriptLoading: "blocking",
+      }),
+      new HtmlWebpackPlugin({
+        filename: "concat-taskpane.html",
+        template: "./src/taskpane/concat-taskpane.html",
+        chunks: ["polyfill", "concat-taskpane"],
       }),
     ],
     devServer: {
