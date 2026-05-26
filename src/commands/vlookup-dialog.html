@@ -381,14 +381,10 @@
         }
 
         function extractFirstColAddress(rangeStr) {
-            try {
-                var parsed = parseRangeAddress(rangeStr);
-                var firstColLetter = getColumnLetter(parsed.startCol);
-                var prefix = parsed.sheet ? parsed.sheet + "!" : "";
-                return prefix + "$" + firstColLetter + "$" + parsed.startRow + ":$" + firstColLetter + "$" + parsed.endRow;
-            } catch (e) {
-                return rangeStr;
-            }
+            var parsed = parseRangeAddress(rangeStr);
+            var firstColLetter = getColumnLetter(parsed.startCol);
+            var prefix = parsed.sheet ? parsed.sheet + "!" : "";
+            return prefix + "$" + firstColLetter + "$" + parsed.startRow + ":$" + firstColLetter + "$" + parsed.endRow;
         }
 
         function getPreselectedRange() {
@@ -481,7 +477,10 @@
                 refreshColumns();
             }
 
-            document.getElementById("lookupRange").oninput = refreshColumns;
+            document.getElementById("lookupRange").oninput = function() {
+                clearTimeout(window._refreshColumnsTimer);
+                window._refreshColumnsTimer = setTimeout(refreshColumns, 300);
+            };
             document.getElementById("headerRow").onchange = refreshColumns;
 
             document.getElementById("readHeadersBtn").onclick = readHeaders;
@@ -562,12 +561,7 @@
                     headerRow: parseInt(document.getElementById("headerRow").value, 10) || 1
                 };
 
-                if (outputType === "static") {
-                    // Send config without lookup table; parent will read it from Excel
-                    Office.context.ui.messageParent(JSON.stringify(config));
-                } else {
-                    Office.context.ui.messageParent(JSON.stringify(config));
-                }
+                Office.context.ui.messageParent(JSON.stringify(config));
             };
         });
     </script>

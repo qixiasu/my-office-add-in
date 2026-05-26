@@ -186,8 +186,7 @@ async function executeVlookupFromConfig(config, statusEl) {
       var lvParsed = parseRangeAddress(lookupValueStr);
       var dataStartCol = lvParsed.startCol;  // 0-based column index
       var dataStartRow = lvParsed.startRow;   // 1-based row number from address
-      var dataStartRow1 = dataStartRow;        // 1-based for cell addresses (startRow is already 1-based)
-      var dataRowCount = lvParsed.rowCount;    // Use lookupValue row count for formulas
+      var dataRowCount = lvParsed.rowCount;
       var dataColLetter = getColumnLetter(dataStartCol);
 
       var lookupColRange = buildColRange(config.parsed, config.matchColIndex);
@@ -201,9 +200,8 @@ async function executeVlookupFromConfig(config, statusEl) {
         var returnColCount = config.returnColIndices.length;
 
         for (var c = 0; c < returnColCount; c++) {
-          worksheet
-            .getRange(getColumnLetter(insertPos + c) + ":" + getColumnLetter(insertPos + c))
-            .insert(Excel.InsertShiftDirection.right);
+          var colLetter = getColumnLetter(insertPos + c);
+          worksheet.getRange(colLetter + ":" + colLetter).insert(Excel.InsertShiftDirection.right);
         }
         await context.sync();
 
@@ -212,15 +210,15 @@ async function executeVlookupFromConfig(config, statusEl) {
         for (var row = 0; row < dataRowCount; row++) {
           var rowFormulas = [];
           for (var col = 0; col < returnColCount; col++) {
-            var lookupCellRef = dataColLetter + (dataStartRow1 + row);
+            var lookupCellRef = dataColLetter + (dataStartRow + row);
             rowFormulas.push(buildIndexMatchFormula(lookupCellRef, lookupColRange, returnColRanges[col], config.matchMode));
           }
           formulas2D.push(rowFormulas);
         }
 
         var outputRange = worksheet.getRange(
-          getColumnLetter(insertPos) + dataStartRow1 + ":" +
-          getColumnLetter(insertPos + returnColCount - 1) + (dataStartRow1 + dataRowCount - 1)
+          getColumnLetter(insertPos) + dataStartRow + ":" +
+          getColumnLetter(insertPos + returnColCount - 1) + (dataStartRow + dataRowCount - 1)
         );
         outputRange.formulas = formulas2D;
         await context.sync();
@@ -229,10 +227,9 @@ async function executeVlookupFromConfig(config, statusEl) {
           "完成! 已在 " + returnColCount + " 列写入 " + dataRowCount + " 行 INDEX/MATCH 公式";
       } else {
         // Static mode
-        var valuesRange = dataRange.getUsedRange();
-        valuesRange.load("values");
+        dataRange.load("values");
         await context.sync();
-        var dataValues = valuesRange.values;
+        var dataValues = dataRange.values;
 
         var lookupValues = [];
         for (var j = 0; j < dataValues.length; j++) {
@@ -251,15 +248,14 @@ async function executeVlookupFromConfig(config, statusEl) {
         var returnColCount2 = config.returnColIndices.length;
 
         for (var c2 = 0; c2 < returnColCount2; c2++) {
-          worksheet
-            .getRange(getColumnLetter(insertPos2 + c2) + ":" + getColumnLetter(insertPos2 + c2))
-            .insert(Excel.InsertShiftDirection.right);
+          var colLetter2 = getColumnLetter(insertPos2 + c2);
+          worksheet.getRange(colLetter2 + ":" + colLetter2).insert(Excel.InsertShiftDirection.right);
         }
         await context.sync();
 
         var targetRange = worksheet.getRange(
-          getColumnLetter(insertPos2) + dataStartRow1 + ":" +
-          getColumnLetter(insertPos2 + returnColCount2 - 1) + (dataStartRow1 + results.length - 1)
+          getColumnLetter(insertPos2) + dataStartRow + ":" +
+          getColumnLetter(insertPos2 + returnColCount2 - 1) + (dataStartRow + results.length - 1)
         );
         targetRange.values = results;
         await context.sync();
