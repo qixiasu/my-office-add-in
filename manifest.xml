@@ -79,6 +79,21 @@
                     <FunctionName>importCSV</FunctionName>
                   </Action>
                 </Control>
+                <Control xsi:type="Button" id="EnhancedVlookupButton">
+                  <Label resid="EnhancedVlookupButton.Label"/>
+                  <Supertip>
+                    <Title resid="EnhancedVlookupButton.Label"/>
+                    <Description resid="EnhancedVlookupButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>enhancedVlookup</FunctionName>
+                  </Action>
+                </Control>
               </Group>
               <Label resid="CustomTab.Label"/>
             </CustomTab>
@@ -105,11 +120,13 @@
         <bt:String id="TaskpaneButton.Label" DefaultValue="显示面板"/>
         <bt:String id="ConcatenateButton.Label" DefaultValue="连接列"/>
         <bt:String id="ImportCsvButton.Label" DefaultValue="导入CSV"/>
+        <bt:String id="EnhancedVlookupButton.Label" DefaultValue="增强查找"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="打开任务面板"/>
         <bt:String id="ImportCsvButton.Tooltip" DefaultValue="用 UTF-8 编码正确导入 CSV/文本文件，支持自定义分隔符"/>
+        <bt:String id="EnhancedVlookupButton.Tooltip" DefaultValue="增强版查找功能：一次配置完成多列 INDEX/MATCH 查找，匹配列可在任意位置"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
