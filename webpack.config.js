@@ -75,10 +75,6 @@ module.exports = async (env, options) => {
             },
           },
           {
-            from: "src/commands/connector-dialog.html",
-            to: "connector-dialog.html",
-          },
-          {
             from: "src/commands/csv-import-dialog.html",
             to: "csv-import-dialog.html",
           },
