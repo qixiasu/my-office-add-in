@@ -53,16 +53,20 @@ function runConcat() {
   var connectorInput = document.getElementById("connector");
   var connector = connectorInput.value || "_";
 
-  statusEl.textContent = "处理中...";
-  statusEl.style.color = "green";
+  function setStatus(message, type) {
+    var el = document.getElementById("status");
+    el.textContent = message;
+    el.className = "status-message status-" + type;
+  }
+
+  setStatus("处理中...", "loading");
 
   Excel.run(function (context) {
     var range = context.workbook.getSelectedRange();
     range.load(["address", "columnCount", "columnIndex"]);
     return context.sync().then(function () {
       if (range.columnCount < 2) {
-        statusEl.textContent = "错误: 请至少选择两列";
-        statusEl.style.color = "red";
+        setStatus("错误: 请至少选择两列", "error");
         return;
       }
 
@@ -77,15 +81,15 @@ function runConcat() {
         var rowCount = usedInSelection.rowCount;
 
         if (rowCount === 0) {
-          statusEl.textContent = "错误: 没有数据";
-          statusEl.style.color = "red";
+          setStatus("错误: 没有数据", "error");
           return;
         }
 
         if (rowCount > MAX_ROWS) {
-          statusEl.textContent =
-            "错误: 数据量过大（" + rowCount + " 行），单次最多支持 " + MAX_ROWS + " 行。";
-          statusEl.style.color = "red";
+          setStatus(
+            "错误: 数据量过大（" + rowCount + " 行），单次最多支持 " + MAX_ROWS + " 行。",
+            "error"
+          );
           return;
         }
 
@@ -107,15 +111,15 @@ function runConcat() {
               return context.sync();
             }
           }).then(function () {
-            statusEl.textContent =
-              "完成! 已在第 " + targetColLetter + " 列写入 " + rowCount + " 行公式";
-            statusEl.style.color = "green";
+            setStatus(
+              "完成! 已在第 " + targetColLetter + " 列写入 " + rowCount + " 行公式",
+              "success"
+            );
           });
         });
       });
     });
   }).catch(function (error) {
-    statusEl.textContent = "错误: " + error.message;
-    statusEl.style.color = "red";
+    setStatus("错误: " + error.message, "error");
   });
 }
