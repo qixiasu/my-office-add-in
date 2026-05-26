@@ -32,14 +32,16 @@
         <div class="guide-card">
             <p>
                 <span class="guide-step">1. 选中 Excel 中要连接的两列</span><br>
-                <span class="guide-step">2. 输入连接符，按 Enter 执行</span>
+                <span class="guide-step">2. 输入连接符，点击执行</span>
             </p>
         </div>
 
         <div class="concat-form-group">
             <label for="connector" class="concat-label">连接符</label>
-            <input type="text" id="connector" class="concat-input" value="_" autofocus />
+            <input type="text" id="connector" class="concat-input" value="_" />
         </div>
+
+        <button id="executeBtn" class="concat-button">执行连接</button>
 
         <div id="status" class="status-message status-idle">状态：等待操作...</div>
     </div>
