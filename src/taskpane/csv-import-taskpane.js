@@ -173,11 +173,15 @@ function doImport() {
     var worksheet = context.workbook.worksheets.getActiveWorksheet();
     var startCell = worksheet.getRange("A1");
     var endCell = worksheet.getRange(getColumnLetter(colCount - 1) + rowCount);
-    var targetRange = worksheet.getRange(startCell.address + ":" + endCell.address);
-    targetRange.values = parsedData;
+    startCell.load("address");
+    endCell.load("address");
     return context.sync().then(function () {
-      setStatus("完成! 已写入 " + rowCount + " 行 × " + colCount + " 列", "success");
-      nextBtn.disabled = false;
+      var targetRange = worksheet.getRange(startCell.address + ":" + endCell.address);
+      targetRange.values = parsedData;
+      return context.sync().then(function () {
+        setStatus("完成! 已写入 " + rowCount + " 行 × " + colCount + " 列", "success");
+        nextBtn.disabled = false;
+      });
     });
   }).catch(function (error) {
     setStatus("错误: " + error.message, "error");

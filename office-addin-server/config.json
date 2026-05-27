@@ -1,5 +1,5 @@
 {
   "port": 3000,
   "dir": "./dist",
-  "autostart": true
+  "autostart": false
 }
