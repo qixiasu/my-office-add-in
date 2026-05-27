@@ -80,10 +80,6 @@ module.exports = async (env, options) => {
             from: "src/commands/csv-import-dialog.html",
             to: "csv-import-dialog.html",
           },
-          {
-            from: "src/commands/vlookup-dialog.html",
-            to: "vlookup-dialog.html",
-          },
         ],
       }),
       new HtmlWebpackPlugin({
