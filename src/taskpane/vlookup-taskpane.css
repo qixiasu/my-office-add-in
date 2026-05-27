@@ -1,0 +1,214 @@
+/* VLOOKUP Sidebar Styles */
+
+.vlookup-container {
+  padding: 20px;
+}
+
+.vlookup-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0078d4;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vlookup-title svg {
+  flex-shrink: 0;
+}
+
+.guide-card {
+  background: #f0f7ff;
+  border-left: 3px solid #0078d4;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.guide-card p {
+  font-size: 13px;
+  color: #005a9e;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.vlookup-form-group {
+  margin-bottom: 16px;
+}
+
+.vlookup-label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.vlookup-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #0078d4;
+  border-radius: 6px;
+  font-size: 15px;
+  outline: none;
+  transition: box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.vlookup-input:focus {
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
+}
+
+.vlookup-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.vlookup-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  margin-top: 16px;
+}
+
+.vlookup-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.vlookup-checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #0078d4;
+}
+
+.vlookup-radio-group {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.vlookup-radio-group input[type="radio"] {
+  accent-color: #0078d4;
+}
+
+.vlookup-preview {
+  display: none;
+  margin-top: 16px;
+  padding: 12px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  overflow-x: auto;
+}
+
+.vlookup-preview.visible {
+  display: block;
+}
+
+.vlookup-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.vlookup-button {
+  padding: 10px 16px;
+  background: transparent;
+  color: #0078d4;
+  border: 2px solid #0078d4;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.vlookup-button:hover {
+  background: #0078d4;
+  color: white;
+}
+
+.vlookup-button:active {
+  background: #005a9e;
+  border-color: #005a9e;
+}
+
+.vlookup-button:disabled {
+  background: #f5f5f5;
+  color: #999;
+  border-color: #999;
+  cursor: not-allowed;
+}
+
+.vlookup-button--primary {
+  background: #0078d4;
+  color: white;
+}
+
+.vlookup-button--primary:hover {
+  background: #005a9e;
+  border-color: #005a9e;
+}
+
+.vlookup-button--secondary {
+  background: transparent;
+  color: #666;
+  border-color: #999;
+}
+
+.vlookup-button--secondary:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.vlookup-btn {
+  padding: 6px 12px;
+  background: transparent;
+  color: #0078d4;
+  border: 1px solid #0078d4;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.vlookup-btn:hover {
+  background: #0078d4;
+  color: white;
+}
+
+.status-message {
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.status-idle {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.status-success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.status-error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.status-loading {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+}
