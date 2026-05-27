@@ -1,4 +1,4 @@
-var { getColumnLetter, escapeFormulaText, buildConcatFormula } = require("./concat-utils");
+var { getColumnLetter, escapeFormulaText, buildConcatFormula, buildNConcatFormula } = require("./concat-utils");
 
 describe("getColumnLetter", function () {
   it("returns A for column 0", function () {
@@ -71,5 +71,32 @@ describe("buildConcatFormula", function () {
   it("works with multi-letter column references", function () {
     var formula = buildConcatFormula("AA", "AB", "|");
     expect(formula).toBe('=IF(AA1&AB1="","",AA1&"|"&AB1)');
+  });
+});
+
+describe("buildNConcatFormula", function () {
+  it("builds formula for 3 columns with underscore connector", function () {
+    var formula = buildNConcatFormula(['A', 'B', 'C'], '_');
+    expect(formula).toBe('=IF(A1&B1&C1="","",A1&"_"&B1&"_"&C1)');
+  });
+
+  it("builds formula for 4 columns with dash connector", function () {
+    var formula = buildNConcatFormula(['A', 'B', 'C', 'D'], '-');
+    expect(formula).toBe('=IF(A1&B1&C1&D1="","",A1&"-"&B1&"-"&C1&"-"&D1)');
+  });
+
+  it("escapes double quotes in connector", function () {
+    var formula = buildNConcatFormula(['A', 'B'], 'a"b');
+    expect(formula).toBe('=IF(A1&B1="","",A1&"a""b"&B1)');
+  });
+
+  it("works with multi-letter column references", function () {
+    var formula = buildNConcatFormula(['AA', 'AB', 'AC'], '|');
+    expect(formula).toBe('=IF(AA1&AB1&AC1="","",AA1&"|"&AB1&"|"&AC1)');
+  });
+
+  it("returns empty string formula for single column", function () {
+    var formula = buildNConcatFormula(['A'], '_');
+    expect(formula).toBe('=IF(A1="","",A1)');
   });
 });
