@@ -6,7 +6,12 @@
 /* global console, document, Excel, Office */
 
 var { parseCSV } = require("../utils/csv-utils");
-var { buildColRange, buildIndexMatchFormula, staticLookup, parseRangeAddress } = require("../utils/vlookup-utils");
+var {
+  buildColRange,
+  buildIndexMatchFormula,
+  staticLookup,
+  parseRangeAddress,
+} = require("../utils/vlookup-utils");
 
 Office.onReady((info) => {
   if (info.host === Office.HostType.Excel) {
@@ -77,7 +82,9 @@ async function executeVlookupFromConfig(config, statusEl) {
     // config.lookupValue specifies which column to use for matching, not how many rows to process
     var range = context.workbook.getSelectedRange();
     range.load(["columnCount", "rowCount", "columnIndex", "rowIndex"]);
-    return context.sync().then(function () { return range; });
+    return context.sync().then(function () {
+      return range;
+    });
   }
 
   try {
@@ -102,8 +109,8 @@ async function executeVlookupFromConfig(config, statusEl) {
       // Parse lookupValue to find the actual lookup value column and row
       var lookupValueStr = config.lookupValue || "";
       var lvParsed = parseRangeAddress(lookupValueStr);
-      var dataStartCol = lvParsed.startCol;  // 0-based column index
-      var dataStartRow = lvParsed.startRow;   // 1-based row number from address
+      var dataStartCol = lvParsed.startCol; // 0-based column index
+      var dataStartRow = lvParsed.startRow; // 1-based row number from address
       var dataRowCount = lvParsed.rowCount;
       var dataColLetter = getColumnLetter(dataStartCol);
 
@@ -129,14 +136,24 @@ async function executeVlookupFromConfig(config, statusEl) {
           var rowFormulas = [];
           for (var col = 0; col < returnColCount; col++) {
             var lookupCellRef = dataColLetter + (dataStartRow + row);
-            rowFormulas.push(buildIndexMatchFormula(lookupCellRef, lookupColRange, returnColRanges[col], config.matchMode));
+            rowFormulas.push(
+              buildIndexMatchFormula(
+                lookupCellRef,
+                lookupColRange,
+                returnColRanges[col],
+                config.matchMode
+              )
+            );
           }
           formulas2D.push(rowFormulas);
         }
 
         var outputRange = worksheet.getRange(
-          getColumnLetter(insertPos) + dataStartRow + ":" +
-          getColumnLetter(insertPos + returnColCount - 1) + (dataStartRow + dataRowCount - 1)
+          getColumnLetter(insertPos) +
+            dataStartRow +
+            ":" +
+            getColumnLetter(insertPos + returnColCount - 1) +
+            (dataStartRow + dataRowCount - 1)
         );
         outputRange.formulas = formulas2D;
         await context.sync();
@@ -167,13 +184,18 @@ async function executeVlookupFromConfig(config, statusEl) {
 
         for (var c2 = 0; c2 < returnColCount2; c2++) {
           var colLetter2 = getColumnLetter(insertPos2 + c2);
-          worksheet.getRange(colLetter2 + ":" + colLetter2).insert(Excel.InsertShiftDirection.right);
+          worksheet
+            .getRange(colLetter2 + ":" + colLetter2)
+            .insert(Excel.InsertShiftDirection.right);
         }
         await context.sync();
 
         var targetRange = worksheet.getRange(
-          getColumnLetter(insertPos2) + dataStartRow + ":" +
-          getColumnLetter(insertPos2 + returnColCount2 - 1) + (dataStartRow + results.length - 1)
+          getColumnLetter(insertPos2) +
+            dataStartRow +
+            ":" +
+            getColumnLetter(insertPos2 + returnColCount2 - 1) +
+            (dataStartRow + results.length - 1)
         );
         targetRange.values = results;
         await context.sync();
@@ -251,13 +273,12 @@ async function importCSV(text, filename) {
 
       // Write to worksheet starting at the selected cell
       var addr = startRange.address.split("!").pop(); // e.g., "A1" or "A1:B2"
-      var startCol = getColNum(addr);  // column index of start
-      var startRow = getRowNum(addr);  // row number of start
+      var startCol = getColNum(addr); // column index of start
+      var startRow = getRowNum(addr); // row number of start
       var endCol = startCol + colCount - 1;
       var endRow = startRow + rowCount - 1;
       var targetRange = sheet.getRange(
-        getColumnLetter(startCol) + startRow + ":" +
-        getColumnLetter(endCol) + endRow
+        getColumnLetter(startCol) + startRow + ":" + getColumnLetter(endCol) + endRow
       );
 
       targetRange.values = rows;

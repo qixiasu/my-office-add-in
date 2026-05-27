@@ -3,7 +3,7 @@ var {
   parseCellRef,
   buildColRange,
   buildIndexMatchFormula,
-  staticLookup
+  staticLookup,
 } = require("./vlookup-utils");
 
 describe("parseCellRef", function () {
@@ -113,30 +113,25 @@ describe("staticLookup", function () {
   var table = [
     ["张三", "研发部", "A001", 8000],
     ["李四", "市场部", "A002", 6000],
-    ["王五", "财务部", "A003", 7000]
+    ["王五", "财务部", "A003", 7000],
   ];
 
   it("exact match returns correct values", function () {
     var result = staticLookup(["张三", "李四"], table, 0, [1, 3], 0);
     expect(result).toEqual([
       ["研发部", 8000],
-      ["市场部", 6000]
+      ["市场部", 6000],
     ]);
   });
 
   it("returns #N/A for not found values", function () {
     var result = staticLookup(["张三", "不存在"], table, 0, [1], 0);
-    expect(result).toEqual([
-      ["研发部"],
-      ["#N/A"]
-    ]);
+    expect(result).toEqual([["研发部"], ["#N/A"]]);
   });
 
   it("returns multiple return columns", function () {
     var result = staticLookup(["王五"], table, 0, [1, 2, 3], 0);
-    expect(result).toEqual([
-      ["财务部", "A003", 7000]
-    ]);
+    expect(result).toEqual([["财务部", "A003", 7000]]);
   });
 
   it("handles null lookup value", function () {
@@ -155,7 +150,10 @@ describe("staticLookup", function () {
   });
 
   it("returns #N/A for null lookup in approximate mode", function () {
-    var numTable = [[100, "low"], [200, "mid"]];
+    var numTable = [
+      [100, "low"],
+      [200, "mid"],
+    ];
     var result = staticLookup([null], numTable, 0, [1], 1);
     expect(result).toEqual([["#N/A"]]);
   });
@@ -164,7 +162,7 @@ describe("staticLookup", function () {
     var numTable = [
       [100, "low"],
       [200, "mid"],
-      [300, "high"]
+      [300, "high"],
     ];
     var result = staticLookup([150, 250, 350], numTable, 0, [1], 1);
     expect(result).toEqual([["low"], ["mid"], ["high"]]);

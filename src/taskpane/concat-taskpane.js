@@ -7,6 +7,8 @@
 
 var MAX_ROWS = 1050000;
 
+var concatUtils = require("../utils/concat-utils");
+
 function getColumnLetter(colIndex) {
   var letter = "";
   var remaining = colIndex;
@@ -15,14 +17,6 @@ function getColumnLetter(colIndex) {
     remaining = Math.floor(remaining / 26) - 1;
   } while (remaining >= 0);
   return letter;
-}
-
-function escapeFormulaText(text) {
-  return text.replace(/"/g, '""');
-}
-
-function buildConcatFormula(firstColLetter, secondColLetter, connector) {
-  return buildNConcatFormula([firstColLetter, secondColLetter], connector);
 }
 
 Office.onReady(function (info) {
@@ -34,14 +28,13 @@ Office.onReady(function (info) {
     connectorInput.focus();
 
     // 按钮点击触发执行
-    executeBtn.addEventListener("click", function() {
+    executeBtn.addEventListener("click", function () {
       runConcat();
     });
   }
 });
 
 function runConcat() {
-  var statusEl = document.getElementById("status");
   var connectorInput = document.getElementById("connector");
   var executeBtn = document.getElementById("executeBtn");
   var connector = connectorInput.value || "_";
@@ -100,7 +93,14 @@ function runConcat() {
         if (colCount > 3) {
           var startColLetter = getColumnLetter(colIndex);
           var endColLetter = getColumnLetter(colIndex + colCount - 1);
-          var confirmMsg = "将连接第 " + startColLetter + " 列到第 " + endColLetter + " 列，使用连接符【" + connector + "】";
+          var confirmMsg =
+            "将连接第 " +
+            startColLetter +
+            " 列到第 " +
+            endColLetter +
+            " 列，使用连接符【" +
+            connector +
+            "】";
           if (!window.confirm(confirmMsg)) {
             executeBtn.disabled = false;
             setStatus("状态：等待操作...", "idle");
@@ -114,25 +114,28 @@ function runConcat() {
           .getRange(targetColLetter + ":" + targetColLetter)
           .insert(Excel.InsertShiftDirection.right);
         return context.sync().then(function () {
-          var formula = buildNConcatFormula(columns, connector);
+          var formula = concatUtils.buildNConcatFormula(columns, connector);
 
           var startCell = worksheet.getRange(targetColLetter + "1");
           startCell.formulas = [[formula]];
-          return context.sync().then(function () {
-            if (rowCount > 1) {
-              var fillRange = worksheet.getRange(
-                targetColLetter + "1:" + targetColLetter + rowCount
+          return context
+            .sync()
+            .then(function () {
+              if (rowCount > 1) {
+                var fillRange = worksheet.getRange(
+                  targetColLetter + "1:" + targetColLetter + rowCount
+                );
+                startCell.autoFill(fillRange, Excel.AutoFillType.fillDefault);
+                return context.sync();
+              }
+            })
+            .then(function () {
+              setStatus(
+                "完成! 已在第 " + targetColLetter + " 列写入 " + rowCount + " 行公式",
+                "success"
               );
-              startCell.autoFill(fillRange, Excel.AutoFillType.fillDefault);
-              return context.sync();
-            }
-          }).then(function () {
-            setStatus(
-              "完成! 已在第 " + targetColLetter + " 列写入 " + rowCount + " 行公式",
-              "success"
-            );
-            executeBtn.disabled = false;
-          });
+              executeBtn.disabled = false;
+            });
         });
       });
     });

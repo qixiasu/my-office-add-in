@@ -24,7 +24,7 @@ function parseRangeAddress(address) {
     endCol: end.col,
     endRow: end.row,
     colCount: end.col - start.col + 1,
-    rowCount: end.row - start.row + 1
+    rowCount: end.row - start.row + 1,
   };
 }
 
@@ -61,7 +61,17 @@ function buildColRange(parsed, colIndex) {
 }
 
 function buildIndexMatchFormula(lookupCellRef, lookupColRange, returnColRange, matchMode) {
-  return "=INDEX(" + returnColRange + ", MATCH(" + lookupCellRef + ", " + lookupColRange + ", " + matchMode + "))";
+  return (
+    "=INDEX(" +
+    returnColRange +
+    ", MATCH(" +
+    lookupCellRef +
+    ", " +
+    lookupColRange +
+    ", " +
+    matchMode +
+    "))"
+  );
 }
 
 function staticLookup(lookupValues, lookupTable, matchColIndex, returnColIndices, matchMode) {
@@ -141,5 +151,5 @@ module.exports = {
   parseCellRef: parseCellRef,
   buildColRange: buildColRange,
   buildIndexMatchFormula: buildIndexMatchFormula,
-  staticLookup: staticLookup
+  staticLookup: staticLookup,
 };
