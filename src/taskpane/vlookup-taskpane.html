@@ -1,0 +1,136 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>增强查找</title>
+
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
+
+    <!-- Template styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+    <link href="vlookup-taskpane.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+    <div class="vlookup-container">
+        <!-- Title with SVG icon -->
+        <h1 class="vlookup-title">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#0078d4">
+                <path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zm0 10.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm.75-4.25v2.5l2 1.25-.75 1.25-2.5-1.5V8.25h1.25z"/>
+            </svg>
+            增强查找
+        </h1>
+
+        <!-- Guide card -->
+        <div class="guide-card">
+            <p>用 INDEX/MATCH 一次完成多列查找，匹配列可在任意位置，返回列可自由选择</p>
+        </div>
+
+        <!-- Form -->
+        <form id="vlookupForm">
+            <!-- 查找值区域 -->
+            <div class="vlookup-form-group">
+                <label class="vlookup-label">查找值区域</label>
+                <div class="vlookup-input-row">
+                    <input type="text" id="lookupValue" class="vlookup-input" readonly placeholder="选择查找值单元格或区域" />
+                    <button type="button" id="refreshLookupValue" class="vlookup-btn">刷新选择</button>
+                </div>
+            </div>
+
+            <!-- 查找表区域 -->
+            <div class="vlookup-form-group">
+                <label class="vlookup-label">查找表区域</label>
+                <div class="vlookup-input-row">
+                    <input type="text" id="lookupTable" class="vlookup-input" readonly placeholder="选择查找表区域" />
+                    <button type="button" id="refreshLookupTable" class="vlookup-btn">刷新选择</button>
+                </div>
+            </div>
+
+            <!-- 表头行号 -->
+            <div class="vlookup-form-group">
+                <label class="vlookup-label">表头行号</label>
+                <div class="vlookup-input-row">
+                    <input type="number" id="headerRow" class="vlookup-input" value="1" min="1" style="width: 80px;" />
+                    <button type="button" id="readHeaders" class="vlookup-btn">读取表头</button>
+                </div>
+            </div>
+
+            <!-- 匹配列 -->
+            <div class="vlookup-form-group">
+                <label class="vlookup-label">匹配列</label>
+                <select id="matchColumn" class="vlookup-input">
+                    <option value="">-- 请先选择查找表并读取表头 --</option>
+                </select>
+            </div>
+
+            <!-- 返回列 -->
+            <div class="vlookup-form-group">
+                <label class="vlookup-section-title">返回列</label>
+                <div class="vlookup-input-row" style="margin-bottom: 12px;">
+                    <button type="button" id="selectAllColumns" class="vlookup-btn">全选</button>
+                    <button type="button" id="deselectAllColumns" class="vlookup-btn">取消全选</button>
+                </div>
+                <div id="returnColumns" class="vlookup-checkbox-group">
+                    <span class="vlookup-label">-- 请先选择查找表并读取表头 --</span>
+                </div>
+            </div>
+
+            <!-- 匹配模式 -->
+            <div class="vlookup-form-group">
+                <label class="vlookup-section-title">匹配模式</label>
+                <div class="vlookup-radio-group">
+                    <label class="vlookup-checkbox-group">
+                        <input type="radio" name="matchMode" value="exact" checked />
+                        <span>精确匹配</span>
+                    </label>
+                    <label class="vlookup-checkbox-group">
+                        <input type="radio" name="matchMode" value="approximate" />
+                        <span>近似匹配</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 输出类型 -->
+            <div class="vlookup-form-group">
+                <label class="vlookup-section-title">输出类型</label>
+                <div class="vlookup-radio-group">
+                    <label class="vlookup-checkbox-group">
+                        <input type="radio" name="outputType" value="formula" checked />
+                        <span>公式</span>
+                    </label>
+                    <label class="vlookup-checkbox-group">
+                        <input type="radio" name="outputType" value="static" />
+                        <span>静态值</span>
+                    </label>
+                </div>
+            </div>
+        </form>
+
+        <!-- Preview section (hidden by default) -->
+        <div id="vlookupPreview" class="vlookup-preview">
+            <table id="previewTable">
+                <!-- Preview content will be populated by JavaScript -->
+            </table>
+        </div>
+
+        <!-- Button row -->
+        <div class="vlookup-btn-row">
+            <button type="button" id="cancelBtn" class="vlookup-button vlookup-button--secondary">取消</button>
+            <button type="button" id="executeBtn" class="vlookup-button vlookup-button--primary" disabled>执行查找</button>
+        </div>
+
+        <!-- Status message -->
+        <div id="statusMessage" class="status-message status-idle">状态：等待操作...</div>
+    </div>
+</body>
+
+</html>
