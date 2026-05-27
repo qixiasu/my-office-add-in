@@ -59,6 +59,10 @@
   box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
 }
 
+.vlookup-input--number {
+  width: 100px;
+}
+
 .vlookup-input-row {
   display: flex;
   gap: 8px;
@@ -93,6 +97,18 @@
 
 .vlookup-radio-group input[type="radio"] {
   accent-color: #0078d4;
+}
+
+.vlookup-radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.vlookup-btn-group {
+  margin-bottom: 12px;
 }
 
 .vlookup-preview {

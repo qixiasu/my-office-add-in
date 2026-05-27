@@ -39,7 +39,7 @@
         <form id="vlookupForm">
             <!-- 查找值区域 -->
             <div class="vlookup-form-group">
-                <label class="vlookup-label">查找值区域</label>
+                <label for="lookupValue" class="vlookup-label">查找值区域</label>
                 <div class="vlookup-input-row">
                     <input type="text" id="lookupValue" class="vlookup-input" readonly placeholder="选择查找值单元格或区域" />
                     <button type="button" id="refreshLookupValue" class="vlookup-btn">刷新选择</button>
@@ -48,7 +48,7 @@
 
             <!-- 查找表区域 -->
             <div class="vlookup-form-group">
-                <label class="vlookup-label">查找表区域</label>
+                <label for="lookupTable" class="vlookup-label">查找表区域</label>
                 <div class="vlookup-input-row">
                     <input type="text" id="lookupTable" class="vlookup-input" readonly placeholder="选择查找表区域" />
                     <button type="button" id="refreshLookupTable" class="vlookup-btn">刷新选择</button>
@@ -57,16 +57,16 @@
 
             <!-- 表头行号 -->
             <div class="vlookup-form-group">
-                <label class="vlookup-label">表头行号</label>
+                <label for="headerRow" class="vlookup-label">表头行号</label>
                 <div class="vlookup-input-row">
-                    <input type="number" id="headerRow" class="vlookup-input" value="1" min="1" style="width: 80px;" />
+                    <input type="number" id="headerRow" class="vlookup-input vlookup-input--number" value="1" min="1" />
                     <button type="button" id="readHeaders" class="vlookup-btn">读取表头</button>
                 </div>
             </div>
 
             <!-- 匹配列 -->
             <div class="vlookup-form-group">
-                <label class="vlookup-label">匹配列</label>
+                <label for="matchColumn" class="vlookup-label">匹配列</label>
                 <select id="matchColumn" class="vlookup-input">
                     <option value="">-- 请先选择查找表并读取表头 --</option>
                 </select>
@@ -74,8 +74,8 @@
 
             <!-- 返回列 -->
             <div class="vlookup-form-group">
-                <label class="vlookup-section-title">返回列</label>
-                <div class="vlookup-input-row" style="margin-bottom: 12px;">
+                <span class="vlookup-section-title">返回列</span>
+                <div class="vlookup-input-row vlookup-btn-group">
                     <button type="button" id="selectAllColumns" class="vlookup-btn">全选</button>
                     <button type="button" id="deselectAllColumns" class="vlookup-btn">取消全选</button>
                 </div>
@@ -86,13 +86,13 @@
 
             <!-- 匹配模式 -->
             <div class="vlookup-form-group">
-                <label class="vlookup-section-title">匹配模式</label>
+                <span class="vlookup-section-title">匹配模式</span>
                 <div class="vlookup-radio-group">
-                    <label class="vlookup-checkbox-group">
+                    <label class="vlookup-radio-label">
                         <input type="radio" name="matchMode" value="exact" checked />
                         <span>精确匹配</span>
                     </label>
-                    <label class="vlookup-checkbox-group">
+                    <label class="vlookup-radio-label">
                         <input type="radio" name="matchMode" value="approximate" />
                         <span>近似匹配</span>
                     </label>
@@ -101,13 +101,13 @@
 
             <!-- 输出类型 -->
             <div class="vlookup-form-group">
-                <label class="vlookup-section-title">输出类型</label>
+                <span class="vlookup-section-title">输出类型</span>
                 <div class="vlookup-radio-group">
-                    <label class="vlookup-checkbox-group">
+                    <label class="vlookup-radio-label">
                         <input type="radio" name="outputType" value="formula" checked />
                         <span>公式</span>
                     </label>
-                    <label class="vlookup-checkbox-group">
+                    <label class="vlookup-radio-label">
                         <input type="radio" name="outputType" value="static" />
                         <span>静态值</span>
                     </label>
