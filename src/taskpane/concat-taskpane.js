@@ -22,13 +22,7 @@ function escapeFormulaText(text) {
 }
 
 function buildConcatFormula(firstColLetter, secondColLetter, connector) {
-  var escaped = escapeFormulaText(connector);
-  return (
-    "=IF(" +
-    firstColLetter + "1&" + secondColLetter + '1="","",' +
-    firstColLetter + '1&"' + escaped + '"&' + secondColLetter +
-    "1)"
-  );
+  return buildNConcatFormula([firstColLetter, secondColLetter], connector);
 }
 
 Office.onReady(function (info) {
@@ -72,10 +66,15 @@ function runConcat() {
         return;
       }
 
-      var worksheet = context.workbook.worksheets.getActiveWorksheet();
+      var colCount = range.columnCount;
       var colIndex = range.columnIndex;
-      var firstColLetter = getColumnLetter(colIndex);
-      var secondColLetter = getColumnLetter(colIndex + 1);
+      var worksheet = context.workbook.worksheets.getActiveWorksheet();
+
+      // Build columns array: [getColumnLetter(colIndex), getColumnLetter(colIndex+1), ...]
+      var columns = [];
+      for (var i = 0; i < colCount; i++) {
+        columns.push(getColumnLetter(colIndex + i));
+      }
 
       var usedInSelection = range.getUsedRange();
       usedInSelection.load("rowCount");
@@ -97,12 +96,25 @@ function runConcat() {
           return;
         }
 
-        var targetColLetter = getColumnLetter(colIndex + 2);
+        // 超过3列显示确认框
+        if (colCount > 3) {
+          var startColLetter = getColumnLetter(colIndex);
+          var endColLetter = getColumnLetter(colIndex + colCount - 1);
+          var confirmMsg = "将连接第 " + startColLetter + " 列到第 " + endColLetter + " 列，使用连接符【" + connector + "】";
+          if (!window.confirm(confirmMsg)) {
+            executeBtn.disabled = false;
+            setStatus("状态：等待操作...", "idle");
+            return;
+          }
+        }
+
+        // 目标列插入到所选范围最右侧
+        var targetColLetter = getColumnLetter(colIndex + colCount);
         worksheet
           .getRange(targetColLetter + ":" + targetColLetter)
           .insert(Excel.InsertShiftDirection.right);
         return context.sync().then(function () {
-          var formula = buildConcatFormula(firstColLetter, secondColLetter, connector);
+          var formula = buildNConcatFormula(columns, connector);
 
           var startCell = worksheet.getRange(targetColLetter + "1");
           startCell.formulas = [[formula]];
