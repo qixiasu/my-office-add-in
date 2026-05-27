@@ -76,8 +76,9 @@
                     <bt:Image size="32" resid="Icon.32x32"/>
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>importCSV</FunctionName>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>CSVImportTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="CSVImportTaskpane.Url"/>
                   </Action>
                 </Control>
                 <Control xsi:type="Button" id="EnhancedVlookupButton">
@@ -115,6 +116,7 @@
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
         <bt:Url id="ConcatTaskpane.Url" DefaultValue="https://localhost:3000/concat-taskpane.html"/>
+        <bt:Url id="CSVImportTaskpane.Url" DefaultValue="https://localhost:3000/csv-import-taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="CustomTab.Label" DefaultValue="我的工具"/>
