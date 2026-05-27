@@ -92,8 +92,9 @@
                     <bt:Image size="32" resid="Icon.32x32"/>
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>enhancedVlookup</FunctionName>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>VlookupTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="VlookupTaskpane.Url"/>
                   </Action>
                 </Control>
               </Group>
@@ -117,6 +118,7 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
         <bt:Url id="ConcatTaskpane.Url" DefaultValue="https://localhost:3000/concat-taskpane.html"/>
         <bt:Url id="CSVImportTaskpane.Url" DefaultValue="https://localhost:3000/csv-import-taskpane.html"/>
+        <bt:Url id="VlookupTaskpane.Url" DefaultValue="https://localhost:3000/vlookup-taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="CustomTab.Label" DefaultValue="我的工具"/>
