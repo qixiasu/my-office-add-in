@@ -21,6 +21,7 @@ module.exports = async (env, options) => {
       taskpane: ["./src/taskpane/taskpane.js", "./src/taskpane/taskpane.html"],
       commands: "./src/commands/commands.js",
       "concat-taskpane": ["./src/taskpane/concat-taskpane.js", "./src/taskpane/concat-taskpane.html"],
+      "csv-import-taskpane": ["./src/taskpane/csv-import-taskpane.js", "./src/taskpane/csv-import-taskpane.html"],
     },
     output: {
       clean: true,
@@ -94,6 +95,11 @@ module.exports = async (env, options) => {
         filename: "concat-taskpane.html",
         template: "./src/taskpane/concat-taskpane.html",
         chunks: ["polyfill", "concat-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "csv-import-taskpane.html",
+        template: "./src/taskpane/csv-import-taskpane.html",
+        chunks: ["polyfill", "csv-import-taskpane"],
       }),
     ],
     devServer: {
