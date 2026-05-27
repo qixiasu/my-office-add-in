@@ -126,6 +126,8 @@ function runConcat() {
           return;
         }
 
+        var targetColLetter = getColumnLetter(colIndex + colCount);
+
         // 超过3列显示确认框
         if (colCount > 3) {
           var startColLetter = getColumnLetter(colIndex);
@@ -139,20 +141,26 @@ function runConcat() {
             connector +
             "】";
 
-          showConfirmBox(confirmMsg).then(function (confirmed) {
+          // 显示确认框并等待用户响应
+          return showConfirmBox(confirmMsg).then(function (confirmed) {
             if (!confirmed) {
               executeBtn.disabled = false;
               setStatus("状态：等待操作...", "idle");
               return;
             }
-            executeConcat(context, columns, colIndex, colCount, connector, worksheet, rowCount);
+            // 用户确认后，重新启动 Excel.run 执行连接
+            return executeConcatWithConfirm(
+              columns,
+              targetColLetter,
+              connector,
+              rowCount,
+              executeBtn
+            );
           });
-
-          return;
         }
 
         // 直接执行
-        executeConcat(context, columns, colIndex, colCount, connector, worksheet, rowCount);
+        return executeConcatDirect(columns, targetColLetter, connector, rowCount, executeBtn);
       });
     });
   }).catch(function (error) {
@@ -161,30 +169,41 @@ function runConcat() {
   });
 }
 
-function executeConcat(context, columns, colIndex, colCount, connector, worksheet, rowCount) {
-  var executeBtn = document.getElementById("executeBtn");
-  var targetColLetter = getColumnLetter(colIndex + colCount);
+function executeConcatDirect(columns, targetColLetter, connector, rowCount, executeBtn) {
+  return Excel.run(function (context) {
+    var worksheet = context.workbook.worksheets.getActiveWorksheet();
 
-  worksheet
-    .getRange(targetColLetter + ":" + targetColLetter)
-    .insert(Excel.InsertShiftDirection.right);
-  return context.sync().then(function () {
-    var formula = concatUtils.buildNConcatFormula(columns, connector);
+    worksheet
+      .getRange(targetColLetter + ":" + targetColLetter)
+      .insert(Excel.InsertShiftDirection.right);
+    return context.sync().then(function () {
+      var formula = concatUtils.buildNConcatFormula(columns, connector);
 
-    var startCell = worksheet.getRange(targetColLetter + "1");
-    startCell.formulas = [[formula]];
-    return context
-      .sync()
-      .then(function () {
-        if (rowCount > 1) {
-          var fillRange = worksheet.getRange(targetColLetter + "1:" + targetColLetter + rowCount);
-          startCell.autoFill(fillRange, Excel.AutoFillType.fillDefault);
-          return context.sync();
-        }
-      })
-      .then(function () {
-        setStatus("完成! 已在第 " + targetColLetter + " 列写入 " + rowCount + " 行公式", "success");
-        executeBtn.disabled = false;
-      });
+      var startCell = worksheet.getRange(targetColLetter + "1");
+      startCell.formulas = [[formula]];
+      return context
+        .sync()
+        .then(function () {
+          if (rowCount > 1) {
+            var fillRange = worksheet.getRange(targetColLetter + "1:" + targetColLetter + rowCount);
+            startCell.autoFill(fillRange, Excel.AutoFillType.fillDefault);
+            return context.sync();
+          }
+        })
+        .then(function () {
+          setStatus(
+            "完成! 已在第 " + targetColLetter + " 列写入 " + rowCount + " 行公式",
+            "success"
+          );
+          executeBtn.disabled = false;
+        });
+    });
+  }).catch(function (error) {
+    setStatus("错误: " + error.message, "error");
+    executeBtn.disabled = false;
   });
+}
+
+function executeConcatWithConfirm(columns, targetColLetter, connector, rowCount, executeBtn) {
+  return executeConcatDirect(columns, targetColLetter, connector, rowCount, executeBtn);
 }
