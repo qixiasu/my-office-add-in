@@ -126,3 +126,44 @@
   border-color: #999;
   cursor: not-allowed;
 }
+
+/* Confirm box styles */
+.confirm-box {
+  margin-top: 16px;
+  padding: 16px;
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 6px;
+}
+
+.confirm-msg {
+  font-size: 13px;
+  color: #856404;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.confirm-buttons {
+  margin-top: 12px;
+  text-align: right;
+}
+
+.confirm-buttons .concat-button + .concat-button {
+  margin-left: 8px;
+}
+
+.concat-button--small {
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+.concat-button--secondary {
+  background: transparent;
+  color: #666;
+  border-color: #999;
+}
+
+.concat-button--secondary:hover {
+  background: #f0f0f0;
+  color: #333;
+}
