@@ -85,14 +85,14 @@ function runFillSeries() {
         sequence.push(start + i * step);
       }
 
-      // Convert to 2D array (column-major order: index = c * rowCount + r)
+      // Convert to 2D array (row-major: index = c * rowCount + r)
       var result = [];
-      for (var c = 0; c < columnCount; c++) {
-        var col = [];
-        for (var r = 0; r < rowCount; r++) {
-          col.push(sequence[c * rowCount + r]);
+      for (var r = 0; r < rowCount; r++) {
+        var row = [];
+        for (var c = 0; c < columnCount; c++) {
+          row.push(sequence[r * columnCount + c]);
         }
-        result.push(col);
+        result.push(row);
       }
 
       // Write to range
