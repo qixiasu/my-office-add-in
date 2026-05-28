@@ -39,7 +39,12 @@ function initEventListeners() {
   };
 
   document.getElementById("cancelBtn").onclick = function () {
-    Office.context.ui.close();
+    try {
+      Office.ui.close();
+    } catch (e) {
+      // Office.ui.close() may not be available in all Office hosts
+      console.warn("Cannot close taskpane: " + e.message);
+    }
   };
 
   document.getElementById("executeBtn").onclick = executeLookup;
