@@ -281,6 +281,25 @@ function setStatus(message, type) {
   statusEl.className = "status-message status-" + (type || "idle");
 }
 
+function updateProgressUI(percent, completed, total) {
+  var statusEl = document.getElementById("progressStatus");
+  var detailEl = document.getElementById("progressDetail");
+  var barEl = document.getElementById("progressBarFill");
+
+  if (statusEl) {
+    statusEl.textContent = "处理中... " + percent + "%";
+    statusEl.className = "status-message status-loading";
+  }
+
+  if (barEl) {
+    barEl.style.width = percent + "%";
+  }
+
+  if (detailEl && total > 0) {
+    detailEl.textContent = "已完成 " + completed + " / " + total + " 行";
+  }
+}
+
 function validateForm() {
   var tableInput = document.getElementById("lookupTable").value;
   var valueInput = document.getElementById("lookupValue").value;
@@ -307,7 +326,14 @@ function executeLookup() {
 }
 
 function performLookup(config) {
-  setStatus("处理中...", "info");
+  var executeBtn = document.getElementById("executeBtn");
+  var progressContainer = document.getElementById("progressContainer");
+  var statusEl = document.getElementById("statusMessage");
+
+  // 禁用按钮，显示进度条
+  executeBtn.disabled = true;
+  if (progressContainer) progressContainer.style.display = "block";
+  statusEl.style.display = "none";
 
   Excel.run(async function (context) {
     var BATCH_SIZE = 10000;
@@ -387,6 +413,15 @@ function performLookup(config) {
     }
 
     if (dataRowCount < LARGE_DATA_THRESHOLD) {
+      // 小数据模式：启动进度条模拟
+      var totalRows = dataRowCount;
+      var progressStep = 0;
+      var progressInterval = setInterval(function() {
+        progressStep = Math.min(progressStep + 10, 90);
+        var percent = progressStep;
+        updateProgressUI(percent, Math.round(totalRows * percent / 100), totalRows);
+      }, 200);
+
       // Small data: single read -> staticLookup -> single write
       // 整列选择时 endRow === 1，需要用实际最后一行
       var lvIsFullColumn = lvParsed.endRow === 1;
@@ -508,6 +543,8 @@ function performLookup(config) {
         "完成! 已写入 " + results.length + " 行 x " + returnColCount + " 列静态值",
         "success"
       );
+      clearInterval(progressInterval);
+      updateProgressUI(100, results.length, results.length);
     } else {
       // Large data: batch processing
       var totalRows = dataRowCount;
@@ -567,13 +604,18 @@ function performLookup(config) {
         processedRows += currentBatchSize;
 
         // Update progress status
-        setStatus("处理中... 已完成 " + processedRows + " / " + totalRows + " 行", "info");
+        var percent = Math.round((processedRows / totalRows) * 100);
+        updateProgressUI(percent, processedRows, totalRows);
       }
 
       setStatus("完成! 已写入 " + totalRows + " 行 x " + returnColCount + " 列静态值", "success");
     }
   }).catch(function (error) {
     setStatus("错误: " + error.message, "error");
+  }).finally(function() {
+    executeBtn.disabled = false;
+    if (progressContainer) progressContainer.style.display = "none";
+    statusEl.style.display = "block";
   });
 }
 
