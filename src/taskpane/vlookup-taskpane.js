@@ -159,13 +159,8 @@ function loadTableHeaders() {
     await context.sync();
     console.log("[DEBUG] loadTableHeaders: 表头读取所在工作表:", tableSheet.name);
 
-    var startRow = parsed.startRow;
-    var endRow = parsed.endRow;
-
-    if (headerRow < startRow || headerRow > endRow) {
-      setStatus("表头行号超出范围", "error");
-      return;
-    }
+    // 表头所在行即用户指定的 headerRow，无需用 startRow/endRow 验证
+    // 表头读取位置：选中列 + headerRow 那一行
 
     var headerRange = tableSheet.getRange(
       getColumnLetter(parsed.startCol) +
@@ -178,43 +173,21 @@ function loadTableHeaders() {
     await context.sync();
 
     var headers = headerRange.values[0] || [];
+    console.log("[DEBUG] loadTableHeaders: 表头行 =", headerRow, "表头内容 =", JSON.stringify(headers));
 
-    // 读取查找表数据（整列实际数据，不是解析出来的范围）
-    // 使用 headerRow 作为起始行，读取到工作表实际最后一行
-    var usedRange = tableSheet.getUsedRange();
-    usedRange.load("rowCount");
+    // 数据从 headerRow + 1 行开始，到选中列的实际已用区域结束
+    var dataStartRow = headerRow + 1;
+    // 先获取工作表级别的 usedRange 作为粗略结尾行（只用于确定读取上界）
+    var sheetUsedRange = tableSheet.getUsedRange();
+    sheetUsedRange.load("rowCount");
     await context.sync();
-
-    var actualLastRow = usedRange.rowCount;
-    console.log("[DEBUG] loadTableHeaders: usedRange rowCount =", actualLastRow);
-
-    // 如果 endRow 小于实际最后一行，用实际最后一行
-    var dataEndRow = endRow < actualLastRow ? actualLastRow : endRow;
-    console.log("[DEBUG] loadTableHeaders: dataEndRow =", dataEndRow);
-
-    // 判断查找表范围是否是整列（endRow === 1 表示可能是整列选择）
-    var isFullColumn = endRow === 1 && actualLastRow > 1;
-    if (isFullColumn) {
-      dataEndRow = actualLastRow;
-      console.log("[DEBUG] loadTableHeaders: 检测到整列选择，使用实际最后一行", dataEndRow);
-    }
-
-    // 如果 headerRow 在所选范围内，跳过 headerRow 这一行（不作为数据）
-    var dataReadStartRow = startRow;
-    if (headerRow >= startRow && headerRow < dataEndRow) {
-      dataReadStartRow = headerRow + 1;
-      console.log(
-        "[DEBUG] loadTableHeaders: headerRow",
-        headerRow,
-        "在范围内，跳过表头行，从",
-        dataReadStartRow,
-        "开始读取"
-      );
-    }
+    var roughEndRow = sheetUsedRange.rowCount;
+    var dataEndRow = Math.max(dataStartRow, roughEndRow);
+    console.log("[DEBUG] loadTableHeaders: 数据行范围 =", dataStartRow, "-", dataEndRow);
 
     var dataRange = tableSheet.getRange(
       getColumnLetter(parsed.startCol) +
-        dataReadStartRow +
+        dataStartRow +
         ":" +
         getColumnLetter(parsed.endCol) +
         dataEndRow
@@ -222,12 +195,27 @@ function loadTableHeaders() {
     dataRange.load("values");
     await context.sync();
 
-    g_lookupTableData = dataRange.values;
+    // 过滤掉完全为空的行（避免其他列的数据导致读入多余的空白行或脏数据）
+    var allRows = dataRange.values;
+    var filteredRows = [];
+    for (var r = 0; r < allRows.length; r++) {
+      var row = allRows[r];
+      var hasContent = false;
+      for (var c = 0; c < row.length; c++) {
+        if (row[c] !== null && row[c] !== undefined && row[c] !== "") {
+          hasContent = true;
+          break;
+        }
+      }
+      if (hasContent) {
+        filteredRows.push(row);
+      }
+    }
+    g_lookupTableData = filteredRows;
     console.log(
-      "[DEBUG] loadTableHeaders: g_lookupTableData 行数=",
-      g_lookupTableData.length,
-      "列数=",
-      g_lookupTableData[0] ? g_lookupTableData[0].length : 0
+      "[DEBUG] loadTableHeaders: 原始行数 =", allRows.length,
+      "过滤后行数 =", filteredRows.length,
+      "列数 =", filteredRows[0] ? filteredRows[0].length : 0
     );
 
     refreshColumns();
@@ -444,13 +432,11 @@ function performLookup(config) {
 
       console.log("[DEBUG] dataRange.values 行数:", dataRange.values.length);
 
-      // 跳过表头行：如果 lookupValue 从 headerRow 开始，第一行是表头不参与查找
-      var lvDataStartRow = lvParsed.startRow;
-      var lvFirstRowIsHeader = lvParsed.startRow === config.headerRow;
-      if (lvFirstRowIsHeader) {
-        lvDataStartRow = lvParsed.startRow + 1;
-        console.log("[DEBUG] lookupValue 第一行是表头，跳过，从行", lvDataStartRow, "开始");
-      }
+      // 查找值区域的第一行始终视为表头，跳过不参与查找
+      // （与查找表的 headerRow 无关，查找值区域有自己独立的表头行）
+      var lvDataStartRow = lvParsed.startRow + 1;
+      var lookupValuesStartRow = lvDataStartRow;
+      console.log("[DEBUG] 查找值区域起始行", lvParsed.startRow, "，跳过第1行表头，数据从行", lvDataStartRow, "开始");
 
       // Build lookup index once for reuse
       var lookupIndex = null;
@@ -459,7 +445,6 @@ function performLookup(config) {
       }
 
       var lookupValues = [];
-      var lookupValuesStartRow = lvDataStartRow;
       for (var j = lvDataStartRow - lvParsed.startRow; j < dataRange.values.length; j++) {
         lookupValues.push(dataRange.values[j][0]);
       }
@@ -507,11 +492,10 @@ function performLookup(config) {
       lvWorksheet.activate();
       await context.sync();
 
-      // 写入表头（从查找表各返回列的表头复制过来）
+      // 写入表头（从查找表各返回列的表头复制过来，写入到查找值区域起始行）
       var headerValues = [];
       for (var hc = 0; hc < returnColCount; hc++) {
         var returnColIdx = config.returnColIndices[hc];
-        // 从查找表所在工作表读取表头
         var headerCell = ltWorksheet.getRange(
           getColumnLetter(ltParsed.startCol + returnColIdx) +
             config.headerRow +
@@ -523,19 +507,17 @@ function performLookup(config) {
         await context.sync();
         headerValues.push(headerCell.values[0][0]);
       }
-      if (lvFirstRowIsHeader) {
-        // 写入表头行
-        var headerRange = worksheet.getRange(
-          getColumnLetter(insertPos) +
-            config.headerRow +
-            ":" +
-            getColumnLetter(insertPos + returnColCount - 1) +
-            config.headerRow
-        );
-        headerRange.values = [headerValues];
-        await context.sync();
-        console.log("[DEBUG] 已写入表头:", JSON.stringify(headerValues));
-      }
+      var headerRowTarget = lvParsed.startRow;
+      var headerRange = worksheet.getRange(
+        getColumnLetter(insertPos) +
+          headerRowTarget +
+          ":" +
+          getColumnLetter(insertPos + returnColCount - 1) +
+          headerRowTarget
+      );
+      headerRange.values = [headerValues];
+      await context.sync();
+      console.log("[DEBUG] 已写入表头:", JSON.stringify(headerValues));
 
       var targetRange = worksheet.getRange(
         getColumnLetter(insertPos) +
