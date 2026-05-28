@@ -213,3 +213,14 @@
   border: 1px solid #ffeeba;
   color: #856404;
 }
+
+#progressContainer {
+  margin: 12px 0;
+}
+
+#progressStatus {
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: #0057b7;
+}
