@@ -139,16 +139,40 @@ function staticLookup(
         }
       }
     } else {
-      // Approximate match: find largest value <= lookup
+      // Binary search: find largest value <= lookup
       // Assumes lookupTable is sorted ascending on match column (same as Excel VLOOKUP)
       var bestRow = -1;
-      for (var m = 0; m < lookupTable.length; m++) {
-        var tableVal = lookupTable[m][matchColIndex];
-        if (tableVal === null || tableVal === undefined) continue;
-        if (Number(tableVal) <= Number(val)) {
-          bestRow = m;
+      var lo = 0;
+      var hi = lookupTable.length - 1;
+
+      while (lo <= hi) {
+        var mid = Math.floor((lo + hi) / 2);
+        var tableVal = lookupTable[mid][matchColIndex];
+
+        if (tableVal === null || tableVal === undefined) {
+          // Search right for the next valid value to determine direction
+          var foundValid = false;
+          for (var scan = mid + 1; scan <= hi; scan++) {
+            var scanVal = lookupTable[scan][matchColIndex];
+            if (scanVal !== null && scanVal !== undefined) {
+              if (Number(scanVal) <= Number(val)) {
+                bestRow = scan;
+                lo = scan + 1;
+              } else {
+                hi = mid - 1;
+              }
+              foundValid = true;
+              break;
+            }
+          }
+          if (!foundValid) {
+            hi = mid - 1;
+          }
+        } else if (Number(tableVal) <= Number(val)) {
+          bestRow = mid;
+          lo = mid + 1;
         } else {
-          break;
+          hi = mid - 1;
         }
       }
       if (bestRow >= 0) {

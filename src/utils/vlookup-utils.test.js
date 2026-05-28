@@ -207,6 +207,50 @@ describe("staticLookup", function () {
 
     expect(result).toEqual([["#N/A"]]);
   });
+
+  it("approximate match with binary search returns correct results on large table", function () {
+    var numTable = [];
+    for (var n = 0; n < 1000; n++) {
+      numTable.push([n * 10, "val_" + n]);
+    }
+
+    var lookupValues = [15, 25, 95, 105, 555, 9995];
+    var result = staticLookup(lookupValues, numTable, 0, [1], 1);
+
+    // 15 -> largest <= 15 is 10 -> val_1
+    // 25 -> largest <= 25 is 20 -> val_2
+    // 95 -> largest <= 95 is 90 -> val_9
+    // 105 -> largest <= 105 is 100 -> val_10
+    // 555 -> largest <= 555 is 550 -> val_55
+    // 9995 -> largest <= 9995 is 9990 -> val_999
+    expect(result).toEqual([
+      ["val_1"],
+      ["val_2"],
+      ["val_9"],
+      ["val_10"],
+      ["val_55"],
+      ["val_999"],
+    ]);
+  });
+
+  it("approximate match returns defaultValue when all values > lookup", function () {
+    var numTable = [
+      [100, "low"],
+      [200, "mid"],
+    ];
+    var result = staticLookup([50], numTable, 0, [1], 1);
+    expect(result).toEqual([["#N/A"]]);
+  });
+
+  it("approximate match works with nulls in match column (skipped)", function () {
+    var numTable = [
+      [null, "skip"],
+      [100, "low"],
+      [200, "mid"],
+    ];
+    var result = staticLookup([150], numTable, 0, [1], 1);
+    expect(result).toEqual([["low"]]);
+  });
 });
 
 describe("buildLookupIndex", function () {
