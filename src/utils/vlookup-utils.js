@@ -93,7 +93,8 @@ function staticLookup(
   matchColIndex,
   returnColIndices,
   matchMode,
-  defaultValue
+  defaultValue,
+  indexCache
 ) {
   if (defaultValue === undefined || defaultValue === null) {
     defaultValue = "#N/A";
@@ -103,13 +104,10 @@ function staticLookup(
 
   var index = {};
   if (matchMode === 0) {
-    for (var r = 0; r < lookupTable.length; r++) {
-      var key = lookupTable[r][matchColIndex];
-      if (key === null || key === undefined) {
-        key = "";
-      }
-      key = String(key);
-      index[key] = r;
+    if (indexCache) {
+      index = indexCache;
+    } else {
+      index = buildLookupIndex(lookupTable, matchColIndex);
     }
   }
 

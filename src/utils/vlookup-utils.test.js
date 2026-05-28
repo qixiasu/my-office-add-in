@@ -168,6 +168,45 @@ describe("staticLookup", function () {
     var result = staticLookup([150, 250, 350], numTable, 0, [1], 1);
     expect(result).toEqual([["low"], ["mid"], ["high"]]);
   });
+
+  it("uses indexCache when provided, giving same results", function () {
+    var table = [
+      ["张三", "研发部", "A001", 8000],
+      ["李四", "市场部", "A002", 6000],
+      ["王五", "财务部", "A003", 7000],
+    ];
+    var indexCache = buildLookupIndex(table, 0);
+
+    var resultWithCache = staticLookup(["张三", "李四", "王五"], table, 0, [1, 3], 0, "#N/A", indexCache);
+    var resultWithoutCache = staticLookup(["张三", "李四", "王五"], table, 0, [1, 3], 0, "#N/A");
+
+    expect(resultWithCache).toEqual(resultWithoutCache);
+  });
+
+  it("ignores indexCache in approximate match mode", function () {
+    var numTable = [
+      [100, "low"],
+      [200, "mid"],
+      [300, "high"],
+    ];
+    var indexCache = buildLookupIndex(numTable, 0);
+
+    var result = staticLookup([150, 250, 350], numTable, 0, [1], 1, "#N/A", indexCache);
+
+    expect(result).toEqual([["low"], ["mid"], ["high"]]);
+  });
+
+  it("works with indexCache when lookup value not found", function () {
+    var table = [
+      ["张三", "研发部"],
+      ["李四", "市场部"],
+    ];
+    var indexCache = buildLookupIndex(table, 0);
+
+    var result = staticLookup(["不存在"], table, 0, [1], 0, "#N/A", indexCache);
+
+    expect(result).toEqual([["#N/A"]]);
+  });
 });
 
 describe("buildLookupIndex", function () {
