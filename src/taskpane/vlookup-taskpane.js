@@ -33,8 +33,6 @@ function initEventListeners() {
     refreshSelection("lookupTable");
   };
 
-  document.getElementById("readHeaders").onclick = readHeaders;
-
   document.getElementById("selectAllColumns").onclick = function () {
     setAllCheckboxes("returnColumns", true);
     validateForm();
@@ -54,6 +52,13 @@ function initEventListeners() {
   var form = document.getElementById("vlookupForm");
   form.addEventListener("change", validateForm);
   form.addEventListener("input", validateForm);
+
+  document.getElementById("headerRow").addEventListener("input", function () {
+    var tableInput = document.getElementById("lookupTable").value;
+    if (tableInput) {
+      loadTableHeaders();
+    }
+  });
 }
 
 function loadInitialSelection() {
@@ -69,6 +74,11 @@ function loadInitialSelection() {
   }).catch(function (error) {
     setStatus("加载选择失败: " + error.message, "error");
   });
+
+  // Auto-load headers if lookupTable has value
+  if (document.getElementById("lookupTable").value) {
+    loadTableHeaders();
+  }
 }
 
 function refreshSelection(target) {
@@ -129,7 +139,7 @@ function refreshColumns() {
   }
 }
 
-function readHeaders() {
+function loadTableHeaders() {
   var tableInput = document.getElementById("lookupTable").value;
   if (!tableInput) {
     setStatus("请先选择查找表区域", "error");

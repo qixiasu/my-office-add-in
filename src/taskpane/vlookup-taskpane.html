@@ -60,7 +60,6 @@
                 <label for="headerRow" class="vlookup-label">表头行号</label>
                 <div class="vlookup-input-row">
                     <input type="number" id="headerRow" class="vlookup-input vlookup-input--number" value="1" min="1" />
-                    <button type="button" id="readHeaders" class="vlookup-btn">读取表头</button>
                 </div>
             </div>
 
@@ -118,7 +117,8 @@
         <!-- Preview section (hidden by default) -->
         <div id="vlookupPreview" class="vlookup-preview">
             <table id="previewTable">
-                <!-- Preview content will be populated by JavaScript -->
+                <thead id="previewHead"></thead>
+                <tbody id="previewBody"></tbody>
             </table>
         </div>
 
