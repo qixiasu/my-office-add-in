@@ -213,6 +213,16 @@
             );
         });
 
+        Office.actions.associate("showFillSeriesPanel", function showFillSeriesPanel(event) {
+            try {
+                Office.addin.showAsTaskpane();
+            } catch (error) {
+                console.error(error);
+            } finally {
+                event.completed();
+            }
+        });
+
     </script>
 </head>
 

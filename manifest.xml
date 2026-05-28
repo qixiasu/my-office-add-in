@@ -81,6 +81,21 @@
                     <SourceLocation resid="VlookupTaskpane.Url"/>
                   </Action>
                 </Control>
+                <Control xsi:type="Button" id="FillSeriesButton">
+                  <Label resid="FillSeriesLabel"/>
+                  <Supertip>
+                    <Title resid="FillSeriesLabel"/>
+                    <Description resid="FillSeriesTooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="FillSeriesIcon.16x16"/>
+                    <bt:Image size="32" resid="FillSeriesIcon.32x32"/>
+                    <bt:Image size="80" resid="FillSeriesIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>showFillSeriesPanel</FunctionName>
+                  </Action>
+                </Control>
               </Group>
               <Label resid="CustomTab.Label"/>
             </CustomTab>
@@ -105,6 +120,9 @@
         <bt:Image id="LookupIcon.16x16" DefaultValue="https://localhost:3000/assets/lookup-16.png"/>
         <bt:Image id="LookupIcon.32x32" DefaultValue="https://localhost:3000/assets/lookup-32.png"/>
         <bt:Image id="LookupIcon.80x80" DefaultValue="https://localhost:3000/assets/lookup-80.png"/>
+        <bt:Image id="FillSeriesIcon.16x16" DefaultValue="https://localhost:3000/assets/fill-series-16.png"/>
+        <bt:Image id="FillSeriesIcon.32x32" DefaultValue="https://localhost:3000/assets/fill-series-32.png"/>
+        <bt:Image id="FillSeriesIcon.80x80" DefaultValue="https://localhost:3000/assets/fill-series-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
@@ -118,11 +136,13 @@
         <bt:String id="ConcatenateButton.Label" DefaultValue="连接列"/>
         <bt:String id="ImportCsvButton.Label" DefaultValue="导入CSV"/>
         <bt:String id="EnhancedVlookupButton.Label" DefaultValue="增强查找"/>
+        <bt:String id="FillSeriesLabel" DefaultValue="填充序列"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
         <bt:String id="ImportCsvButton.Tooltip" DefaultValue="用 UTF-8 编码正确导入 CSV/文本文件，支持自定义分隔符"/>
         <bt:String id="EnhancedVlookupButton.Tooltip" DefaultValue="增强版查找功能：一次配置完成多列 INDEX/MATCH 查找，匹配列可在任意位置"/>
+        <bt:String id="FillSeriesTooltip" DefaultValue="打开填充序列工具面板"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
