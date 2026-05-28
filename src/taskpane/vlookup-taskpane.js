@@ -329,6 +329,7 @@ function performLookup(config) {
   var executeBtn = document.getElementById("executeBtn");
   var progressContainer = document.getElementById("progressContainer");
   var statusEl = document.getElementById("statusMessage");
+  var progressInterval = null;
 
   // 禁用按钮，显示进度条
   executeBtn.disabled = true;
@@ -385,7 +386,7 @@ function performLookup(config) {
       dataColLetter
     );
 
-    var ltParsed = parseRangeAddress(config.lookupTable);
+    ltParsed = parseRangeAddress(config.lookupTable);
     console.log("[DEBUG] lookupTable 地址:", config.lookupTable);
     console.log("[DEBUG] ltParsed:", JSON.stringify(ltParsed));
 
@@ -416,7 +417,7 @@ function performLookup(config) {
       // 小数据模式：启动进度条模拟
       var totalRows = dataRowCount;
       var progressStep = 0;
-      var progressInterval = setInterval(function() {
+      progressInterval = setInterval(function() {
         progressStep = Math.min(progressStep + 10, 90);
         var percent = progressStep;
         updateProgressUI(percent, Math.round(totalRows * percent / 100), totalRows);
