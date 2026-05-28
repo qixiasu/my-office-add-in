@@ -5,12 +5,7 @@
 
 /* global console, document, Excel, Office */
 
-var {
-  buildColRange,
-  buildIndexMatchFormula,
-  staticLookup,
-  parseRangeAddress,
-} = require("../utils/vlookup-utils");
+var { staticLookup, parseRangeAddress } = require("../utils/vlookup-utils");
 
 var { getColumnLetter } = require("../utils/concat-utils");
 
@@ -112,8 +107,8 @@ function refreshColumns() {
   var matchColumnSelect = document.getElementById("matchColumn");
   var returnColumnsDiv = document.getElementById("returnColumns");
 
-  matchColumnSelect.innerHTML = "<option value=\"\">-- 选择匹配列 --</option>";
-  returnColumnsDiv.innerHTML = "<span class=\"vlookup-label\">-- 请先选择查找表并读取表头 --</span>";
+  matchColumnSelect.innerHTML = '<option value="">-- 选择匹配列 --</option>';
+  returnColumnsDiv.innerHTML = '<span class="vlookup-label">-- 请先选择查找表并读取表头 --</span>';
 
   var colCount = parsed.colCount;
   for (var i = 0; i < colCount; i++) {
@@ -179,11 +174,7 @@ function loadTableHeaders() {
     var headers = headerRange.values[0] || [];
 
     var dataRange = sheet.getRange(
-      getColumnLetter(parsed.startCol) +
-        startRow +
-        ":" +
-        getColumnLetter(parsed.endCol) +
-        endRow
+      getColumnLetter(parsed.startCol) + startRow + ":" + getColumnLetter(parsed.endCol) + endRow
     );
     dataRange.load("values");
     await context.sync();
@@ -192,7 +183,6 @@ function loadTableHeaders() {
 
     refreshColumns();
     updateHeaderLabels(headers, parsed);
-    showPreview(headers, g_lookupTableData, headerRow);
 
     setStatus("表头读取成功，共 " + parsed.colCount + " 列", "success");
     validateForm();
@@ -207,50 +197,20 @@ function updateHeaderLabels(headers, parsed) {
   var options = matchColumnSelect.querySelectorAll("option");
 
   for (var i = 1; i < options.length; i++) {
-    var headerName = headers[i - 1] || ("列" + i);
+    var headerName = headers[i - 1] || "列" + i;
     options[i].textContent = headerName + " (列" + i + ")";
   }
 
   var checkboxItems = returnColumnsDiv.querySelectorAll(".vlookup-checkbox-item");
   for (var j = 0; j < checkboxItems.length; j++) {
     var label = checkboxItems[j].querySelector("label");
-    var headerName = headers[j] || ("列" + (j + 1));
+    var headerName = headers[j] || "列" + (j + 1);
     label.textContent = headerName;
   }
 }
 
-function showPreview(headers, data, headerRow) {
-  var previewSection = document.getElementById("vlookupPreview");
-  var previewHead = document.getElementById("previewHead");
-  var previewBody = document.getElementById("previewBody");
-
-  previewHead.innerHTML = "";
-  previewBody.innerHTML = "";
-
-  var headerTr = document.createElement("tr");
-  for (var i = 0; i < headers.length; i++) {
-    var th = document.createElement("th");
-    th.textContent = headers[i] || ("列" + (i + 1));
-    headerTr.appendChild(th);
-  }
-  previewHead.appendChild(headerTr);
-
-  var maxRows = Math.min(5, data.length);
-  for (var rowIdx = 0; rowIdx < maxRows; rowIdx++) {
-    var tr = document.createElement("tr");
-    for (var colIdx = 0; colIdx < headers.length; colIdx++) {
-      var td = document.createElement("td");
-      td.textContent = data[rowIdx][colIdx] !== undefined ? data[rowIdx][colIdx] : "";
-      tr.appendChild(td);
-    }
-    previewBody.appendChild(tr);
-  }
-
-  previewSection.classList.add("visible");
-}
-
 function getCheckedReturnCols() {
-  var checkboxes = document.querySelectorAll("#returnColumns input[type=\"checkbox\"]:checked");
+  var checkboxes = document.querySelectorAll('#returnColumns input[type="checkbox"]:checked');
   var indices = [];
   for (var i = 0; i < checkboxes.length; i++) {
     indices.push(parseInt(checkboxes[i].value, 10));
@@ -275,11 +235,7 @@ function validateForm() {
   var matchCol = document.getElementById("matchColumn").value;
   var returnCols = getCheckedReturnCols();
 
-  var isValid =
-    tableInput &&
-    valueInput &&
-    matchCol !== "" &&
-    returnCols.length > 0;
+  var isValid = tableInput && valueInput && matchCol !== "" && returnCols.length > 0;
 
   document.getElementById("executeBtn").disabled = !isValid;
 }
@@ -291,8 +247,8 @@ function executeLookup() {
     headerRow: parseInt(document.getElementById("headerRow").value, 10) || 1,
     matchColIndex: parseInt(document.getElementById("matchColumn").value, 10),
     returnColIndices: getCheckedReturnCols(),
-    matchMode: document.querySelector("input[name=\"matchMode\"]:checked").value === "exact" ? 0 : 1,
-    outputType: document.querySelector("input[name=\"outputType\"]:checked").value,
+    matchMode: document.querySelector('input[name="matchMode"]:checked').value === "exact" ? 0 : 1,
+    defaultValue: document.getElementById("defaultValue").value || "#N/A",
   };
 
   performLookup(config);
@@ -302,6 +258,9 @@ function performLookup(config) {
   setStatus("处理中...", "info");
 
   Excel.run(async function (context) {
+    var BATCH_SIZE = 10000;
+    var LARGE_DATA_THRESHOLD = 100000;
+
     var worksheet = context.workbook.worksheets.getActiveWorksheet();
 
     var lvParsed = parseRangeAddress(config.lookupValue);
@@ -312,54 +271,21 @@ function performLookup(config) {
 
     var ltParsed = parseRangeAddress(config.lookupTable);
 
-    var lookupColRange = buildColRange(ltParsed, config.matchColIndex);
-    var returnColRanges = [];
-    for (var i = 0; i < config.returnColIndices.length; i++) {
-      returnColRanges.push(buildColRange(ltParsed, config.returnColIndices[i]));
+    if (!g_lookupTableData) {
+      var tableRange = worksheet.getRange(
+        getColumnLetter(ltParsed.startCol) +
+          ltParsed.startRow +
+          ":" +
+          getColumnLetter(ltParsed.endCol) +
+          ltParsed.endRow
+      );
+      tableRange.load("values");
+      await context.sync();
+      g_lookupTableData = tableRange.values;
     }
 
-    if (config.outputType === "formula") {
-      var insertPos = ltParsed.endCol + 1;
-      var returnColCount = config.returnColIndices.length;
-
-      for (var c = 0; c < returnColCount; c++) {
-        var colLetter = getColumnLetter(insertPos + c);
-        worksheet.getRange(colLetter + ":" + colLetter).insert(Excel.InsertShiftDirection.right);
-      }
-      await context.sync();
-
-      var formulas2D = [];
-      for (var row = 0; row < dataRowCount; row++) {
-        var rowFormulas = [];
-        for (var col = 0; col < returnColCount; col++) {
-          var lookupCellRef = dataColLetter + (dataStartRow + row);
-          rowFormulas.push(
-            buildIndexMatchFormula(
-              lookupCellRef,
-              lookupColRange,
-              returnColRanges[col],
-              config.matchMode
-            )
-          );
-        }
-        formulas2D.push(rowFormulas);
-      }
-
-      var outputRange = worksheet.getRange(
-        getColumnLetter(insertPos) +
-          dataStartRow +
-          ":" +
-          getColumnLetter(insertPos + returnColCount - 1) +
-          (dataStartRow + dataRowCount - 1)
-      );
-      outputRange.formulas = formulas2D;
-      await context.sync();
-
-      setStatus(
-        "完成! 已在 " + returnColCount + " 列写入 " + dataRowCount + " 行 INDEX/MATCH 公式",
-        "success"
-      );
-    } else {
+    if (dataRowCount < LARGE_DATA_THRESHOLD) {
+      // Small data: single read -> staticLookup -> single write
       var dataRange = worksheet.getRange(
         dataColLetter + dataStartRow + ":" + dataColLetter + (dataStartRow + dataRowCount - 1)
       );
@@ -371,50 +297,97 @@ function performLookup(config) {
         lookupValues.push(dataRange.values[j][0]);
       }
 
-      if (!g_lookupTableData) {
-        var tableRange = worksheet.getRange(
-          getColumnLetter(ltParsed.startCol) +
-            ltParsed.startRow +
-            ":" +
-            getColumnLetter(ltParsed.endCol) +
-            ltParsed.endRow
-        );
-        tableRange.load("values");
-        await context.sync();
-        g_lookupTableData = tableRange.values;
-      }
-
       var results = staticLookup(
         lookupValues,
         g_lookupTableData,
         config.matchColIndex,
         config.returnColIndices,
-        config.matchMode
+        config.matchMode,
+        config.defaultValue
       );
 
-      var insertPos2 = ltParsed.endCol + 1;
-      var returnColCount2 = config.returnColIndices.length;
+      var insertPos = ltParsed.endCol + 1;
+      var returnColCount = config.returnColIndices.length;
 
-      for (var c2 = 0; c2 < returnColCount2; c2++) {
-        var colLetter2 = getColumnLetter(insertPos2 + c2);
-        worksheet.getRange(colLetter2 + ":" + colLetter2).insert(Excel.InsertShiftDirection.right);
+      for (var c = 0; c < returnColCount; c++) {
+        var colLetter = getColumnLetter(insertPos + c);
+        worksheet.getRange(colLetter + ":" + colLetter).insert(Excel.InsertShiftDirection.right);
       }
       await context.sync();
 
       var targetRange = worksheet.getRange(
-        getColumnLetter(insertPos2) +
+        getColumnLetter(insertPos) +
           dataStartRow +
           ":" +
-          getColumnLetter(insertPos2 + returnColCount2 - 1) +
+          getColumnLetter(insertPos + returnColCount - 1) +
           (dataStartRow + results.length - 1)
       );
       targetRange.values = results;
       await context.sync();
 
       setStatus(
-        "完成! 已写入 " + results.length + " 行 x " + returnColCount2 + " 列静态值",
+        "完成! 已写入 " + results.length + " 行 x " + returnColCount + " 列静态值",
         "success"
       );
+    } else {
+      // Large data: batch processing
+      var totalRows = dataRowCount;
+      var processedRows = 0;
+      var insertPos = ltParsed.endCol + 1;
+      var returnColCount = config.returnColIndices.length;
+
+      // Insert all return columns first (once, before batches)
+      for (var ci = 0; ci < returnColCount; ci++) {
+        var colLetter = getColumnLetter(insertPos + ci);
+        worksheet.getRange(colLetter + ":" + colLetter).insert(Excel.InsertShiftDirection.right);
+      }
+      await context.sync();
+
+      while (processedRows < totalRows) {
+        var currentBatchSize = Math.min(BATCH_SIZE, totalRows - processedRows);
+        var batchStartRow = dataStartRow + processedRows;
+        var batchEndRow = batchStartRow + currentBatchSize - 1;
+
+        // Read current batch lookupValues
+        var batchDataRange = worksheet.getRange(
+          dataColLetter + batchStartRow + ":" + dataColLetter + batchEndRow
+        );
+        batchDataRange.load("values");
+        await context.sync();
+
+        var batchLookupValues = [];
+        for (var bj = 0; bj < batchDataRange.values.length; bj++) {
+          batchLookupValues.push(batchDataRange.values[bj][0]);
+        }
+
+        // Compute current batch
+        var batchResults = staticLookup(
+          batchLookupValues,
+          g_lookupTableData,
+          config.matchColIndex,
+          config.returnColIndices,
+          config.matchMode,
+          config.defaultValue
+        );
+
+        // Write current batch results
+        var batchTargetRange = worksheet.getRange(
+          getColumnLetter(insertPos) +
+            batchStartRow +
+            ":" +
+            getColumnLetter(insertPos + returnColCount - 1) +
+            batchEndRow
+        );
+        batchTargetRange.values = batchResults;
+        await context.sync();
+
+        processedRows += currentBatchSize;
+
+        // Update progress status
+        setStatus("处理中... 已完成 " + processedRows + " / " + totalRows + " 行", "info");
+      }
+
+      setStatus("完成! 已写入 " + totalRows + " 行 x " + returnColCount + " 列静态值", "success");
     }
   }).catch(function (error) {
     setStatus("错误: " + error.message, "error");
@@ -423,7 +396,7 @@ function performLookup(config) {
 
 function setAllCheckboxes(containerId, checked) {
   var container = document.getElementById(containerId);
-  var checkboxes = container.querySelectorAll("input[type=\"checkbox\"]");
+  var checkboxes = container.querySelectorAll('input[type="checkbox"]');
   for (var i = 0; i < checkboxes.length; i++) {
     checkboxes[i].checked = checked;
   }

@@ -98,29 +98,15 @@
                 </div>
             </div>
 
-            <!-- 输出类型 -->
+            <!-- 默认值 -->
             <div class="vlookup-form-group">
-                <span class="vlookup-section-title">输出类型</span>
-                <div class="vlookup-radio-group">
-                    <label class="vlookup-radio-label">
-                        <input type="radio" name="outputType" value="formula" checked />
-                        <span>公式</span>
-                    </label>
-                    <label class="vlookup-radio-label">
-                        <input type="radio" name="outputType" value="static" />
-                        <span>静态值</span>
-                    </label>
+                <label for="defaultValue" class="vlookup-label">查找不到时填充</label>
+                <div class="vlookup-input-row">
+                    <input type="text" id="defaultValue" class="vlookup-input" placeholder="#N/A" value="#N/A" />
                 </div>
             </div>
-        </form>
 
-        <!-- Preview section (hidden by default) -->
-        <div id="vlookupPreview" class="vlookup-preview">
-            <table id="previewTable">
-                <thead id="previewHead"></thead>
-                <tbody id="previewBody"></tbody>
-            </table>
-        </div>
+        </form>
 
         <!-- Button row -->
         <div class="vlookup-btn-row">

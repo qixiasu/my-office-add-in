@@ -154,7 +154,8 @@ function updateSummary() {
   var fileName = selectedFile ? selectedFile.name : "";
   var delimiter = document.getElementById("delimiterInput").value || ",";
   var delimiterLabel = delimiter === "\t" ? "Tab" : delimiter;
-  var text = fileName + "，共 " + rowCount + " 行 × " + colCount + " 列，分隔符：【" + delimiterLabel + "】";
+  var text =
+    fileName + "，共 " + rowCount + " 行 × " + colCount + " 列，分隔符：【" + delimiterLabel + "】";
   document.getElementById("summaryText").textContent = text;
 }
 

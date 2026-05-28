@@ -111,21 +111,6 @@
   margin-bottom: 12px;
 }
 
-.vlookup-preview {
-  display: none;
-  margin-top: 16px;
-  padding: 12px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 13px;
-  overflow-x: auto;
-}
-
-.vlookup-preview.visible {
-  display: block;
-}
-
 .vlookup-btn-row {
   display: flex;
   gap: 8px;

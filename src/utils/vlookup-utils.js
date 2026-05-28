@@ -74,7 +74,18 @@ function buildIndexMatchFormula(lookupCellRef, lookupColRange, returnColRange, m
   );
 }
 
-function staticLookup(lookupValues, lookupTable, matchColIndex, returnColIndices, matchMode) {
+function staticLookup(
+  lookupValues,
+  lookupTable,
+  matchColIndex,
+  returnColIndices,
+  matchMode,
+  defaultValue
+) {
+  if (defaultValue === undefined || defaultValue === null) {
+    defaultValue = "#N/A";
+  }
+
   var results = [];
 
   var index = {};
@@ -95,10 +106,10 @@ function staticLookup(lookupValues, lookupTable, matchColIndex, returnColIndices
     if (val === null || val === undefined) {
       val = "";
     }
-    // Null/undefined in approximate mode → #N/A (avoid Number("") → 0)
+    // Null/undefined in approximate mode → defaultValue (avoid Number("") → 0)
     if (matchMode !== 0 && (lookupValues[i] === null || lookupValues[i] === undefined)) {
       for (var q = 0; q < returnColIndices.length; q++) {
-        row.push("#N/A");
+        row.push(defaultValue);
       }
       results.push(row);
       continue;
@@ -113,7 +124,7 @@ function staticLookup(lookupValues, lookupTable, matchColIndex, returnColIndices
         }
       } else {
         for (var k = 0; k < returnColIndices.length; k++) {
-          row.push("#N/A");
+          row.push(defaultValue);
         }
       }
     } else {
@@ -135,7 +146,7 @@ function staticLookup(lookupValues, lookupTable, matchColIndex, returnColIndices
         }
       } else {
         for (var p = 0; p < returnColIndices.length; p++) {
-          row.push("#N/A");
+          row.push(defaultValue);
         }
       }
     }
