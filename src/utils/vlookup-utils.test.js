@@ -4,6 +4,7 @@ var {
   buildColRange,
   buildIndexMatchFormula,
   staticLookup,
+  buildLookupIndex,
 } = require("./vlookup-utils");
 
 describe("parseCellRef", function () {
@@ -166,5 +167,51 @@ describe("staticLookup", function () {
     ];
     var result = staticLookup([150, 250, 350], numTable, 0, [1], 1);
     expect(result).toEqual([["low"], ["mid"], ["high"]]);
+  });
+});
+
+describe("buildLookupIndex", function () {
+  var table = [
+    ["张三", "研发部", "A001"],
+    ["李四", "市场部", "A002"],
+    ["王五", "财务部", "A003"],
+  ];
+
+  it("builds index keyed by match column values", function () {
+    var index = buildLookupIndex(table, 0);
+    expect(index["张三"]).toBe(0);
+    expect(index["李四"]).toBe(1);
+    expect(index["王五"]).toBe(2);
+  });
+
+  it("builds index against non-first column", function () {
+    var index = buildLookupIndex(table, 2);
+    expect(index["A001"]).toBe(0);
+    expect(index["A002"]).toBe(1);
+    expect(index["A003"]).toBe(2);
+  });
+
+  it("handles null key by converting to empty string", function () {
+    var nullTable = [
+      [null, "value1"],
+      ["key2", "value2"],
+    ];
+    var index = buildLookupIndex(nullTable, 0);
+    expect(index[""]).toBe(0);
+    expect(index["key2"]).toBe(1);
+  });
+
+  it("later duplicate key overwrites earlier row index", function () {
+    var dupTable = [
+      ["dup", "first"],
+      ["dup", "second"],
+    ];
+    var index = buildLookupIndex(dupTable, 0);
+    expect(index["dup"]).toBe(1);
+  });
+
+  it("returns empty object for empty table", function () {
+    var index = buildLookupIndex([], 0);
+    expect(index).toEqual({});
   });
 });

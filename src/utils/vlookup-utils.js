@@ -74,6 +74,19 @@ function buildIndexMatchFormula(lookupCellRef, lookupColRange, returnColRange, m
   );
 }
 
+function buildLookupIndex(lookupTable, matchColIndex) {
+  var index = {};
+  for (var r = 0; r < lookupTable.length; r++) {
+    var key = lookupTable[r][matchColIndex];
+    if (key === null || key === undefined) {
+      key = "";
+    }
+    key = String(key);
+    index[key] = r;
+  }
+  return index;
+}
+
 function staticLookup(
   lookupValues,
   lookupTable,
@@ -163,4 +176,5 @@ module.exports = {
   buildColRange: buildColRange,
   buildIndexMatchFormula: buildIndexMatchFormula,
   staticLookup: staticLookup,
+  buildLookupIndex: buildLookupIndex,
 };
