@@ -33,23 +33,7 @@
                   <bt:Image size="32" resid="Icon.32x32"/>
                   <bt:Image size="80" resid="Icon.80x80"/>
                 </Icon>
-                <Control xsi:type="Button" id="TaskpaneButton">
-                  <Label resid="TaskpaneButton.Label"/>
-                  <Supertip>
-                    <Title resid="TaskpaneButton.Label"/>
-                    <Description resid="TaskpaneButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="Icon.16x16"/>
-                    <bt:Image size="32" resid="Icon.32x32"/>
-                    <bt:Image size="80" resid="Icon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>ButtonId1</TaskpaneId>
-                    <SourceLocation resid="Taskpane.Url"/>
-                  </Action>
-                </Control>
-                <Control xsi:type="Button" id="ConcatenateButton">
+<Control xsi:type="Button" id="ConcatenateButton">
                   <Label resid="ConcatenateButton.Label"/>
                   <Supertip>
                     <Title resid="ConcatenateButton.Label"/>
@@ -115,7 +99,6 @@
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
         <bt:Url id="ConcatTaskpane.Url" DefaultValue="https://localhost:3000/concat-taskpane.html"/>
         <bt:Url id="CSVImportTaskpane.Url" DefaultValue="https://localhost:3000/csv-import-taskpane.html"/>
         <bt:Url id="VlookupTaskpane.Url" DefaultValue="https://localhost:3000/vlookup-taskpane.html"/>
@@ -123,14 +106,12 @@
       <bt:ShortStrings>
         <bt:String id="CustomTab.Label" DefaultValue="我的工具"/>
         <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="显示面板"/>
         <bt:String id="ConcatenateButton.Label" DefaultValue="连接列"/>
         <bt:String id="ImportCsvButton.Label" DefaultValue="导入CSV"/>
         <bt:String id="EnhancedVlookupButton.Label" DefaultValue="增强查找"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="打开任务面板"/>
         <bt:String id="ImportCsvButton.Tooltip" DefaultValue="用 UTF-8 编码正确导入 CSV/文本文件，支持自定义分隔符"/>
         <bt:String id="EnhancedVlookupButton.Tooltip" DefaultValue="增强版查找功能：一次配置完成多列 INDEX/MATCH 查找，匹配列可在任意位置"/>
       </bt:LongStrings>
