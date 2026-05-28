@@ -49,6 +49,13 @@ function initEventListeners() {
 
   document.getElementById("executeBtn").onclick = executeLookup;
 
+  // 初始化时如果 lookupTable 已有值，自动加载表头
+  setTimeout(function () {
+    if (document.getElementById("lookupTable").value) {
+      loadTableHeaders();
+    }
+  }, 0);
+
   var form = document.getElementById("vlookupForm");
   form.addEventListener("change", validateForm);
   form.addEventListener("input", validateForm);
