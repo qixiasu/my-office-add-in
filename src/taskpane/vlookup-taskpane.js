@@ -70,15 +70,12 @@ function loadInitialSelection() {
     if (range.address) {
       document.getElementById("lookupTable").value = range.address;
       g_lookupTableParsed = parseRangeAddress(range.address);
+      // Auto-load headers after lookupTable is set
+      loadTableHeaders();
     }
   }).catch(function (error) {
     setStatus("加载选择失败: " + error.message, "error");
   });
-
-  // Auto-load headers if lookupTable has value
-  if (document.getElementById("lookupTable").value) {
-    loadTableHeaders();
-  }
 }
 
 function refreshSelection(target) {
