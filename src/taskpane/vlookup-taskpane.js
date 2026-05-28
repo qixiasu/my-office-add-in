@@ -614,6 +614,7 @@ function performLookup(config) {
   }).catch(function (error) {
     setStatus("错误: " + error.message, "error");
   }).finally(function() {
+    clearInterval(progressInterval);
     executeBtn.disabled = false;
     if (progressContainer) progressContainer.style.display = "none";
     statusEl.style.display = "block";
