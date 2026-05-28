@@ -147,7 +147,17 @@ function loadTableHeaders() {
     var parsed = parseRangeAddress(tableAddress);
     g_lookupTableParsed = parsed;
 
-    var sheet = context.workbook.worksheets.getActiveWorksheet();
+    // 获取查找表所在的工作表
+    var tableSheetName = parsed.sheet;
+    var tableSheet;
+    if (tableSheetName) {
+      tableSheet = context.workbook.worksheets.getItem(tableSheetName);
+    } else {
+      tableSheet = context.workbook.worksheets.getActiveWorksheet();
+    }
+    tableSheet.load("name");
+    await context.sync();
+    console.log("[DEBUG] loadTableHeaders: 表头读取所在工作表:", tableSheet.name);
 
     var startRow = parsed.startRow;
     var endRow = parsed.endRow;
@@ -157,7 +167,7 @@ function loadTableHeaders() {
       return;
     }
 
-    var headerRange = sheet.getRange(
+    var headerRange = tableSheet.getRange(
       getColumnLetter(parsed.startCol) +
         headerRow +
         ":" +
@@ -171,7 +181,7 @@ function loadTableHeaders() {
 
     // 读取查找表数据（整列实际数据，不是解析出来的范围）
     // 使用 headerRow 作为起始行，读取到工作表实际最后一行
-    var usedRange = sheet.getUsedRange();
+    var usedRange = tableSheet.getUsedRange();
     usedRange.load("rowCount");
     await context.sync();
 
@@ -183,7 +193,7 @@ function loadTableHeaders() {
     console.log("[DEBUG] loadTableHeaders: dataEndRow =", dataEndRow);
 
     // 判断查找表范围是否是整列（endRow === 1 表示可能是整列选择）
-    var isFullColumn = (endRow === 1 && actualLastRow > 1);
+    var isFullColumn = endRow === 1 && actualLastRow > 1;
     if (isFullColumn) {
       dataEndRow = actualLastRow;
       console.log("[DEBUG] loadTableHeaders: 检测到整列选择，使用实际最后一行", dataEndRow);
@@ -193,22 +203,40 @@ function loadTableHeaders() {
     var dataReadStartRow = startRow;
     if (headerRow >= startRow && headerRow < dataEndRow) {
       dataReadStartRow = headerRow + 1;
-      console.log("[DEBUG] loadTableHeaders: headerRow", headerRow, "在范围内，跳过表头行，从", dataReadStartRow, "开始读取");
+      console.log(
+        "[DEBUG] loadTableHeaders: headerRow",
+        headerRow,
+        "在范围内，跳过表头行，从",
+        dataReadStartRow,
+        "开始读取"
+      );
     }
 
-    var dataRange = sheet.getRange(
-      getColumnLetter(parsed.startCol) + dataReadStartRow + ":" + getColumnLetter(parsed.endCol) + dataEndRow
+    var dataRange = tableSheet.getRange(
+      getColumnLetter(parsed.startCol) +
+        dataReadStartRow +
+        ":" +
+        getColumnLetter(parsed.endCol) +
+        dataEndRow
     );
     dataRange.load("values");
     await context.sync();
 
     g_lookupTableData = dataRange.values;
-    console.log("[DEBUG] loadTableHeaders: g_lookupTableData 行数=", g_lookupTableData.length, "列数=", g_lookupTableData[0] ? g_lookupTableData[0].length : 0);
+    console.log(
+      "[DEBUG] loadTableHeaders: g_lookupTableData 行数=",
+      g_lookupTableData.length,
+      "列数=",
+      g_lookupTableData[0] ? g_lookupTableData[0].length : 0
+    );
 
     refreshColumns();
     updateHeaderLabels(headers, parsed);
 
-    setStatus("表头读取成功，共 " + parsed.colCount + " 列，" + g_lookupTableData.length + " 行数据", "success");
+    setStatus(
+      "表头读取成功，共 " + parsed.colCount + " 列，" + g_lookupTableData.length + " 行数据",
+      "success"
+    );
     validateForm();
   }).catch(function (error) {
     setStatus("读取表头失败: " + error.message, "error");
@@ -285,16 +313,51 @@ function performLookup(config) {
     var BATCH_SIZE = 10000;
     var LARGE_DATA_THRESHOLD = 100000;
 
-    var worksheet = context.workbook.worksheets.getActiveWorksheet();
-
+    // 获取查找值区域所在的工作表（这是写入目标）
     var lvParsed = parseRangeAddress(config.lookupValue);
+    var lvSheetName = lvParsed.sheet;
+    var lvWorksheet;
+    if (lvSheetName) {
+      lvWorksheet = context.workbook.worksheets.getItem(lvSheetName);
+    } else {
+      lvWorksheet = context.workbook.worksheets.getActiveWorksheet();
+    }
+    lvWorksheet.load("name");
+    await context.sync();
+    console.log("[DEBUG] 查找值工作表:", lvWorksheet.name);
+
+    // 获取查找表所在的工作表（用于读取查找表数据）
+    var ltParsed = parseRangeAddress(config.lookupTable);
+    var ltSheetName = ltParsed.sheet;
+    var ltWorksheet;
+    if (ltSheetName) {
+      ltWorksheet = context.workbook.worksheets.getItem(ltSheetName);
+    } else {
+      ltWorksheet = context.workbook.worksheets.getActiveWorksheet();
+    }
+    ltWorksheet.load("name");
+    await context.sync();
+    console.log("[DEBUG] 查找表工作表:", ltWorksheet.name);
+
+    // 使用 lvWorksheet 作为目标工作表（写入结果的位置）
+    var worksheet = lvWorksheet;
+
     console.log("[DEBUG] lookupValue 地址:", config.lookupValue);
     console.log("[DEBUG] lvParsed:", JSON.stringify(lvParsed));
     var dataStartRow = lvParsed.startRow;
     var dataStartCol = lvParsed.startCol;
     var dataRowCount = lvParsed.rowCount;
     var dataColLetter = getColumnLetter(dataStartCol);
-    console.log("[DEBUG] dataStartRow:", dataStartRow, "dataStartCol:", dataStartCol, "dataRowCount:", dataRowCount, "dataColLetter:", dataColLetter);
+    console.log(
+      "[DEBUG] dataStartRow:",
+      dataStartRow,
+      "dataStartCol:",
+      dataStartCol,
+      "dataRowCount:",
+      dataRowCount,
+      "dataColLetter:",
+      dataColLetter
+    );
 
     var ltParsed = parseRangeAddress(config.lookupTable);
     console.log("[DEBUG] lookupTable 地址:", config.lookupTable);
@@ -302,7 +365,8 @@ function performLookup(config) {
 
     if (!g_lookupTableData) {
       console.log("[DEBUG] g_lookupTableData 为空，从工作表加载");
-      var tableRange = worksheet.getRange(
+      // 从查找表所在工作表读取数据
+      var tableRange = ltWorksheet.getRange(
         getColumnLetter(ltParsed.startCol) +
           ltParsed.startRow +
           ":" +
@@ -312,7 +376,12 @@ function performLookup(config) {
       tableRange.load("values");
       await context.sync();
       g_lookupTableData = tableRange.values;
-      console.log("[DEBUG] g_lookupTableData 已加载，行数:", g_lookupTableData.length, "列数:", g_lookupTableData[0] ? g_lookupTableData[0].length : 0);
+      console.log(
+        "[DEBUG] g_lookupTableData 已加载，行数:",
+        g_lookupTableData.length,
+        "列数:",
+        g_lookupTableData[0] ? g_lookupTableData[0].length : 0
+      );
     } else {
       console.log("[DEBUG] g_lookupTableData 已存在，行数:", g_lookupTableData.length);
     }
@@ -320,7 +389,7 @@ function performLookup(config) {
     if (dataRowCount < LARGE_DATA_THRESHOLD) {
       // Small data: single read -> staticLookup -> single write
       // 整列选择时 endRow === 1，需要用实际最后一行
-      var lvIsFullColumn = (lvParsed.endRow === 1);
+      var lvIsFullColumn = lvParsed.endRow === 1;
       var lvActualEndRow = lvParsed.endRow;
 
       if (lvIsFullColumn) {
@@ -341,7 +410,7 @@ function performLookup(config) {
 
       // 跳过表头行：如果 lookupValue 从 headerRow 开始，第一行是表头不参与查找
       var lvDataStartRow = lvParsed.startRow;
-      var lvFirstRowIsHeader = (lvParsed.startRow === config.headerRow);
+      var lvFirstRowIsHeader = lvParsed.startRow === config.headerRow;
       if (lvFirstRowIsHeader) {
         lvDataStartRow = lvParsed.startRow + 1;
         console.log("[DEBUG] lookupValue 第一行是表头，跳过，从行", lvDataStartRow, "开始");
@@ -362,30 +431,50 @@ function performLookup(config) {
         config.matchMode,
         config.defaultValue
       );
-      console.log("[DEBUG] staticLookup 结果, results.length:", results.length, "results[0]?.length:", results[0] ? results[0].length : 0);
+      console.log(
+        "[DEBUG] staticLookup 结果, results.length:",
+        results.length,
+        "results[0]?.length:",
+        results[0] ? results[0].length : 0
+      );
       console.log("[DEBUG] 前3条结果:", JSON.stringify(results.slice(0, 3)));
 
       // 修复：写入位置应该是查找值区域的右边，而不是查找表的右边
       var insertPos = lvParsed.endCol + 1;
-      console.log("[DEBUG] 写入位置 insertPos:", insertPos, "= getColumnLetter(", getColumnLetter(insertPos), ")");
-      console.log("[DEBUG] 注意：旧代码使用 ltParsed.endCol + 1 =", ltParsed.endCol + 1, ", 现改为 lvParsed.endCol + 1 =", insertPos);
+      console.log(
+        "[DEBUG] 写入位置 insertPos:",
+        insertPos,
+        "= getColumnLetter(",
+        getColumnLetter(insertPos),
+        ")"
+      );
+      console.log(
+        "[DEBUG] 注意：旧代码使用 ltParsed.endCol + 1 =",
+        ltParsed.endCol + 1,
+        ", 现改为 lvParsed.endCol + 1 =",
+        insertPos
+      );
       var returnColCount = config.returnColIndices.length;
 
       for (var c = 0; c < returnColCount; c++) {
         var colLetter = getColumnLetter(insertPos + c);
         worksheet.getRange(colLetter + ":" + colLetter).insert(Excel.InsertShiftDirection.right);
       }
+      // 激活查找值区域所在的工作表，让用户能看到写入过程
+      lvWorksheet.activate();
       await context.sync();
 
       // 写入表头（从查找表各返回列的表头复制过来）
       var headerValues = [];
       for (var hc = 0; hc < returnColCount; hc++) {
         var returnColIdx = config.returnColIndices[hc];
-        // g_lookupTableData 第 0 行是表头（loadTableHeaders 已经跳过表头读取，但 g_lookupTableData[0] 还是第一行数据）
-        // 实际上 g_lookupTableData[0] 是 headerRow 那行，所以我们直接从表头行读取
-        var headerCell = worksheet.getRange(
-          getColumnLetter(ltParsed.startCol + returnColIdx) + config.headerRow + ":" +
-          getColumnLetter(ltParsed.startCol + returnColIdx) + config.headerRow
+        // 从查找表所在工作表读取表头
+        var headerCell = ltWorksheet.getRange(
+          getColumnLetter(ltParsed.startCol + returnColIdx) +
+            config.headerRow +
+            ":" +
+            getColumnLetter(ltParsed.startCol + returnColIdx) +
+            config.headerRow
         );
         headerCell.load("values");
         await context.sync();
@@ -394,8 +483,11 @@ function performLookup(config) {
       if (lvFirstRowIsHeader) {
         // 写入表头行
         var headerRange = worksheet.getRange(
-          getColumnLetter(insertPos) + config.headerRow + ":" +
-          getColumnLetter(insertPos + returnColCount - 1) + config.headerRow
+          getColumnLetter(insertPos) +
+            config.headerRow +
+            ":" +
+            getColumnLetter(insertPos + returnColCount - 1) +
+            config.headerRow
         );
         headerRange.values = [headerValues];
         await context.sync();
@@ -430,6 +522,8 @@ function performLookup(config) {
         var colLetter = getColumnLetter(insertPos + ci);
         worksheet.getRange(colLetter + ":" + colLetter).insert(Excel.InsertShiftDirection.right);
       }
+      // 激活查找值区域所在的工作表，让用户能看到写入过程
+      lvWorksheet.activate();
       await context.sync();
 
       while (processedRows < totalRows) {

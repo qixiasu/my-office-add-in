@@ -89,8 +89,20 @@ function staticLookup(
   var results = [];
 
   console.log("[DEBUG staticLookup] lookupValues:", JSON.stringify(lookupValues));
-  console.log("[DEBUG staticLookup] lookupTable 行数:", lookupTable.length, "列数:", lookupTable[0] ? lookupTable[0].length : 0);
-  console.log("[DEBUG staticLookup] matchColIndex:", matchColIndex, "returnColIndices:", JSON.stringify(returnColIndices), "matchMode:", matchMode);
+  console.log(
+    "[DEBUG staticLookup] lookupTable 行数:",
+    lookupTable.length,
+    "列数:",
+    lookupTable[0] ? lookupTable[0].length : 0
+  );
+  console.log(
+    "[DEBUG staticLookup] matchColIndex:",
+    matchColIndex,
+    "returnColIndices:",
+    JSON.stringify(returnColIndices),
+    "matchMode:",
+    matchMode
+  );
 
   // 打印查找表第一列（match列）的实际内容
   if (lookupTable.length > 0) {
@@ -122,7 +134,14 @@ function staticLookup(
     if (val === null || val === undefined) {
       val = "";
     }
-    console.log("[DEBUG staticLookup] 查找第", i, "个值:", JSON.stringify(val), "类型:", typeof val);
+    console.log(
+      "[DEBUG staticLookup] 查找第",
+      i,
+      "个值:",
+      JSON.stringify(val),
+      "类型:",
+      typeof val
+    );
     // Null/undefined in approximate mode → defaultValue (avoid Number("") → 0)
     if (matchMode !== 0 && (lookupValues[i] === null || lookupValues[i] === undefined)) {
       for (var q = 0; q < returnColIndices.length; q++) {
