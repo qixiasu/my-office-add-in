@@ -38,15 +38,6 @@ function initEventListeners() {
     validateForm();
   };
 
-  document.getElementById("cancelBtn").onclick = function () {
-    try {
-      Office.ui.close();
-    } catch (e) {
-      // Office.ui.close() may not be available in all Office hosts
-      console.warn("Cannot close taskpane: " + e.message);
-    }
-  };
-
   document.getElementById("executeBtn").onclick = executeLookup;
 
   // 初始化时如果 lookupTable 已有值，自动加载表头
