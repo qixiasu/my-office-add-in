@@ -22,6 +22,7 @@ module.exports = async (env, options) => {
       "concat-taskpane": ["./src/taskpane/concat-taskpane.js", "./src/taskpane/concat-taskpane.html"],
       "csv-import-taskpane": ["./src/taskpane/csv-import-taskpane.js", "./src/taskpane/csv-import-taskpane.html"],
       "vlookup-taskpane": ["./src/taskpane/vlookup-taskpane.js", "./src/taskpane/vlookup-taskpane.html"],
+      "fill-series-taskpane": ["./src/taskpane/fill-series-taskpane.js", "./src/taskpane/fill-series-taskpane.html"],
     },
     output: {
       clean: true,
@@ -96,6 +97,11 @@ module.exports = async (env, options) => {
         filename: "vlookup-taskpane.html",
         template: "./src/taskpane/vlookup-taskpane.html",
         chunks: ["polyfill", "vlookup-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "fill-series-taskpane.html",
+        template: "./src/taskpane/fill-series-taskpane.html",
+        chunks: ["polyfill", "fill-series-taskpane"],
       }),
     ],
     devServer: {
