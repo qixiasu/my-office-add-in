@@ -14,8 +14,8 @@
 
 | 文件 | 修改内容 |
 |------|----------|
-| `src/taskpane/vlookup-taskpane.html` | 进度条 DOM 插入到状态消息前 |
-| `src/taskpane/vlookup-taskpane.css` | 进度条样式（进度条填充动画） |
+| `src/taskpane/vlookup-taskpane.html` | 进度条 DOM 插入到按钮行和状态消息之间 |
+| `src/taskpane/vlookup-taskpane.css` | 进度条容器样式（进度条填充动画） |
 | `src/taskpane/vlookup-taskpane.js` | 按钮禁用 + updateProgressUI + 进度集成 |
 
 ---
@@ -23,22 +23,28 @@
 ## Task 1: HTML 添加进度条 DOM
 
 **Files:**
-- Modify: `src/taskpane/vlookup-taskpane.html:116-118`
+- Modify: `src/taskpane/vlookup-taskpane.html:111-117`
 
-进度条 DOM 放在状态消息上方，按钮行下方。
+- [ ] **Step 1: 修改 vlookup-taskpane.html，在按钮行和状态消息之间插入进度条**
 
-- [ ] **Step 1: 修改 vlookup-taskpane.html**
-
-找到第 116-118 行（状态消息 div）：
-
+找到第 111-117 行：
 ```html
+        <!-- Button row -->
+        <div class="vlookup-btn-row">
+            <button type="button" id="executeBtn" class="vlookup-button vlookup-button--primary" disabled>执行查找</button>
+        </div>
+
         <!-- Status message -->
         <div id="statusMessage" class="status-message status-idle">状态：等待操作...</div>
 ```
 
-在按钮行（第 112-114 行）后面、状态消息（第 117 行）前面，插入：
-
+替换为：
 ```html
+        <!-- Button row -->
+        <div class="vlookup-btn-row">
+            <button type="button" id="executeBtn" class="vlookup-button vlookup-button--primary" disabled>执行查找</button>
+        </div>
+
         <!-- Progress bar (hidden by default) -->
         <div id="progressContainer" style="display:none;margin:12px 0">
             <div id="progressStatus" class="status-message status-loading" style="margin-bottom:6px;font-size:14px;font-weight:600">处理中...</div>
@@ -57,13 +63,11 @@
 ## Task 2: CSS 添加进度条样式
 
 **Files:**
-- Modify: `src/taskpane/vlookup-taskpane.css`
-
-在文件末尾 `.status-loading` 后面添加：
+- Modify: `src/taskpane/vlookup-taskpane.css:187-216`
 
 - [ ] **Step 1: 添加进度条样式到 vlookup-taskpane.css**
 
-在第 216 行后（`.status-loading` 块之后）添加：
+在第 216 行（`.status-loading` 块之后）添加：
 
 ```css
 #progressContainer {
@@ -85,10 +89,16 @@
 **Files:**
 - Modify: `src/taskpane/vlookup-taskpane.js:309-578`（performLookup 函数）
 
-- [ ] **Step 1: 在 performLookup 开头添加按钮禁用逻辑**
+- [ ] **Step 1: 在 performLookup 开头添加按钮禁用和显示进度条逻辑**
 
-找到 `performLookup` 函数（第 309 行），在第一行 `setStatus("处理中...", "info");` 之前插入：
+找到 `performLookup` 函数开头（第 309 行）：
 
+```javascript
+function performLookup(config) {
+  setStatus("处理中...", "info");
+```
+
+替换为：
 ```javascript
 function performLookup(config) {
   var executeBtn = document.getElementById("executeBtn");
@@ -101,18 +111,16 @@ function performLookup(config) {
   statusEl.style.display = "none";
 ```
 
-- [ ] **Step 2: 在 catch 之前添加 finally 块确保按钮恢复**
+- [ ] **Step 2: 在 catch 之后添加 finally 块确保按钮和进度条恢复**
 
-找到 `performLookup` 结尾的 `catch` 块（第 575-577 行）：
-
+找到 `performLookup` 结尾的 catch 块（第 575-577 行）：
 ```javascript
   }).catch(function (error) {
     setStatus("错误: " + error.message, "error");
   });
 ```
 
-将其修改为：
-
+替换为：
 ```javascript
   }).catch(function (error) {
     setStatus("错误: " + error.message, "error");
@@ -148,18 +156,18 @@ function updateProgressUI(percent, completed, total) {
 }
 ```
 
-- [ ] **Step 4: 修改小数据模式（if 分支）添加进度条**
+- [ ] **Step 4: 修改小数据模式（dataRowCount < LARGE_DATA_THRESHOLD 分支）添加进度条模拟**
 
-找到第 389 行附近的小数据模式分支开头：
-
-```javascript
-    if (dataRowCount < LARGE_DATA_THRESHOLD) {
-```
-
-在这一行之后、`// Small data: single read...` 注释之前，添加模拟进度：
-
+找到小数据模式分支（约第 389-511 行），找到这行：
 ```javascript
       if (dataRowCount < LARGE_DATA_THRESHOLD) {
+        // Small data: single read -> staticLookup -> single write
+```
+
+在 `{` 之后、`// Small data:` 注释之前插入：
+```javascript
+      if (dataRowCount < LARGE_DATA_THRESHOLD) {
+        // 小数据模式：启动进度条模拟
         var totalRows = dataRowCount;
         var progressStep = 0;
         var progressInterval = setInterval(function() {
@@ -167,12 +175,13 @@ function updateProgressUI(percent, completed, total) {
           var percent = progressStep;
           updateProgressUI(percent, Math.round(totalRows * percent / 100), totalRows);
         }, 200);
+
+        // Small data: single read -> staticLookup -> single write
 ```
 
-- [ ] **Step 5: 在小数据模式写入完成后清除定时器**
+- [ ] **Step 5: 在小数据模式成功完成处清除定时器并更新为100%**
 
-找到小数据模式写入完成后的位置（约第 507 行）：
-
+找到小数据模式写入完成后（约第 507-510 行）：
 ```javascript
       setStatus(
         "完成! 已写入 " + results.length + " 行 x " + returnColCount + " 列静态值",
@@ -180,43 +189,33 @@ function updateProgressUI(percent, completed, total) {
       );
 ```
 
-在这之后、`} else {`（大数据模式分支）之前，添加：
-
+在这行 `setStatus(...)` 之后、`} else {`（大数据分支）之前插入：
 ```javascript
         clearInterval(progressInterval);
         updateProgressUI(100, results.length, results.length);
       } else {
 ```
 
-- [ ] **Step 6: 修改大数据模式（else 分支）使用 updateProgressUI**
+- [ ] **Step 6: 修改大数据模式的进度更新为使用 updateProgressUI**
 
-找到大数据模式的进度更新行（第 570 行）：
-
+找到大数据模式的进度更新（约第 570 行）：
 ```javascript
+        // Update progress status
         setStatus("处理中... 已完成 " + processedRows + " / " + totalRows + " 行", "info");
 ```
 
 替换为：
-
 ```javascript
         var percent = Math.round((processedRows / totalRows) * 100);
         updateProgressUI(percent, processedRows, totalRows);
 ```
-
-找到大数据模式完成后的状态设置（约第 573 行）：
-
-```javascript
-      setStatus("完成! 已写入 " + totalRows + " 行 x " + returnColCount + " 列静态值", "success");
-```
-
-保持不变（updateProgressUI 在每批已调用，finally 阶段无需额外处理）。
 
 ---
 
 ## Task 4: 验证并测试
 
 **Files:**
-- Test: `src/taskpane/vlookup-taskpane.js`
+- Test: 手动测试整个流程
 
 - [ ] **Step 1: 启动开发服务器**
 
@@ -240,9 +239,13 @@ npm run start
 6. 进度条出现并更新
 7. 完成后按钮恢复
 
-- [ ] **Step 4: 测试小数据进度**
+- [ ] **Step 4: 测试小数据进度（<100000行）**
 
-选择少量数据（<100000行），观察进度条动画是否正常显示。
+选择少量数据，观察进度条动画是否正常显示（每200ms更新一次，模拟0-90%进度）。
+
+- [ ] **Step 5: 测试大数据进度（>100000行）**
+
+选择大量数据（>100000行），观察是否使用分批进度更新。
 
 ---
 
@@ -253,5 +256,5 @@ npm run start
 - [ ] 小数据模式（≤100000行）显示进度条
 - [ ] 大数据模式（>100000行）显示进度条
 - [ ] 处理完成后按钮恢复可用
-- [ ] 错误发生时按钮也能恢复
+- [ ] 错误发生时按钮和进度条也能恢复
 - [ ] 进度条宽度平滑过渡（transition: width 0.3s）
