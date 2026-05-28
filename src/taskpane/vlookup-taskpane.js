@@ -69,16 +69,14 @@ function initEventListeners() {
 }
 
 function loadInitialSelection() {
+  // 仅加载选择区域到 lookupValue（查找值区域），不自动填充 lookupTable
   Excel.run(async function (context) {
     var range = context.workbook.getSelectedRange();
     range.load("address");
     await context.sync();
 
     if (range.address) {
-      document.getElementById("lookupTable").value = range.address;
-      g_lookupTableParsed = parseRangeAddress(range.address);
-      // Auto-load headers after lookupTable is set
-      loadTableHeaders();
+      document.getElementById("lookupValue").value = range.address;
     }
   }).catch(function (error) {
     setStatus("加载选择失败: " + error.message, "error");
@@ -95,6 +93,7 @@ function refreshSelection(target) {
 
     if (target === "lookupTable") {
       g_lookupTableParsed = parseRangeAddress(range.address);
+      loadTableHeaders();
     }
   }).catch(function (error) {
     setStatus("刷新选择失败: " + error.message, "error");
