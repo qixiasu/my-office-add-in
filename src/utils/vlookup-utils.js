@@ -88,16 +88,32 @@ function staticLookup(
 
   var results = [];
 
+  console.log("[DEBUG staticLookup] lookupValues:", JSON.stringify(lookupValues));
+  console.log("[DEBUG staticLookup] lookupTable 行数:", lookupTable.length, "列数:", lookupTable[0] ? lookupTable[0].length : 0);
+  console.log("[DEBUG staticLookup] matchColIndex:", matchColIndex, "returnColIndices:", JSON.stringify(returnColIndices), "matchMode:", matchMode);
+
+  // 打印查找表第一列（match列）的实际内容
+  if (lookupTable.length > 0) {
+    var matchColValues = [];
+    for (var mi = 0; mi < lookupTable.length; mi++) {
+      matchColValues.push(lookupTable[mi][matchColIndex]);
+    }
+    console.log("[DEBUG staticLookup] 查找表 match 列内容:", JSON.stringify(matchColValues));
+  }
+
   var index = {};
   if (matchMode === 0) {
+    console.log("[DEBUG staticLookup] 构建 index 哈希表 (精确匹配模式)");
     for (var r = 0; r < lookupTable.length; r++) {
       var key = lookupTable[r][matchColIndex];
       if (key === null || key === undefined) {
         key = "";
       }
       key = String(key);
+      console.log("[DEBUG staticLookup] index['" + key + "'] = " + r);
       index[key] = r;
     }
+    console.log("[DEBUG staticLookup] index 哈希表构建完成:", JSON.stringify(index));
   }
 
   for (var i = 0; i < lookupValues.length; i++) {
@@ -106,6 +122,7 @@ function staticLookup(
     if (val === null || val === undefined) {
       val = "";
     }
+    console.log("[DEBUG staticLookup] 查找第", i, "个值:", JSON.stringify(val), "类型:", typeof val);
     // Null/undefined in approximate mode → defaultValue (avoid Number("") → 0)
     if (matchMode !== 0 && (lookupValues[i] === null || lookupValues[i] === undefined)) {
       for (var q = 0; q < returnColIndices.length; q++) {
@@ -115,9 +132,11 @@ function staticLookup(
       continue;
     }
     var valStr = String(val);
+    console.log("[DEBUG staticLookup] valStr =", JSON.stringify(valStr));
 
     if (matchMode === 0) {
       var matchedRow = index[valStr];
+      console.log("[DEBUG staticLookup] 精确匹配: index['" + valStr + "'] =", matchedRow);
       if (matchedRow !== undefined) {
         for (var j = 0; j < returnColIndices.length; j++) {
           row.push(lookupTable[matchedRow][returnColIndices[j]]);
