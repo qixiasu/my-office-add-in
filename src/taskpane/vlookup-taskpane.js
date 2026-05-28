@@ -5,7 +5,7 @@
 
 /* global console, document, Excel, Office */
 
-var { staticLookup, parseRangeAddress } = require("../utils/vlookup-utils");
+var { staticLookup, parseRangeAddress, buildLookupIndex } = require("../utils/vlookup-utils");
 
 var { getColumnLetter } = require("../utils/concat-utils");
 
@@ -452,6 +452,12 @@ function performLookup(config) {
         console.log("[DEBUG] lookupValue 第一行是表头，跳过，从行", lvDataStartRow, "开始");
       }
 
+      // Build lookup index once for reuse
+      var lookupIndex = null;
+      if (config.matchMode === 0) {
+        lookupIndex = buildLookupIndex(g_lookupTableData, config.matchColIndex);
+      }
+
       var lookupValues = [];
       var lookupValuesStartRow = lvDataStartRow;
       for (var j = lvDataStartRow - lvParsed.startRow; j < dataRange.values.length; j++) {
@@ -465,7 +471,8 @@ function performLookup(config) {
         config.matchColIndex,
         config.returnColIndices,
         config.matchMode,
-        config.defaultValue
+        config.defaultValue,
+        lookupIndex
       );
       console.log(
         "[DEBUG] staticLookup 结果, results.length:",
@@ -564,6 +571,12 @@ function performLookup(config) {
       lvWorksheet.activate();
       await context.sync();
 
+      // Build lookup index once for all batches
+      var lookupIndex = null;
+      if (config.matchMode === 0) {
+        lookupIndex = buildLookupIndex(g_lookupTableData, config.matchColIndex);
+      }
+
       while (processedRows < totalRows) {
         var currentBatchSize = Math.min(BATCH_SIZE, totalRows - processedRows);
         var batchStartRow = dataStartRow + processedRows;
@@ -588,7 +601,8 @@ function performLookup(config) {
           config.matchColIndex,
           config.returnColIndices,
           config.matchMode,
-          config.defaultValue
+          config.defaultValue,
+          lookupIndex
         );
 
         // Write current batch results
