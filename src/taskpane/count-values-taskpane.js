@@ -197,9 +197,11 @@ function executeCount(worksheet, columnDataRanges, headerRow, executeBtn) {
       headerCell.values = [[headerValue + "-计数"]];
 
       // Step 5: 生成计数结果数组（2D 数组格式）
+      // 使用实际数据行数（lastRow - dataStartRow + 1）而不是 usedRange.rowCount
+      // values 数组索引与数据行对应：values[0] 对应 dataStartRow 行
       var dataRowCount = lastRow - dataStartRow + 1;
       var countResults = [];
-      for (var dr = 0; dr < rowCount; dr++) {
+      for (var dr = 0; dr < dataRowCount; dr++) {
         var cellValue = values[dr][0];
         var count = countMap.get(cellValue) || 0;
         countResults.push([count]);
