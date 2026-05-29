@@ -80,9 +80,9 @@ function runCount() {
         var currentColIndex = colIndex + i;
         var colLetter = getColumnLetter(currentColIndex);
 
-        // 获取表头值
+        // 获取表头值（加载 values 属性，返回 2D 数组）
         var headerCell = worksheet.getRange(colLetter + headerRow);
-        headerCell.load("value");
+        headerCell.load("values");
         columns.push({
           colLetter: colLetter,
           colIndex: currentColIndex,
@@ -91,6 +91,16 @@ function runCount() {
       }
 
       return context.sync().then(function () {
+        // 获取每个列的表头值（Excel API 使用 .values[0][0] 获取单列元格的值）
+        for (var i = 0; i < columns.length; i++) {
+          var rawValue = columns[i].headerCell.values[0][0];
+          var headerText = (rawValue !== null && rawValue !== undefined) ? String(rawValue) : "";
+          if (headerText === "") {
+            headerText = "Column" + (columns[i].colIndex + 1);
+          }
+          columns[i].headerText = headerText;
+        }
+
         // 获取每个列的数据范围（表头行下方到最后一行的数据）
         var dataStartRow = headerRow + 1;
 
@@ -101,11 +111,6 @@ function runCount() {
         for (var j = 0; j < columns.length; j++) {
           var col = columns[j];
           var colLetter = col.colLetter;
-
-          // 使用 getUsedRange 获取实际使用范围
-          var usedRange = worksheet.getRange(colLetter + ":" + colLetter);
-          usedRange.load("rowCount");
-          usedRange.load("columnCount");
 
           // 获取特定列的UsedRange
           var singleColUsed = worksheet.getRange(colLetter + dataStartRow + ":" + colLetter + 1000000);
@@ -134,10 +139,8 @@ function runCount() {
               }
             }
             item.lastRow = lastRow;
-            item.headerValue = item.col.headerCell.value;
-            if (item.headerValue === null || item.headerValue === "") {
-              item.headerValue = "Column" + (item.col.colIndex + 1);
-            }
+            // 使用之前保存的 headerText 字符串，而不是通过 Excel proxy 对象获取
+            item.headerValue = item.col.headerText;
           }
 
           // 执行计数操作
@@ -163,7 +166,8 @@ function executeCount(worksheet, columnDataRanges, headerRow, executeBtn) {
   return Excel.run(function (context) {
     var results = [];
 
-    for (var i = 0; i < columnDataRanges.length; i++) {
+    // 从右到左处理，避免插入列后影响后续列的索引
+    for (var i = columnDataRanges.length - 1; i >= 0; i--) {
       var item = columnDataRanges[i];
       var colLetter = item.col.colLetter;
       var colIndex = item.col.colIndex;
