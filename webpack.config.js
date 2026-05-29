@@ -24,6 +24,7 @@ module.exports = async (env, options) => {
       "vlookup-taskpane": ["./src/taskpane/vlookup-taskpane.js", "./src/taskpane/vlookup-taskpane.html"],
       "fill-series-taskpane": ["./src/taskpane/fill-series-taskpane.js", "./src/taskpane/fill-series-taskpane.html"],
       "count-values-taskpane": ["./src/taskpane/count-values-taskpane.js", "./src/taskpane/count-values-taskpane.html"],
+      "expand-taskpane": ["./src/taskpane/expand-taskpane.js", "./src/taskpane/expand-taskpane.html"],
     },
     output: {
       clean: true,
@@ -108,6 +109,11 @@ module.exports = async (env, options) => {
         filename: "count-values-taskpane.html",
         template: "./src/taskpane/count-values-taskpane.html",
         chunks: ["polyfill", "count-values-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "expand-taskpane.html",
+        template: "./src/taskpane/expand-taskpane.html",
+        chunks: ["polyfill", "expand-taskpane"],
       }),
     ],
     devServer: {
