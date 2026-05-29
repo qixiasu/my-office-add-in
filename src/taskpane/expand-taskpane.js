@@ -80,6 +80,34 @@ function runExpand() {
 
       // 读取数据
       var values = range.values;
+
+      // 校验 values 是否有效
+      if (!values || !Array.isArray(values)) {
+        executeBtn.disabled = false;
+        setStatus("错误：无法读取选中区域的数据", "error");
+        return;
+      }
+
+      // 过滤掉完全为空的行（当选择整列时可能包含 null 行）
+      var filteredRows = [];
+      for (var r = 0; r < values.length; r++) {
+        var row = values[r];
+        if (!row || !Array.isArray(row)) {
+          continue;
+        }
+        var hasContent = false;
+        for (var c = 0; c < row.length; c++) {
+          if (row[c] !== null && row[c] !== undefined && row[c] !== "") {
+            hasContent = true;
+            break;
+          }
+        }
+        if (hasContent) {
+          filteredRows.push(row);
+        }
+      }
+      values = filteredRows;
+
       if (values.length <= 1) {
         executeBtn.disabled = false;
         setStatus("错误：选中区域没有数据", "error");
