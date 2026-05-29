@@ -23,6 +23,7 @@ module.exports = async (env, options) => {
       "csv-import-taskpane": ["./src/taskpane/csv-import-taskpane.js", "./src/taskpane/csv-import-taskpane.html"],
       "vlookup-taskpane": ["./src/taskpane/vlookup-taskpane.js", "./src/taskpane/vlookup-taskpane.html"],
       "fill-series-taskpane": ["./src/taskpane/fill-series-taskpane.js", "./src/taskpane/fill-series-taskpane.html"],
+      "count-values-taskpane": ["./src/taskpane/count-values-taskpane.js", "./src/taskpane/count-values-taskpane.html"],
     },
     output: {
       clean: true,
@@ -102,6 +103,11 @@ module.exports = async (env, options) => {
         filename: "fill-series-taskpane.html",
         template: "./src/taskpane/fill-series-taskpane.html",
         chunks: ["polyfill", "fill-series-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "count-values-taskpane.html",
+        template: "./src/taskpane/count-values-taskpane.html",
+        chunks: ["polyfill", "count-values-taskpane"],
       }),
     ],
     devServer: {
