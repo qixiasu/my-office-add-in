@@ -15,7 +15,15 @@ function expandData(values) {
   // 从第1行开始是数据（第0行是表头）
   for (var i = 1; i < values.length; i++) {
     var row = values[i];
+    // 跳过空行（当选择整列时 values[i] 可能为 null）
+    if (!row || !Array.isArray(row)) {
+      continue;
+    }
     var key = row[0];
+    // 跳过键列为空的行
+    if (key === null || key === "" || key === undefined) {
+      continue;
+    }
 
     // 遍历其他列（从索引1开始）
     for (var j = 1; j < row.length; j++) {
