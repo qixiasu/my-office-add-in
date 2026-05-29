@@ -155,7 +155,7 @@ function runCount() {
 }
 
 /**
- * 执行计数操作：插入新列并写入 COUNTIF 公式
+ * 执行计数操作：使用 Map 在内存中统计每个值的出现次数
  * @param {object} worksheet - Excel worksheet 对象
  * @param {Array} columnDataRanges - 列数据范围信息数组
  * @param {number} headerRow - 表头行号
@@ -174,37 +174,49 @@ function executeCount(worksheet, columnDataRanges, headerRow, executeBtn) {
       var dataStartRow = item.dataStartRow;
       var lastRow = item.lastRow;
       var headerValue = item.headerValue;
+      var values = item.usedRange.values;
+      var rowCount = item.usedRange.rowCount;
 
-      // 在当前列后插入新列
+      // Step 2: 用 Map 统计每个值的出现次数
+      var countMap = new Map();
+      for (var r = 0; r < rowCount; r++) {
+        var key = values[r][0];
+        // 跳过空值
+        if (key === null || key === undefined || key === "") {
+          continue;
+        }
+        countMap.set(key, (countMap.get(key) || 0) + 1);
+      }
+
+      // Step 3: 在当前列后插入新列
       var resultColLetter = getColumnLetter(colIndex + 1);
       worksheet.getRange(resultColLetter + ":" + resultColLetter).insert(Excel.InsertShiftDirection.right);
 
-      // 写入表头
+      // Step 4: 写入表头
       var headerCell = worksheet.getRange(resultColLetter + headerRow);
       headerCell.values = [[headerValue + "-计数"]];
 
-      // 生成 COUNTIF 公式
-      var formula = "=COUNTIF($" + colLetter + "$" + dataStartRow + ":$" + colLetter + "$" + lastRow + "," + colLetter + dataStartRow + ")";
-
-      // 写入第一行公式
-      var startCell = worksheet.getRange(resultColLetter + dataStartRow);
-      startCell.formulas = [[formula]];
-
-      // 自动填充到最后一行
-      if (lastRow > dataStartRow) {
-        var fillRange = worksheet.getRange(resultColLetter + dataStartRow + ":" + resultColLetter + lastRow);
-        startCell.autoFill(fillRange, Excel.AutoFillType.fillDefault);
+      // Step 5: 生成计数结果数组（2D 数组格式）
+      var dataRowCount = lastRow - dataStartRow + 1;
+      var countResults = [];
+      for (var dr = 0; dr < rowCount; dr++) {
+        var cellValue = values[dr][0];
+        var count = countMap.get(cellValue) || 0;
+        countResults.push([count]);
       }
+
+      // Step 6: 一次性写入所有计数结果
+      var dataRange = worksheet.getRange(resultColLetter + dataStartRow + ":" + resultColLetter + lastRow);
+      dataRange.values = countResults;
 
       results.push({
         colLetter: colLetter,
         resultColLetter: resultColLetter,
-        rowCount: lastRow - dataStartRow + 1
+        rowCount: dataRowCount
       });
     }
 
     return context.sync().then(function () {
-      // 汇总结果信息
       var resultParts = [];
       for (var j = 0; j < results.length; j++) {
         var res = results[j];
