@@ -94,6 +94,22 @@
                   </Icon>
                   <Action xsi:type="ShowTaskpane"><TaskpaneId>FillSeriesTaskpaneId</TaskpaneId><SourceLocation resid="FillSeriesTaskpane.Url"/></Action>
                 </Control>
+                <Control xsi:type="Button" id="CountValuesButton">
+                  <Label resid="CountValuesButton.Label"/>
+                  <Supertip>
+                    <Title resid="CountValuesButton.Label"/>
+                    <Description resid="CountValuesButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="CountValuesIcon.16x16"/>
+                    <bt:Image size="32" resid="CountValuesIcon.32x32"/>
+                    <bt:Image size="80" resid="CountValuesIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>CountValuesTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="CountValuesTaskpane.Url"/>
+                  </Action>
+                </Control>
               </Group>
               <Label resid="CustomTab.Label"/>
             </CustomTab>
@@ -121,6 +137,9 @@
         <bt:Image id="FillSeriesIcon.16x16" DefaultValue="https://localhost:3000/assets/fill-series-16.png"/>
         <bt:Image id="FillSeriesIcon.32x32" DefaultValue="https://localhost:3000/assets/fill-series-32.png"/>
         <bt:Image id="FillSeriesIcon.80x80" DefaultValue="https://localhost:3000/assets/fill-series-80.png"/>
+        <bt:Image id="CountValuesIcon.16x16" DefaultValue="https://localhost:3000/assets/count-values-16.png"/>
+        <bt:Image id="CountValuesIcon.32x32" DefaultValue="https://localhost:3000/assets/count-values-32.png"/>
+        <bt:Image id="CountValuesIcon.80x80" DefaultValue="https://localhost:3000/assets/count-values-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
@@ -128,6 +147,7 @@
         <bt:Url id="CSVImportTaskpane.Url" DefaultValue="https://localhost:3000/csv-import-taskpane.html"/>
         <bt:Url id="VlookupTaskpane.Url" DefaultValue="https://localhost:3000/vlookup-taskpane.html"/>
         <bt:Url id="FillSeriesTaskpane.Url" DefaultValue="https://localhost:3000/fill-series-taskpane.html"/>
+        <bt:Url id="CountValuesTaskpane.Url" DefaultValue="https://localhost:3000/count-values-taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="CustomTab.Label" DefaultValue="我的工具"/>
@@ -136,12 +156,14 @@
         <bt:String id="ImportCsvButton.Label" DefaultValue="导入CSV"/>
         <bt:String id="EnhancedVlookupButton.Label" DefaultValue="增强查找"/>
         <bt:String id="FillSeriesLabel" DefaultValue="填充序列"/>
+        <bt:String id="CountValuesButton.Label" DefaultValue="字段计数"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
         <bt:String id="ImportCsvButton.Tooltip" DefaultValue="用 UTF-8 编码正确导入 CSV/文本文件，支持自定义分隔符"/>
         <bt:String id="EnhancedVlookupButton.Tooltip" DefaultValue="增强版查找功能：一次配置完成多列 INDEX/MATCH 查找，匹配列可在任意位置"/>
         <bt:String id="FillSeriesTooltip" DefaultValue="打开填充序列工具面板"/>
+        <bt:String id="CountValuesButton.Tooltip" DefaultValue="统计选中列每个字段值出现的次数"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
