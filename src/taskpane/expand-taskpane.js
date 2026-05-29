@@ -12,11 +12,19 @@ var MAX_ROWS = 1050000;
 Office.onReady(function (info) {
   if (info.host === Office.HostType.Excel) {
     var executeBtn = document.getElementById("executeBtn");
+    var refreshBtn = document.getElementById("refreshBtn");
 
     // 按钮点击触发展开
     executeBtn.addEventListener("click", function () {
       runExpand();
     });
+
+    // 刷新按钮点击更新选择信息
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", function () {
+        updateSelectionInfo();
+      });
+    }
 
     // 初始化时显示当前选中区域
     updateSelectionInfo();
@@ -35,8 +43,7 @@ function updateSelectionInfo() {
     range.load(["address"]);
     return context.sync().then(function () {
       var selectionInfo = document.getElementById("selectionInfo");
-      selectionInfo.textContent = range.address;
-      selectionInfo.className = "selection-info has-selection";
+      selectionInfo.value = range.address;
     });
   }).catch(function (error) {
     console.error("Failed to get selection:", error);
@@ -90,45 +97,51 @@ function runExpand() {
 
       // 获取原工作表名称
       var originalSheet = context.workbook.worksheets.getActiveWorksheet();
-      var originalSheetName = originalSheet.name;
-      var newSheetName = originalSheetName + "_展开";
-
-      // 创建新工作表（在原工作表之后）
-      var sheetCollection = context.workbook.worksheets;
-      sheetCollection.load("items");
+      originalSheet.load("name");
       return context.sync().then(function () {
-        // 检查是否存在同名工作表，如果存在则添加后缀
-        var existingNames = sheetCollection.items.map(function (s) {
-          return s.name;
-        });
+        var originalSheetName = originalSheet.name;
+        var newSheetName = originalSheetName + "_展开";
 
-        var finalSheetName = newSheetName;
-        var counter = 1;
-        while (existingNames.indexOf(finalSheetName) !== -1) {
-          finalSheetName = newSheetName + " (" + counter + ")";
-          counter++;
-        }
-
-        // 添加新工作表
-        var newSheet = sheetCollection.add(originalSheetName + "_展开");
-        newSheet.position = originalSheet.index + 1;
-
-        // 写入表头
-        var headerRange = newSheet.getRange("A1:B1");
-        headerRange.values = [[values[0][0], "展开值"]];
-
-        // 写入展开后的数据
-        if (result.length > 0) {
-          var dataRange = newSheet.getRange("A2:B" + (result.length + 1));
-          dataRange.values = result;
-        }
-
+        // 创建新工作表（在原工作表之后）
+        var sheetCollection = context.workbook.worksheets;
+        sheetCollection.load("items");
         return context.sync().then(function () {
-          setStatus(
-            "完成! 已在「" + finalSheetName + "」工作表写入 " + result.length + " 行数据",
-            "success"
-          );
-          executeBtn.disabled = false;
+          // 检查是否存在同名工作表，如果存在则添加后缀
+          var existingNames = sheetCollection.items.map(function (s) {
+            s.load("name");
+            return s.name;
+          });
+          return context.sync().then(function () {
+
+            var finalSheetName = newSheetName;
+            var counter = 1;
+            while (existingNames.indexOf(finalSheetName) !== -1) {
+              finalSheetName = newSheetName + " (" + counter + ")";
+              counter++;
+            }
+
+            // 添加新工作表
+            var newSheet = sheetCollection.add(originalSheetName + "_展开");
+            newSheet.position = originalSheet.index + 1;
+
+            // 写入表头
+            var headerRange = newSheet.getRange("A1:B1");
+            headerRange.values = [[values[0][0], "展开值"]];
+
+            // 写入展开后的数据
+            if (result.length > 0) {
+              var dataRange = newSheet.getRange("A2:B" + (result.length + 1));
+              dataRange.values = result;
+            }
+
+            return context.sync().then(function () {
+              setStatus(
+                "完成! 已在「" + finalSheetName + "」工作表写入 " + result.length + " 行数据",
+                "success"
+              );
+              executeBtn.disabled = false;
+            });
+          });
         });
       });
     });
