@@ -1,0 +1,51 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>展开列工具</title>
+
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
+
+    <!-- Template styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+    <link href="expand-taskpane.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+    <div class="concat-container">
+        <h1 class="concat-title">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#0078d4">
+                <path d="M16 5H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1zm-1 8H5V7h10v6z"/>
+                <path d="M7 9h2v2H7zM11 9h2v2h-2zM7 12h2v2H7zM11 12h2v2h-2z"/>
+            </svg>
+            展开列工具
+        </h1>
+
+        <div class="guide-card">
+            <p>
+                <span class="guide-step">1. 在 Excel 中选中包含数据的区域</span><br>
+                <span class="guide-step">2. 点击「执行展开」按钮</span>
+            </p>
+        </div>
+
+        <div class="concat-form-group">
+            <label class="concat-label">当前选中</label>
+            <div id="selectionInfo" class="selection-info">等待选择数据...</div>
+        </div>
+
+        <button id="executeBtn" class="concat-button">执行展开</button>
+
+        <div id="status" class="status-message status-idle">状态：等待操作...</div>
+    </div>
+</body>
+
+</html>
