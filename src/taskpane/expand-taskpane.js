@@ -62,7 +62,7 @@ function runExpand() {
 
   Excel.run(function (context) {
     var range = context.workbook.getSelectedRange();
-    range.load(["address", "columnCount", "rowCount"]);
+    range.load(["address", "columnCount", "rowCount", "values"]);
     return context.sync().then(function () {
       // 校验：至少2列
       if (range.columnCount < 2) {
