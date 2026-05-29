@@ -186,6 +186,47 @@ def draw_tools(draw, w):
                      fill=PURPLE)
 
 
+def draw_expand(draw, w):
+    """Left column expanding into multiple columns on the right."""
+    margin = w * 0.08
+
+    # Left column (dark blue) - the key column
+    lx = margin
+    ly = margin
+    lw_col = w * 0.22
+    lh_col = w - 2 * margin
+    r = w * 0.06
+    filled_rounded_rect(draw, [lx, ly, lx + lw_col, ly + lh_col], int(r), DARK_BG)
+
+    # Arrow from left column to right side
+    arrow_cx = lx + lw_col + w * 0.1
+    arrow_cy = w / 2
+    arrow_len = w * 0.12
+    lw_arrow = max(2, int(w * 0.05))
+    draw.line([arrow_cx, arrow_cy, arrow_cx + arrow_len, arrow_cy], fill=BLUE, width=lw_arrow)
+    # Arrow head
+    draw.polygon([
+        arrow_cx + arrow_len, arrow_cy,
+        arrow_cx + arrow_len - w * 0.06, arrow_cy - w * 0.05,
+        arrow_cx + arrow_len - w * 0.06, arrow_cy + w * 0.05,
+    ], fill=BLUE)
+
+    # Right side - 3 small columns spreading outward (emerald, teal, amber)
+    colors = [EMERALD, TEAL, BLUE]
+    start_x = w * 0.55
+    col_w = w * 0.12
+    spacing = w * 0.12
+
+    for i, color in enumerate(colors):
+        cx = start_x + i * spacing
+        cy = w / 2
+        h = (w * 0.35) + (i - 1) * w * 0.08  # varying heights for visual interest
+        filled_rounded_rect(draw, [
+            cx - col_w / 2, cy - h / 2,
+            cx + col_w / 2, cy + h / 2
+        ], int(w * 0.04), color)
+
+
 def generate_icon(name, draw_func):
     """Generate icon at all sizes."""
     for size in SIZES:
@@ -205,6 +246,7 @@ if __name__ == "__main__":
         ("import", draw_import),
         ("lookup", draw_lookup),
         ("tools", draw_tools),
+        ("expand", draw_expand),
     ]
 
     for name, func in icons:
