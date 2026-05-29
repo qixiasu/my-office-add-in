@@ -115,7 +115,7 @@ function runExpand() {
 
         // 写入表头
         var headerRange = newSheet.getRange("A1:B1");
-        headerRange.values = [[values[0][0], values[0][1] || "展开值"]];
+        headerRange.values = [[values[0][0], "展开值"]];
 
         // 写入展开后的数据
         if (result.length > 0) {
