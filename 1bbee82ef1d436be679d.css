@@ -1,0 +1,218 @@
+/* Split Sheet Taskpane Styles */
+
+.split-sheet-container {
+  padding: 20px;
+}
+
+.split-sheet-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0078d4;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.split-sheet-title svg {
+  flex-shrink: 0;
+}
+
+.guide-card {
+  background: #f0f7ff;
+  border-left: 3px solid #0078d4;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.guide-card p {
+  font-size: 13px;
+  color: #005a9e;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.split-sheet-form-group {
+  margin-bottom: 16px;
+}
+
+.split-sheet-label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.split-sheet-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #0078d4;
+  border-radius: 6px;
+  font-size: 15px;
+  outline: none;
+  transition: box-shadow 0.2s;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.split-sheet-input:focus {
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
+}
+
+.split-sheet-input:read-only {
+  background: #f3f3f3;
+  color: #666;
+  border-color: #edebe9;
+}
+
+.split-sheet-input:read-only:focus {
+  box-shadow: none;
+}
+
+.split-sheet-input--number {
+  width: 100px;
+}
+
+.split-sheet-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.split-sheet-select {
+  cursor: pointer;
+}
+
+.split-sheet-btn {
+  padding: 6px 12px;
+  background: transparent;
+  color: #0078d4;
+  border: 1px solid #0078d4;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.split-sheet-btn:hover {
+  background: #0078d4;
+  color: white;
+}
+
+.split-sheet-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.split-sheet-button {
+  padding: 10px 16px;
+  background: transparent;
+  color: #0078d4;
+  border: 2px solid #0078d4;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.split-sheet-button:hover {
+  background: #0078d4;
+  color: white;
+}
+
+.split-sheet-button:active {
+  background: #005a9e;
+  border-color: #005a9e;
+}
+
+.split-sheet-button:disabled {
+  background: #f5f5f5;
+  color: #999;
+  border-color: #999;
+  cursor: not-allowed;
+}
+
+.split-sheet-button--primary {
+  background: #0078d4;
+  color: white;
+}
+
+.split-sheet-button--primary:hover {
+  background: #005a9e;
+  border-color: #005a9e;
+}
+
+.split-sheet-divider {
+  height: 1px;
+  background: #edebe9;
+  margin: 16px 0;
+}
+
+.split-sheet-status {
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.split-sheet-status--idle {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.split-sheet-status--success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.split-sheet-status--error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.split-sheet-status--loading {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+}
+
+.split-sheet-progress {
+  margin: 12px 0;
+}
+
+.split-sheet-progress-label {
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: #0057b7;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.split-sheet-progress-bar {
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.split-sheet-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0078d4, #00b4d8);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.split-sheet-progress-detail {
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+}
