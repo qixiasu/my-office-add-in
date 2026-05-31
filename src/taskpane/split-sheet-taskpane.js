@@ -190,12 +190,23 @@ function performSplit(config) {
 
     // Read entire data range
     var dataStartRow = config.headerRow;
+    // Detect full column selection: endRow=1 often means entire columns were selected
+    // In that case, use the worksheet's used range to find actual last row
+    var actualEndRow = parsed.endRow;
+    if (parsed.endRow === 1) {
+      var sheetUsedRange = worksheet.getUsedRange();
+      sheetUsedRange.load("rowCount");
+      await context.sync();
+      actualEndRow = sheetUsedRange.rowCount;
+      
+    }
+
     var dataRange = worksheet.getRange(
       getColumnLetter(parsed.startCol) +
         dataStartRow +
         ":" +
         getColumnLetter(parsed.endCol) +
-        parsed.endRow
+        actualEndRow
     );
     dataRange.load("values");
     await context.sync();
