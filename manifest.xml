@@ -71,9 +71,7 @@
                     <Description resid="SplitSheetButton.Tooltip"/>
                   </Supertip>
                   <Icon>
-                    <bt:Image size="16" resid="LookupIcon.16x16"/>
-                    <bt:Image size="32" resid="LookupIcon.32x32"/>
-                    <bt:Image size="80" resid="LookupIcon.80x80"/>
+                    <bt:Image size="16" resid="SplitSheetIcon.16x16"/><bt:Image size="32" resid="SplitSheetIcon.32x32"/><bt:Image size="80" resid="SplitSheetIcon.80x80"/>
                   </Icon>
                   <Action xsi:type="ShowTaskpane">
                     <TaskpaneId>SplitSheetTaskpaneId</TaskpaneId>
@@ -180,7 +178,7 @@
         <bt:Image id="ImportIcon.80x80" DefaultValue="https://localhost:3000/assets/import-80.png"/>
         <bt:Image id="LookupIcon.16x16" DefaultValue="https://localhost:3000/assets/lookup-16.png"/>
         <bt:Image id="LookupIcon.32x32" DefaultValue="https://localhost:3000/assets/lookup-32.png"/>
-        <bt:Image id="LookupIcon.80x80" DefaultValue="https://localhost:3000/assets/lookup-80.png"/>
+        <bt:Image id="LookupIcon.80x80" DefaultValue="https://localhost:3000/assets/lookup-80.png"/><bt:Image id="SplitSheetIcon.16x16" DefaultValue="https://localhost:3000/assets/split-sheet-16.png"/><bt:Image id="SplitSheetIcon.32x32" DefaultValue="https://localhost:3000/assets/split-sheet-32.png"/><bt:Image id="SplitSheetIcon.80x80" DefaultValue="https://localhost:3000/assets/split-sheet-80.png"/>
         <bt:Image id="FillSeriesIcon.16x16" DefaultValue="https://localhost:3000/assets/fill-series-16.png"/>
         <bt:Image id="FillSeriesIcon.32x32" DefaultValue="https://localhost:3000/assets/fill-series-32.png"/>
         <bt:Image id="FillSeriesIcon.80x80" DefaultValue="https://localhost:3000/assets/fill-series-80.png"/>
