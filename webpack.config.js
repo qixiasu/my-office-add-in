@@ -25,6 +25,7 @@ module.exports = async (env, options) => {
       "fill-series-taskpane": ["./src/taskpane/fill-series-taskpane.js", "./src/taskpane/fill-series-taskpane.html"],
       "count-values-taskpane": ["./src/taskpane/count-values-taskpane.js", "./src/taskpane/count-values-taskpane.html"],
       "expand-taskpane": ["./src/taskpane/expand-taskpane.js", "./src/taskpane/expand-taskpane.html"],
+      "split-sheet-taskpane": ["./src/taskpane/split-sheet-taskpane.js", "./src/taskpane/split-sheet-taskpane.html"],
     },
     output: {
       clean: true,
@@ -114,6 +115,11 @@ module.exports = async (env, options) => {
         filename: "expand-taskpane.html",
         template: "./src/taskpane/expand-taskpane.html",
         chunks: ["polyfill", "expand-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "split-sheet-taskpane.html",
+        template: "./src/taskpane/split-sheet-taskpane.html",
+        chunks: ["polyfill", "split-sheet-taskpane"],
       }),
       new HtmlWebpackPlugin({
         filename: "index.html",

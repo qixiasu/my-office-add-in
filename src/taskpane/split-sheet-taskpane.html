@@ -1,0 +1,86 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>按列拆分数据</title>
+
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
+
+    <!-- Template styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+    <link href="split-sheet-taskpane.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+    <div class="split-sheet-container">
+        <!-- Title with SVG icon -->
+        <h1 class="split-sheet-title">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#0078d4">
+                <path d="M9 2H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zm8 0h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM9 5h2v2H9V5zm0 4h2v2H9V9zm0 4h2v2H9v-2z"/>
+            </svg>
+            按列拆分数据
+        </h1>
+
+        <!-- Guide card -->
+        <div class="guide-card">
+            <p>将数据按某一列的值拆分为多个新工作表</p>
+        </div>
+
+        <!-- Form -->
+        <form id="splitSheetForm">
+            <!-- 数据区域 -->
+            <div class="split-sheet-form-group">
+                <label for="dataRange" class="split-sheet-label">数据区域</label>
+                <div class="split-sheet-input-row">
+                    <input type="text" id="dataRange" class="split-sheet-input" readonly placeholder="选择数据区域" />
+                    <button type="button" id="refreshRange" class="split-sheet-btn">刷新选择</button>
+                </div>
+            </div>
+
+            <!-- 表头行号 -->
+            <div class="split-sheet-form-group">
+                <label for="headerRow" class="split-sheet-label">表头行号</label>
+                <div class="split-sheet-input-row">
+                    <input type="number" id="headerRow" class="split-sheet-input split-sheet-input--number" value="1" min="1" />
+                </div>
+            </div>
+
+            <!-- 关键列 -->
+            <div class="split-sheet-form-group">
+                <label for="keyColumn" class="split-sheet-label">关键列</label>
+                <select id="keyColumn" class="split-sheet-input">
+                    <option value="">-- 请先选择数据区域 --</option>
+                </select>
+            </div>
+
+        </form>
+
+        <!-- Button row -->
+        <div class="split-sheet-btn-row">
+            <button type="button" id="executeBtn" class="split-sheet-button split-sheet-button--primary" disabled>执行拆分</button>
+        </div>
+
+        <!-- Progress bar (hidden by default) -->
+        <div id="progressContainer" class="split-sheet-progress" style="display:none">
+            <div id="progressStatus" class="split-sheet-progress-label">处理中...</div>
+            <div class="split-sheet-progress-bar">
+                <div id="progressBarFill" class="split-sheet-progress-fill"></div>
+            </div>
+            <div id="progressDetail" class="split-sheet-progress-detail"></div>
+        </div>
+
+        <!-- Status message -->
+        <div id="statusMessage" class="split-sheet-status split-sheet-status--idle">状态：等待操作...</div>
+    </div>
+</body>
+
+</html>

@@ -64,6 +64,20 @@
                     <SourceLocation resid="CountValuesTaskpane.Url"/>
                   </Action>
                 </Control>
+                <Control xsi:type="Button" id="SplitSheetButton">
+                  <Label resid="SplitSheetButton.Label"/>
+                  <Supertip>
+                    <Title resid="SplitSheetButton.Label"/>
+                    <Description resid="SplitSheetButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="SplitSheetIcon.16x16"/><bt:Image size="32" resid="SplitSheetIcon.32x32"/><bt:Image size="80" resid="SplitSheetIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>SplitSheetTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="SplitSheetTaskpane.Url"/>
+                  </Action>
+                </Control>
               </Group>
               <Group id="DataConversionGroup">
                 <Label resid="DataConversionGroup.Label"/>
@@ -164,7 +178,7 @@
         <bt:Image id="ImportIcon.80x80" DefaultValue="https://localhost:3000/assets/import-80.png"/>
         <bt:Image id="LookupIcon.16x16" DefaultValue="https://localhost:3000/assets/lookup-16.png"/>
         <bt:Image id="LookupIcon.32x32" DefaultValue="https://localhost:3000/assets/lookup-32.png"/>
-        <bt:Image id="LookupIcon.80x80" DefaultValue="https://localhost:3000/assets/lookup-80.png"/>
+        <bt:Image id="LookupIcon.80x80" DefaultValue="https://localhost:3000/assets/lookup-80.png"/><bt:Image id="SplitSheetIcon.16x16" DefaultValue="https://localhost:3000/assets/split-sheet-16.png"/><bt:Image id="SplitSheetIcon.32x32" DefaultValue="https://localhost:3000/assets/split-sheet-32.png"/><bt:Image id="SplitSheetIcon.80x80" DefaultValue="https://localhost:3000/assets/split-sheet-80.png"/>
         <bt:Image id="FillSeriesIcon.16x16" DefaultValue="https://localhost:3000/assets/fill-series-16.png"/>
         <bt:Image id="FillSeriesIcon.32x32" DefaultValue="https://localhost:3000/assets/fill-series-32.png"/>
         <bt:Image id="FillSeriesIcon.80x80" DefaultValue="https://localhost:3000/assets/fill-series-80.png"/>
@@ -183,6 +197,7 @@
         <bt:Url id="FillSeriesTaskpane.Url" DefaultValue="https://localhost:3000/fill-series-taskpane.html"/>
         <bt:Url id="CountValuesTaskpane.Url" DefaultValue="https://localhost:3000/count-values-taskpane.html"/>
         <bt:Url id="ExpandTaskpane.Url" DefaultValue="https://localhost:3000/expand-taskpane.html"/>
+        <bt:Url id="SplitSheetTaskpane.Url" DefaultValue="https://localhost:3000/split-sheet-taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="CustomTab.Label" DefaultValue="我的工具"/>
@@ -195,6 +210,7 @@
         <bt:String id="EnhancedVlookupButton.Label" DefaultValue="增强查找"/>
         <bt:String id="FillSeriesLabel" DefaultValue="填充序列"/>
         <bt:String id="CountValuesButton.Label" DefaultValue="字段计数"/>
+        <bt:String id="SplitSheetButton.Label" DefaultValue="按列拆分"/>
         <bt:String id="ExpandColumnButton.Label" DefaultValue="展开列"/>
       </bt:ShortStrings>
       <bt:LongStrings>
@@ -204,6 +220,7 @@
         <bt:String id="FillSeriesTooltip" DefaultValue="打开填充序列工具面板"/>
         <bt:String id="CountValuesButton.Tooltip" DefaultValue="统计选中列每个字段值出现的次数"/>
         <bt:String id="ExpandColumnButton.Tooltip" DefaultValue="将宽表数据转换为长表格式，第一列作为键，其他列的值展开为独立行"/>
+        <bt:String id="SplitSheetButton.Tooltip" DefaultValue="将数据按某一列的值拆分为多个新工作表"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
