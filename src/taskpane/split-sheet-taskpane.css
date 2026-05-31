@@ -1,38 +1,36 @@
 /* Split Sheet Taskpane Styles */
 
-html,
-body {
-  background: #f3f3f3;
-}
-
 .split-sheet-container {
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  border-radius: 4px;
-  padding: 28px 32px;
-  width: 420px;
+  padding: 20px;
 }
 
 .split-sheet-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #323130;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0078d4;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
 }
 
 .split-sheet-title svg {
   flex-shrink: 0;
 }
 
-.split-sheet-subtitle {
-  font-size: 13px;
-  color: #605e5c;
-  border-bottom: 1px solid #edebe9;
-  padding-bottom: 12px;
+.guide-card {
+  background: #f0f7ff;
+  border-left: 3px solid #0078d4;
+  padding: 12px;
+  border-radius: 4px;
   margin-bottom: 16px;
+}
+
+.guide-card p {
+  font-size: 13px;
+  color: #005a9e;
+  line-height: 1.6;
+  margin: 0;
 }
 
 .split-sheet-form-group {
@@ -41,10 +39,39 @@ body {
 
 .split-sheet-label {
   display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #323130;
+  font-size: 13px;
+  color: #666;
   margin-bottom: 6px;
+}
+
+.split-sheet-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #0078d4;
+  border-radius: 6px;
+  font-size: 15px;
+  outline: none;
+  transition: box-shadow 0.2s;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.split-sheet-input:focus {
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
+}
+
+.split-sheet-input:read-only {
+  background: #f3f3f3;
+  color: #666;
+  border-color: #edebe9;
+}
+
+.split-sheet-input:read-only:focus {
+  box-shadow: none;
+}
+
+.split-sheet-input--number {
+  width: 100px;
 }
 
 .split-sheet-input-row {
@@ -52,76 +79,71 @@ body {
   gap: 8px;
 }
 
-.split-sheet-input {
-  flex: 1;
-  height: 32px;
-  border: 1px solid #edebe9;
-  border-radius: 4px;
-  padding: 0 10px;
-  font-size: 14px;
-  background: #faf9f8;
-  outline: none;
-  transition: border-color 0.2s, background 0.2s;
-  box-sizing: border-box;
-}
-
-.split-sheet-input:focus {
-  border-color: #0078d4;
-  background: #fff;
-}
-
-.split-sheet-input:read-only {
-  background: #f3f3f3;
-  color: #605e5c;
-}
-
-.split-sheet-input--number {
-  width: 80px;
-  flex: none;
-}
-
 .split-sheet-select {
   cursor: pointer;
 }
 
 .split-sheet-btn {
-  height: 32px;
-  padding: 0 16px;
-  border: none;
+  padding: 6px 12px;
+  background: transparent;
+  color: #0078d4;
+  border: 1px solid #0078d4;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.split-sheet-btn--default {
-  background: #f3f3f3;
-  color: #323130;
-  border: 1px solid #edebe9;
-}
-
-.split-sheet-btn--default:hover {
-  background: #e8e8e8;
-}
-
-.split-sheet-btn--primary {
+.split-sheet-btn:hover {
   background: #0078d4;
-  color: #fff;
-  width: 100%;
-  height: 38px;
-  font-size: 15px;
+  color: white;
+}
+
+.split-sheet-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.split-sheet-button {
+  padding: 10px 16px;
+  background: transparent;
+  color: #0078d4;
+  border: 2px solid #0078d4;
+  border-radius: 6px;
+  font-size: 14px;
   font-weight: 600;
-  margin-top: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.split-sheet-btn--primary:hover {
-  background: #006cbd;
+.split-sheet-button:hover {
+  background: #0078d4;
+  color: white;
 }
 
-.split-sheet-btn--primary:disabled {
-  background: #e0e0e0;
-  color: #a8a8a8;
+.split-sheet-button:active {
+  background: #005a9e;
+  border-color: #005a9e;
+}
+
+.split-sheet-button:disabled {
+  background: #f5f5f5;
+  color: #999;
+  border-color: #999;
   cursor: not-allowed;
+}
+
+.split-sheet-button--primary {
+  background: #0078d4;
+  color: white;
+}
+
+.split-sheet-button--primary:hover {
+  background: #005a9e;
+  border-color: #005a9e;
 }
 
 .split-sheet-divider {
@@ -131,35 +153,46 @@ body {
 }
 
 .split-sheet-status {
+  padding: 10px;
+  border-radius: 6px;
   font-size: 13px;
-  padding: 8px 12px;
-  border-radius: 4px;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .split-sheet-status--idle {
-  background: #f3f3f3;
+  background: #f5f5f5;
+  color: #666;
 }
 
 .split-sheet-status--success {
-  background: #dff6dd;
-  color: #0b6a0b;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
 }
 
 .split-sheet-status--error {
-  background: #fde7e9;
-  color: #a80000;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.split-sheet-status--loading {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
 }
 
 .split-sheet-progress {
-  margin-top: 14px;
-  display: none;
+  margin: 12px 0;
 }
 
 .split-sheet-progress-label {
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: #0057b7;
   font-size: 13px;
   font-weight: 600;
-  color: #323130;
   margin-bottom: 6px;
 }
 

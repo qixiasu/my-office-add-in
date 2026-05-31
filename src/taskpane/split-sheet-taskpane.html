@@ -70,16 +70,16 @@
         </div>
 
         <!-- Progress bar (hidden by default) -->
-        <div id="progressContainer" style="display:none;margin:12px 0">
-            <div id="progressStatus" class="status-message status-loading" style="margin-bottom:6px;font-size:14px;font-weight:600">处理中...</div>
-            <div style="height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden">
-                <div id="progressBarFill" style="width:0%;height:100%;background:linear-gradient(90deg,#0078d4,#00b4d8);border-radius:4px;transition:width 0.3s ease"></div>
+        <div id="progressContainer" class="split-sheet-progress" style="display:none">
+            <div id="progressStatus" class="split-sheet-progress-label">处理中...</div>
+            <div class="split-sheet-progress-bar">
+                <div id="progressBarFill" class="split-sheet-progress-fill"></div>
             </div>
-            <div id="progressDetail" style="color:#666;font-size:11px;margin-top:4px"></div>
+            <div id="progressDetail" class="split-sheet-progress-detail"></div>
         </div>
 
         <!-- Status message -->
-        <div id="statusMessage" class="status-message status-idle">状态：等待操作...</div>
+        <div id="statusMessage" class="split-sheet-status split-sheet-status--idle">状态：等待操作...</div>
     </div>
 </body>
 

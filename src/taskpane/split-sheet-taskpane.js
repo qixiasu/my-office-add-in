@@ -124,7 +124,7 @@ function loadTableHeaders() {
 function setStatus(message, type) {
   var statusEl = document.getElementById("statusMessage");
   statusEl.textContent = "状态：" + message;
-  statusEl.className = "status-message status-" + (type || "idle");
+  statusEl.className = "split-sheet-status split-sheet-status--" + (type || "idle");
 }
 
 function updateProgressUI(percent, completed, total) {
@@ -134,7 +134,7 @@ function updateProgressUI(percent, completed, total) {
 
   if (statusEl) {
     statusEl.textContent = "处理中... " + percent + "%";
-    statusEl.className = "status-message status-loading";
+    statusEl.className = "split-sheet-status split-sheet-status--loading";
   }
 
   if (barEl) {
@@ -172,7 +172,7 @@ function performSplit(config) {
 
   // Disable button, show progress bar
   executeBtn.disabled = true;
-  if (progressContainer) progressContainer.style.display = "block";
+  if (progressContainer) { progressContainer.style.display = "block"; }
   statusEl.style.display = "none";
 
   Excel.run(async function (context) {
@@ -267,7 +267,7 @@ function performSplit(config) {
     setStatus("错误: " + error.message, "error");
   }).finally(function () {
     executeBtn.disabled = false;
-    if (progressContainer) progressContainer.style.display = "none";
+    if (progressContainer) { progressContainer.style.display = "none"; progressContainer.className = "split-sheet-progress"; }
     statusEl.style.display = "block";
   });
 }
