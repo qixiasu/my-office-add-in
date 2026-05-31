@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
+  <Id>399bd8ea-ebf6-4d3a-b838-d2e4deaac2f3</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Contoso</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="My Office Add-in"/>
+  <Description DefaultValue="A template to get started."/>
+  <IconUrl DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/tools-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/tools-32.png"/>
+  <SupportUrl DefaultValue="https://qixiasu.github.io/my-office-add-in/"/>
+  <AppDomains>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Workbook"/>
+  </Hosts>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://qixiasu.github.io/my-office-add-in/taskpane.html"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Workbook">
+        <DesktopFormFactor>
+                    <FunctionFile resid="Commands.Url"/>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <CustomTab id="MyAddInTab">
+              <Group id="DataProcessingGroup">
+                <Label resid="DataProcessingGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="ToolsIcon.16x16"/>
+                  <bt:Image size="32" resid="ToolsIcon.32x32"/>
+                  <bt:Image size="80" resid="ToolsIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="ConcatenateButton">
+                  <Label resid="ConcatenateButton.Label"/>
+                  <Supertip>
+                    <Title resid="ConcatenateButton.Label"/>
+                    <Description resid="ConcatenateButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="ConcatIcon.16x16"/>
+                    <bt:Image size="32" resid="ConcatIcon.32x32"/>
+                    <bt:Image size="80" resid="ConcatIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>ConcatTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="ConcatTaskpane.Url"/>
+                  </Action>
+                </Control>
+                <Control xsi:type="Button" id="CountValuesButton">
+                  <Label resid="CountValuesButton.Label"/>
+                  <Supertip>
+                    <Title resid="CountValuesButton.Label"/>
+                    <Description resid="CountValuesButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="CountValuesIcon.16x16"/>
+                    <bt:Image size="32" resid="CountValuesIcon.32x32"/>
+                    <bt:Image size="80" resid="CountValuesIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>CountValuesTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="CountValuesTaskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+              <Group id="DataConversionGroup">
+                <Label resid="DataConversionGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="ToolsIcon.16x16"/>
+                  <bt:Image size="32" resid="ToolsIcon.32x32"/>
+                  <bt:Image size="80" resid="ToolsIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="ExpandColumnButton">
+                  <Label resid="ExpandColumnButton.Label"/>
+                  <Supertip>
+                    <Title resid="ExpandColumnButton.Label"/>
+                    <Description resid="ExpandColumnButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="ExpandIcon.16x16"/>
+                    <bt:Image size="32" resid="ExpandIcon.32x32"/>
+                    <bt:Image size="80" resid="ExpandIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>ExpandTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="ExpandTaskpane.Url"/>
+                  </Action>
+                </Control>
+                <Control xsi:type="Button" id="FillSeriesButton">
+                  <Label resid="FillSeriesLabel"/>
+                  <Supertip>
+                    <Title resid="FillSeriesLabel"/>
+                    <Description resid="FillSeriesTooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="FillSeriesIcon.16x16"/>
+                    <bt:Image size="32" resid="FillSeriesIcon.32x32"/>
+                    <bt:Image size="80" resid="FillSeriesIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane"><TaskpaneId>FillSeriesTaskpaneId</TaskpaneId><SourceLocation resid="FillSeriesTaskpane.Url"/></Action>
+                </Control>
+              </Group>
+              <Group id="LookupImportGroup">
+                <Label resid="LookupImportGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="ToolsIcon.16x16"/>
+                  <bt:Image size="32" resid="ToolsIcon.32x32"/>
+                  <bt:Image size="80" resid="ToolsIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="EnhancedVlookupButton">
+                  <Label resid="EnhancedVlookupButton.Label"/>
+                  <Supertip>
+                    <Title resid="EnhancedVlookupButton.Label"/>
+                    <Description resid="EnhancedVlookupButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="LookupIcon.16x16"/>
+                    <bt:Image size="32" resid="LookupIcon.32x32"/>
+                    <bt:Image size="80" resid="LookupIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>VlookupTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="VlookupTaskpane.Url"/>
+                  </Action>
+                </Control>
+                <Control xsi:type="Button" id="ImportCsvButton">
+                  <Label resid="ImportCsvButton.Label"/>
+                  <Supertip>
+                    <Title resid="ImportCsvButton.Label"/>
+                    <Description resid="ImportCsvButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="ImportIcon.16x16"/>
+                    <bt:Image size="32" resid="ImportIcon.32x32"/>
+                    <bt:Image size="80" resid="ImportIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>CSVImportTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="CSVImportTaskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+              <Label resid="CustomTab.Label"/>
+            </CustomTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/tools-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/tools-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/tools-80.png"/>
+        <bt:Image id="ToolsIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/tools-16.png"/>
+        <bt:Image id="ToolsIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/tools-32.png"/>
+        <bt:Image id="ToolsIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/tools-80.png"/>
+        <bt:Image id="ConcatIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/concat-column-16.png"/>
+        <bt:Image id="ConcatIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/concat-column-32.png"/>
+        <bt:Image id="ConcatIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/concat-column-80.png"/>
+        <bt:Image id="ImportIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/import-16.png"/>
+        <bt:Image id="ImportIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/import-32.png"/>
+        <bt:Image id="ImportIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/import-80.png"/>
+        <bt:Image id="LookupIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/lookup-16.png"/>
+        <bt:Image id="LookupIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/lookup-32.png"/>
+        <bt:Image id="LookupIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/lookup-80.png"/>
+        <bt:Image id="FillSeriesIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/fill-series-16.png"/>
+        <bt:Image id="FillSeriesIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/fill-series-32.png"/>
+        <bt:Image id="FillSeriesIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/fill-series-80.png"/>
+        <bt:Image id="CountValuesIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/count-values-16.png"/>
+        <bt:Image id="CountValuesIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/count-values-32.png"/>
+        <bt:Image id="CountValuesIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/count-values-80.png"/>
+        <bt:Image id="ExpandIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/expand-16.png"/>
+        <bt:Image id="ExpandIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/expand-32.png"/>
+        <bt:Image id="ExpandIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/expand-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Commands.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/commands.html"/>
+        <bt:Url id="ConcatTaskpane.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/concat-taskpane.html"/>
+        <bt:Url id="CSVImportTaskpane.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/csv-import-taskpane.html"/>
+        <bt:Url id="VlookupTaskpane.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/vlookup-taskpane.html"/>
+        <bt:Url id="FillSeriesTaskpane.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/fill-series-taskpane.html"/>
+        <bt:Url id="CountValuesTaskpane.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/count-values-taskpane.html"/>
+        <bt:Url id="ExpandTaskpane.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/expand-taskpane.html"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="CustomTab.Label" DefaultValue="我的工具"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
+        <bt:String id="DataProcessingGroup.Label" DefaultValue="数据处理"/>
+        <bt:String id="DataConversionGroup.Label" DefaultValue="数据转换"/>
+        <bt:String id="LookupImportGroup.Label" DefaultValue="查找与导入"/>
+        <bt:String id="ConcatenateButton.Label" DefaultValue="连接列"/>
+        <bt:String id="ImportCsvButton.Label" DefaultValue="导入CSV"/>
+        <bt:String id="EnhancedVlookupButton.Label" DefaultValue="增强查找"/>
+        <bt:String id="FillSeriesLabel" DefaultValue="填充序列"/>
+        <bt:String id="CountValuesButton.Label" DefaultValue="字段计数"/>
+        <bt:String id="ExpandColumnButton.Label" DefaultValue="展开列"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
+        <bt:String id="ImportCsvButton.Tooltip" DefaultValue="用 UTF-8 编码正确导入 CSV/文本文件，支持自定义分隔符"/>
+        <bt:String id="EnhancedVlookupButton.Tooltip" DefaultValue="增强版查找功能：一次配置完成多列 INDEX/MATCH 查找，匹配列可在任意位置"/>
+        <bt:String id="FillSeriesTooltip" DefaultValue="打开填充序列工具面板"/>
+        <bt:String id="CountValuesButton.Tooltip" DefaultValue="统计选中列每个字段值出现的次数"/>
+        <bt:String id="ExpandColumnButton.Tooltip" DefaultValue="将宽表数据转换为长表格式，第一列作为键，其他列的值展开为独立行"/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

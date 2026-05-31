@@ -1,0 +1,108 @@
+/* 容器 */
+.count-container {
+  padding: 16px;
+}
+
+/* 标题 */
+.count-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0078d4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px 0;
+}
+
+/* 步骤引导卡片 */
+.guide-card {
+  background: #f0f7ff;
+  border-left: 3px solid #0078d4;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+/* 表单组 */
+.count-form-group {
+  margin-bottom: 16px;
+}
+
+/* 标签 */
+.count-label {
+  display: block;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+/* 输入框 */
+.count-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #0078d4;
+  border-radius: 6px;
+  font-size: 15px;
+  outline: none;
+  transition: box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.count-input:focus {
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
+}
+
+/* 按钮 */
+.count-button {
+  width: 100%;
+  padding: 12px 24px;
+  background: #0078d4;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.count-button:hover {
+  background: #106ebe;
+}
+
+.count-button:disabled {
+  background: #c8c8c8;
+  cursor: not-allowed;
+}
+
+/* 状态消息 */
+.status-message {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.status-idle {
+  background: #f5f5f5;
+  color: #999;
+}
+
+.status-loading {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.status-error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
