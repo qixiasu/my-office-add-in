@@ -115,6 +115,11 @@ module.exports = async (env, options) => {
         template: "./src/taskpane/expand-taskpane.html",
         chunks: ["polyfill", "expand-taskpane"],
       }),
+      new HtmlWebpackPlugin({
+        filename: "index.html",
+        template: "./src/index.html",
+        chunks: [],
+      }),
     ],
     devServer: {
       headers: {
