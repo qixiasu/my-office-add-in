@@ -1,7 +1,16 @@
 /* Split Sheet Taskpane Styles */
 
+html,
+body {
+  background: #f3f3f3;
+}
+
 .split-sheet-container {
-  padding: 20px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  border-radius: 4px;
+  padding: 28px 32px;
+  width: 420px;
 }
 
 .split-sheet-title {
