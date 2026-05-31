@@ -216,7 +216,7 @@
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
         <bt:String id="ImportCsvButton.Tooltip" DefaultValue="用 UTF-8 编码正确导入 CSV/文本文件，支持自定义分隔符"/>
-        <bt:String id="EnhancedVlookupButton.Tooltip" DefaultValue="增强版查找功能：一次配置完成多列 INDEX/MATCH 查找，匹配列可在任意位置"/>
+        <bt:String id="EnhancedVlookupButton.Tooltip" DefaultValue="在查找表中匹配一个值，返回该行指定列的数据，支持精确匹配和模糊匹配"/>
         <bt:String id="FillSeriesTooltip" DefaultValue="打开填充序列工具面板"/>
         <bt:String id="CountValuesButton.Tooltip" DefaultValue="统计选中列每个字段值出现的次数"/>
         <bt:String id="ExpandColumnButton.Tooltip" DefaultValue="将宽表数据转换为长表格式，第一列作为键，其他列的值展开为独立行"/>
