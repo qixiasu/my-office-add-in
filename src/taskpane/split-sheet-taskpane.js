@@ -201,7 +201,6 @@ function performSplit(config) {
     await context.sync();
 
     var allData = dataRange.values;
-    console.log("[DEBUG] performSplit: 读取数据行数 =", allData.length, "列数 =", allData[0] ? allData[0].length : 0);
 
     // Group data by key column
     var groupingResult = groupDataByKey(allData, config.keyColumnIndex);
@@ -212,7 +211,6 @@ function performSplit(config) {
     var groups = groupingResult.groups;
     var groupKeys = Object.keys(groups);
     var totalGroups = groupKeys.length;
-    console.log("[DEBUG] performSplit: 分组数量 =", totalGroups);
 
     // Process each group
     for (var i = 0; i < groupKeys.length; i++) {
@@ -262,7 +260,6 @@ function performSplit(config) {
       // Update progress
       var percent = Math.round(((i + 1) / totalGroups) * 100);
       updateProgressUI(percent, i + 1, totalGroups);
-      console.log("[DEBUG] performSplit: 已处理 " + (i + 1) + " / " + totalGroups + " 个工作表: " + sheetName);
     }
 
     setStatus("完成! 已创建 " + totalGroups + " 个工作表", "success");
