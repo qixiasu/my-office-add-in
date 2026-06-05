@@ -71,6 +71,27 @@ describe("parseRangeAddress", function () {
     expect(result.endRow).toBe(10);
     expect(result.colCount).toBe(4);
   });
+
+  it("parses range with quoted sheet name (Excel format for special chars)", function () {
+    var result = parseRangeAddress("'My Sheet'!B2:E10");
+    expect(result.sheet).toBe("My Sheet");
+    expect(result.startCol).toBe(1);
+    expect(result.startRow).toBe(2);
+    expect(result.endCol).toBe(4);
+    expect(result.endRow).toBe(10);
+    expect(result.colCount).toBe(4);
+  });
+
+  it("parses range with quoted sheet name containing Chinese characters", function () {
+    var result = parseRangeAddress("'5G宏站功率及倾角'!C:C");
+    expect(result.sheet).toBe("5G宏站功率及倾角");
+    expect(result.startCol).toBe(2);
+    expect(result.startRow).toBe(1);
+    expect(result.endCol).toBe(2);
+    expect(result.endRow).toBe(1);
+    expect(result.colCount).toBe(1);
+    expect(result.rowCount).toBe(1);
+  });
 });
 
 describe("buildColRange", function () {

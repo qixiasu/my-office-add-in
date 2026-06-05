@@ -329,29 +329,43 @@ function performLookup(config) {
     var LARGE_DATA_THRESHOLD = 100000;
 
     // 获取查找值区域所在的工作表（这是写入目标）
+    console.log("[DEBUG] performLookup: config.lookupValue =", JSON.stringify(config.lookupValue));
     var lvParsed = parseRangeAddress(config.lookupValue);
+    console.log("[DEBUG] performLookup: lvParsed =", JSON.stringify(lvParsed));
     var lvSheetName = lvParsed.sheet;
+    console.log("[DEBUG] performLookup: lvSheetName =", JSON.stringify(lvSheetName));
     var lvWorksheet;
     if (lvSheetName) {
+      console.log("[DEBUG] performLookup: 使用 getItem('" + lvSheetName + "')");
       lvWorksheet = context.workbook.worksheets.getItem(lvSheetName);
     } else {
+      console.log("[DEBUG] performLookup: 使用 getActiveWorksheet()");
       lvWorksheet = context.workbook.worksheets.getActiveWorksheet();
     }
     lvWorksheet.load("name");
+    console.log("[DEBUG] performLookup: 即将执行第1次 context.sync()...");
     await context.sync();
+    console.log("[DEBUG] performLookup: 第1次 context.sync() 成功");
     console.log("[DEBUG] 查找值工作表:", lvWorksheet.name);
 
     // 获取查找表所在的工作表（用于读取查找表数据）
+    console.log("[DEBUG] performLookup: config.lookupTable =", JSON.stringify(config.lookupTable));
     var ltParsed = parseRangeAddress(config.lookupTable);
+    console.log("[DEBUG] performLookup: ltParsed =", JSON.stringify(ltParsed));
     var ltSheetName = ltParsed.sheet;
+    console.log("[DEBUG] performLookup: ltSheetName =", JSON.stringify(ltSheetName));
     var ltWorksheet;
     if (ltSheetName) {
+      console.log("[DEBUG] performLookup: 查找表使用 getItem('" + ltSheetName + "')");
       ltWorksheet = context.workbook.worksheets.getItem(ltSheetName);
     } else {
+      console.log("[DEBUG] performLookup: 查找表使用 getActiveWorksheet()");
       ltWorksheet = context.workbook.worksheets.getActiveWorksheet();
     }
     ltWorksheet.load("name");
+    console.log("[DEBUG] performLookup: 即将执行第2次 context.sync()...");
     await context.sync();
+    console.log("[DEBUG] performLookup: 第2次 context.sync() 成功");
     console.log("[DEBUG] 查找表工作表:", ltWorksheet.name);
 
     // 使用 lvWorksheet 作为目标工作表（写入结果的位置）

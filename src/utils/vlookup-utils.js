@@ -10,6 +10,10 @@ function parseRangeAddress(address) {
   var bangIdx = address.indexOf(SEPA);
   if (bangIdx !== -1) {
     sheet = address.substring(0, bangIdx);
+    // 去除工作表名两边的单引号（Excel 对含空格/中文等特殊字符的工作表名会用单引号包裹）
+    if (sheet.length >= 2 && sheet.charAt(0) === "'" && sheet.charAt(sheet.length - 1) === "'") {
+      sheet = sheet.substring(1, sheet.length - 1);
+    }
     rangePart = address.substring(bangIdx + 1);
   }
 
