@@ -263,7 +263,7 @@
                         }
 
                         if (maxDataRow === 0) {
-                            Office.context.ui.messageBox("所选区域没有数据");
+                            console.warn("selectToEnd: 所选区域没有数据");
                             return;
                         }
 
@@ -277,7 +277,7 @@
                     });
                 });
             }).catch(function (error) {
-                Office.context.ui.messageBox("操作失败: " + error.message);
+                console.error("selectToEnd failed:", error);
             }).then(function () {
                 event.completed();
             });
