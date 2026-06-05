@@ -78,6 +78,21 @@
                     <SourceLocation resid="SplitSheetTaskpane.Url"/>
                   </Action>
                 </Control>
+                <Control xsi:type="Button" id="SelectToEndButton">
+                  <Label resid="SelectToEndButton.Label"/>
+                  <Supertip>
+                    <Title resid="SelectToEndButton.Label"/>
+                    <Description resid="SelectToEndButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="SelectToEndIcon.16x16"/>
+                    <bt:Image size="32" resid="SelectToEndIcon.32x32"/>
+                    <bt:Image size="80" resid="SelectToEndIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>selectToEnd</FunctionName>
+                  </Action>
+                </Control>
               </Group>
               <Group id="DataConversionGroup">
                 <Label resid="DataConversionGroup.Label"/>
@@ -188,6 +203,9 @@
         <bt:Image id="ExpandIcon.16x16" DefaultValue="https://localhost:3000/assets/expand-16.png"/>
         <bt:Image id="ExpandIcon.32x32" DefaultValue="https://localhost:3000/assets/expand-32.png"/>
         <bt:Image id="ExpandIcon.80x80" DefaultValue="https://localhost:3000/assets/expand-80.png"/>
+        <bt:Image id="SelectToEndIcon.16x16" DefaultValue="https://localhost:3000/assets/tools-16.png"/>
+        <bt:Image id="SelectToEndIcon.32x32" DefaultValue="https://localhost:3000/assets/tools-32.png"/>
+        <bt:Image id="SelectToEndIcon.80x80" DefaultValue="https://localhost:3000/assets/tools-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
@@ -212,6 +230,7 @@
         <bt:String id="CountValuesButton.Label" DefaultValue="字段计数"/>
         <bt:String id="SplitSheetButton.Label" DefaultValue="按列拆分"/>
         <bt:String id="ExpandColumnButton.Label" DefaultValue="展开列"/>
+        <bt:String id="SelectToEndButton.Label" DefaultValue="选中至末尾"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
@@ -221,6 +240,7 @@
         <bt:String id="CountValuesButton.Tooltip" DefaultValue="统计选中列每个字段值出现的次数"/>
         <bt:String id="ExpandColumnButton.Tooltip" DefaultValue="将宽表数据转换为长表格式，第一列作为键，其他列的值展开为独立行"/>
         <bt:String id="SplitSheetButton.Tooltip" DefaultValue="将数据按某一列的值拆分为多个新工作表"/>
+        <bt:String id="SelectToEndButton.Tooltip" DefaultValue="选中当前单元格并向下扩展到连续数据区域的最后一行"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
