@@ -227,18 +227,30 @@
             Excel.run(function (context) {
                 var range = context.workbook.getSelectedRange();
                 range.load(["columnIndex", "columnCount", "rowIndex"]);
+                var worksheet = context.workbook.worksheets.getActiveWorksheet();
+                var usedRange = worksheet.getUsedRange();
+                usedRange.load(["rowIndex", "rowCount"]);
                 return context.sync().then(function () {
                     var colIndex = range.columnIndex;
                     var colCount = range.columnCount;
                     var startRow = range.rowIndex + 1; // 0-based → 1-based
-                    var worksheet = context.workbook.worksheets.getActiveWorksheet();
 
-                    // 对每一列加载数据
+                    // 通过 usedRange 确定工作表的实际数据边界
+                    var sheetLastRow = usedRange.rowIndex + usedRange.rowCount;
+                    // 安全上限：不超过 MAX_ROWS
+                    var endRow = Math.min(sheetLastRow, startRow + MAX_ROWS - 1);
+
+                    if (startRow > endRow) {
+                        console.warn("selectToEnd: 所选区域没有数据");
+                        return;
+                    }
+
+                    // 对每一列加载数据（仅限 usedRange 范围内）
                     var columnData = [];
                     for (var i = 0; i < colCount; i++) {
                         var colLetter = getColumnLetter(colIndex + i);
                         var dataRange = worksheet.getRange(
-                            colLetter + startRow + ":" + colLetter + 1048576
+                            colLetter + startRow + ":" + colLetter + endRow
                         );
                         dataRange.load("values");
                         columnData.push({ data: dataRange });
@@ -249,6 +261,7 @@
                         var maxDataRow = 0;
                         for (var j = 0; j < columnData.length; j++) {
                             var values = columnData[j].data.values;
+                            if (!values) { continue; }
                             var lastRow = 0;
                             for (var r = values.length - 1; r >= 0; r--) {
                                 var v = values[r][0];
