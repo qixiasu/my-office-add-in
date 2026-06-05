@@ -58,6 +58,15 @@
                     <input type="file" id="fileInput" accept=".csv,.tsv,.txt" />
                     <div id="fileName" class="file-name"></div>
                 </div>
+                <div class="form-group">
+                    <label for="encodingSelect">文件编码：</label>
+                    <select id="encodingSelect">
+                        <option value="utf-8" selected>UTF-8</option>
+                        <option value="gbk">GBK / GB2312（简体中文）</option>
+                        <option value="gb18030">GB18030</option>
+                        <option value="big5">Big5（繁体中文）</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Step 2: Delimiter setting -->

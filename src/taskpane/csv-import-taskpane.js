@@ -6,14 +6,20 @@
 /* global console, document, Excel, Office */
 
 var MAX_ROWS = 1050000;
+var BATCH_SIZE = 10000; // Rows per batch for chunked import
 
 var csvUtils = require("../utils/csv-utils");
 
 var currentStep = 1;
 var selectedFile = null;
-var parsedData = null;
+var selectedEncoding = "utf-8";
 var rowCount = 0;
 var colCount = 0;
+
+function getEncoding() {
+  var sel = document.getElementById("encodingSelect");
+  return sel ? sel.value : "utf-8";
+}
 
 Office.onReady(function (info) {
   if (info.host === Office.HostType.Excel) {
@@ -70,6 +76,8 @@ function showPanel(step) {
   updateStepper();
 }
 
+// ── Step 1: file selection ────────────────────────────────────────────
+
 function onFileSelected(e) {
   var file = e.target.files[0];
   if (!file) return;
@@ -78,58 +86,65 @@ function onFileSelected(e) {
   document.getElementById("fileName").textContent = file.name;
   updateNextButton();
 
-  var reader = new FileReader();
-  reader.onload = function (event) {
-    var delimiter = document.getElementById("delimiterInput").value || ",";
-    try {
-      parsedData = csvUtils.parseCSV(event.target.result, delimiter);
-      rowCount = parsedData.length;
-      colCount = parsedData.length > 0 ? parsedData[0].length : 0;
-    } catch (err) {
+  setStatus("正在分析文件...", "loading");
+
+  var delimiter = document.getElementById("delimiterInput").value || ",";
+  selectedEncoding = getEncoding();
+
+  // Stream‑scan the file in 1-MB chunks — NEVER loads full file into memory
+  csvUtils.scanCSVFile(
+    file,
+    delimiter,
+    selectedEncoding,
+    function done(stats) {
+      rowCount = stats.rowCount;
+      colCount = stats.colCount;
+
+      if (rowCount === 0) {
+        setStatus("错误: 文件为空", "error");
+        selectedFile = null;
+        rowCount = 0;
+        colCount = 0;
+        document.getElementById("fileName").textContent = "";
+        updateNextButton();
+        return;
+      }
+
+      showPanel(2);
+      setStatus("状态：等待操作...", "idle");
+    },
+    function error(err) {
       setStatus("错误: 文件读取失败", "error");
       selectedFile = null;
       document.getElementById("fileName").textContent = "";
       updateNextButton();
-      return;
     }
-    if (rowCount === 0) {
-      setStatus("错误: 文件为空", "error");
-      selectedFile = null;
-      document.getElementById("fileName").textContent = "";
-      updateNextButton();
-      return;
-    }
-    showPanel(2);
-    setStatus("状态：等待操作...", "idle");
-  };
-  reader.onerror = function () {
-    setStatus("错误: 文件读取失败", "error");
-    selectedFile = null;
-    document.getElementById("fileName").textContent = "";
-    updateNextButton();
-  };
-  reader.readAsText(file);
+  );
 }
 
+// ── Delimiter change (re‑scan from file, still chunked) ───────────────
+
 function onDelimiterChanged() {
-  if (currentStep === 2 && selectedFile) {
-    var fileInput = document.getElementById("fileInput");
-    if (fileInput.files[0]) {
-      var reader = new FileReader();
-      reader.onload = function (event) {
-        var delimiter = document.getElementById("delimiterInput").value || ",";
-        try {
-          parsedData = csvUtils.parseCSV(event.target.result, delimiter);
-          rowCount = parsedData.length;
-          colCount = parsedData.length > 0 ? parsedData[0].length : 0;
-        } catch (err) {
-          // silent — user will see issue on step 3
-        }
-      };
-      reader.readAsText(fileInput.files[0]);
+  if (currentStep !== 2 || !selectedFile) return;
+
+  var delimiter = document.getElementById("delimiterInput").value || ",";
+
+  csvUtils.scanCSVFile(
+    selectedFile,
+    delimiter,
+    selectedEncoding,
+    function done(stats) {
+      rowCount = stats.rowCount;
+      colCount = stats.colCount;
+      updateSummary();
+    },
+    function error() {
+      // silent — user will see the issue on step 3
     }
-  }
+  );
 }
+
+// ── Navigation ────────────────────────────────────────────────────────
 
 function onPrev() {
   if (currentStep === 2) {
@@ -159,6 +174,8 @@ function updateSummary() {
   document.getElementById("summaryText").textContent = text;
 }
 
+// ── Step 3: import ────────────────────────────────────────────────────
+
 function doImport() {
   var nextBtn = document.getElementById("nextBtn");
   nextBtn.disabled = true;
@@ -170,25 +187,63 @@ function doImport() {
     return;
   }
 
-  Excel.run(function (context) {
-    var worksheet = context.workbook.worksheets.getActiveWorksheet();
-    var startCell = worksheet.getRange("A1");
-    var endCell = worksheet.getRange(getColumnLetter(colCount - 1) + rowCount);
-    startCell.load("address");
-    endCell.load("address");
-    return context.sync().then(function () {
-      var targetRange = worksheet.getRange(startCell.address + ":" + endCell.address);
-      targetRange.values = parsedData;
+  var delimiter = document.getElementById("delimiterInput").value || ",";
+  var totalBatches = Math.ceil(rowCount / BATCH_SIZE);
+  var processedBatches = 0;
+
+  // Write a single batch to Excel
+  function writeBatch(batchRows, batchIndex) {
+    return Excel.run(function (context) {
+      var worksheet = context.workbook.worksheets.getActiveWorksheet();
+      var startRow = batchIndex * BATCH_SIZE + 1;
+      var endRow = startRow + batchRows.length - 1;
+      var endColLetter = getColumnLetter(colCount - 1);
+
+      var targetRange = worksheet.getRange(
+        "A" + startRow + ":" + endColLetter + endRow
+      );
+      targetRange.values = batchRows;
+
       return context.sync().then(function () {
-        setStatus("完成! 已写入 " + rowCount + " 行 × " + colCount + " 列", "success");
-        nextBtn.disabled = false;
+        processedBatches++;
+        setStatus(
+          "写入中... " + processedBatches + "/" + totalBatches + " 批",
+          "loading"
+        );
       });
     });
-  }).catch(function (error) {
-    setStatus("错误: " + error.message, "error");
-    nextBtn.disabled = false;
-  });
+  }
+
+  // Stream‑parse the file and build a sequential promise‑chain for Excel writes
+  var chain = Promise.resolve();
+
+  csvUtils.parseCSVFile(
+    selectedFile,
+    delimiter,
+    BATCH_SIZE,
+    selectedEncoding,
+    function onBatch(batchRows, batchIndex) {
+      chain = chain.then(function () {
+        return writeBatch(batchRows, batchIndex);
+      });
+    },
+    function onDone(stats) {
+      chain.then(function () {
+        setStatus("完成! 已写入 " + stats.rowCount + " 行 × " + stats.colCount + " 列", "success");
+        nextBtn.disabled = false;
+      }).catch(function (error) {
+        setStatus("错误: " + (error && error.message ? error.message : error), "error");
+        nextBtn.disabled = false;
+      });
+    },
+    function onError(err) {
+      setStatus("错误: " + (err && err.message ? err.message : "文件读取失败"), "error");
+      nextBtn.disabled = false;
+    }
+  );
 }
+
+// ── Helpers ───────────────────────────────────────────────────────────
 
 function getColumnLetter(colIndex) {
   var letter = "";

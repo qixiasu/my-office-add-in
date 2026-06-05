@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>399bd8ea-ebf6-4d3a-b838-d2e4deaac2f3</Id>
-  <Version>1.0.9</Version>
-  <ProviderName>Contoso</ProviderName>
-  <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="My Office Add-in"/>
-  <Description DefaultValue="A template to get started."/>
+  <Version>1.0.10</Version>
+  <ProviderName>QinXuan</ProviderName>
+  <DefaultLocale>zh-CN</DefaultLocale>
+  <DisplayName DefaultValue="Excel 数据处理工具"/>
+  <Description DefaultValue="一组实用的 Excel 数据处理工具，包含连接列、导入CSV、增强查找、填充序列、字段计数、展开列、按列拆分、向下选区等功能。"/>
   <IconUrl DefaultValue="https://localhost:3000/assets/tools-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/tools-32.png"/>
   <SupportUrl DefaultValue="https://qixiasu.github.io/my-office-add-in/"/>
@@ -218,7 +218,7 @@
         <bt:Url id="SplitSheetTaskpane.Url" DefaultValue="https://localhost:3000/split-sheet-taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="CustomTab.Label" DefaultValue="我的工具"/>
+        <bt:String id="CustomTab.Label" DefaultValue="Excel 工具箱"/>
         <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
         <bt:String id="DataProcessingGroup.Label" DefaultValue="数据处理"/>
         <bt:String id="DataConversionGroup.Label" DefaultValue="数据转换"/>
