@@ -63,6 +63,15 @@
         <label for="delimiter">分隔符：</label>
         <input type="text" id="delimiter" value="," />
     </div>
+    <div class="row">
+        <label for="encodingSelect">文件编码：</label>
+        <select id="encodingSelect">
+            <option value="utf-8" selected>UTF-8</option>
+            <option value="gbk">GBK / GB2312（简体中文）</option>
+            <option value="gb18030">GB18030</option>
+            <option value="big5">Big5（繁体中文）</option>
+        </select>
+    </div>
     <div id="status"></div>
     <div class="buttons">
         <button id="cancelBtn">取消</button>
@@ -70,6 +79,8 @@
     </div>
     <script type="text/javascript">
         var MAX_ROWS = 1050000;
+        var BATCH_SIZE = 10000;
+        var FILE_CHUNK_SIZE = 1 * 1024 * 1024; // 1 MB per read chunk
         var selectedFile = null;
 
         Office.onReady(function () {
@@ -87,21 +98,21 @@
                 if (!selectedFile) return;
 
                 var delimiter = document.getElementById("delimiter").value || ",";
+                var encSel = document.getElementById("encodingSelect");
+                var encoding = encSel ? encSel.value : "utf-8";
                 var importBtn = document.getElementById("importBtn");
                 var cancelBtn = document.getElementById("cancelBtn");
                 var statusEl = document.getElementById("status");
+                var filename = selectedFile.name;
 
                 importBtn.disabled = true;
                 cancelBtn.disabled = true;
-                statusEl.textContent = "正在读取文件...";
+                statusEl.textContent = "正在分析文件...";
                 statusEl.style.color = "green";
 
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    var text = e.target.result;
-                    var rows = parseCSV(text, delimiter);
-
-                    if (rows.length === 0) {
+                // ── Phase 1: scan the file in chunks to get row/col counts ──
+                scanCSVFile(selectedFile, delimiter, encoding, function (stats) {
+                    if (stats.rowCount === 0) {
                         statusEl.textContent = "错误: 文件为空";
                         statusEl.style.color = "red";
                         importBtn.disabled = false;
@@ -109,106 +120,313 @@
                         return;
                     }
 
-                    if (rows.length > MAX_ROWS) {
-                        statusEl.textContent = "错误: 数据量过大（" + rows.length + " 行），最多支持 " + MAX_ROWS + " 行";
+                    if (stats.rowCount > MAX_ROWS) {
+                        statusEl.textContent = "错误: 数据量过大（" + stats.rowCount + " 行），最多支持 " + MAX_ROWS + " 行";
                         statusEl.style.color = "red";
                         importBtn.disabled = false;
                         cancelBtn.disabled = false;
                         return;
                     }
 
-                    statusEl.textContent = "正在发送 " + rows.length + " 行数据...";
+                    // ── Phase 2: parse in chunks and write to Excel ──
+                    var totalBatches = Math.ceil(stats.rowCount / BATCH_SIZE);
+                    var processedBatches = 0;
 
-                    // Pad all rows to same column count
-                    var colCount = rows[0].length;
-                    for (var r = 0; r < rows.length; r++) {
-                        while (rows[r].length < colCount) {
-                            rows[r].push("");
-                        }
+                    function writeBatch(batchRows, batchIndex) {
+                        return Excel.run(function (context) {
+                            var sheet = context.workbook.worksheets.getActiveWorksheet();
+                            var startRange = context.workbook.getSelectedRange();
+                            startRange.load("address");
+                            return context.sync().then(function () {
+                                var addr = startRange.address.split("!").pop();
+                                var startCol = getColNum(addr);
+                                var startRow = getRowNum(addr);
+                                var batchStartRow = startRow + batchIndex * BATCH_SIZE;
+                                var batchEndRow = batchStartRow + batchRows.length - 1;
+                                var endCol = startCol + stats.colCount - 1;
+
+                                var targetRange = sheet.getRange(
+                                    getColumnLetter(startCol) + batchStartRow + ":" +
+                                    getColumnLetter(endCol) + batchEndRow
+                                );
+                                targetRange.values = batchRows;
+                                return context.sync().then(function () {
+                                    processedBatches++;
+                                    statusEl.textContent = "写入中... " + processedBatches + "/" + totalBatches + " 批";
+                                });
+                            });
+                        });
                     }
 
-                    // Send parsed data to parent page (dialog cannot use Excel.run directly)
-                    Office.context.ui.messageParent(JSON.stringify({
-                        type: "import",
-                        rows: rows,
-                        filename: selectedFile.name,
-                        delimiter: delimiter
-                    }));
-                };
-
-                reader.onerror = function () {
+                    var chain = Promise.resolve();
+                    parseCSVFile(selectedFile, delimiter, BATCH_SIZE, encoding, function (batchRows, batchIndex) {
+                        chain = chain.then(function () {
+                            return writeBatch(batchRows, batchIndex);
+                        });
+                    }, function (finalStats) {
+                        chain.then(function () {
+                            statusEl.textContent = "完成! 已写入 " + finalStats.rowCount + " 行";
+                            Office.context.ui.messageParent(JSON.stringify({
+                                type: "done",
+                                filename: filename,
+                                rowCount: finalStats.rowCount,
+                                colCount: finalStats.colCount
+                            }));
+                        }).catch(function (error) {
+                            statusEl.textContent = "错误: " + (error && error.message ? error.message : "写入失败");
+                            statusEl.style.color = "red";
+                            importBtn.disabled = false;
+                            cancelBtn.disabled = false;
+                            Office.context.ui.messageParent(JSON.stringify({
+                                type: "error",
+                                message: error && error.message ? error.message : "写入失败"
+                            }));
+                        });
+                    }, function (err) {
+                        statusEl.textContent = "错误: " + (err && err.message ? err.message : "文件读取失败");
+                        statusEl.style.color = "red";
+                        importBtn.disabled = false;
+                        cancelBtn.disabled = false;
+                        Office.context.ui.messageParent(JSON.stringify({
+                            type: "error",
+                            message: err && err.message ? err.message : "文件读取失败"
+                        }));
+                    });
+                }, function (err) {
                     statusEl.textContent = "错误: 文件读取失败";
                     statusEl.style.color = "red";
                     importBtn.disabled = false;
                     cancelBtn.disabled = false;
-                };
-
-                reader.readAsText(selectedFile, "UTF-8");
+                });
             };
         });
 
-        // Inline parseCSV (same logic as csv-utils.js, duplicated for standalone dialog)
-        function parseCSV(text, delimiter) {
-            if (!text || text.length === 0) return [];
+        // ── Utility functions ────────────────────────────────────────────
 
-            var sep = delimiter || ",";
+        function getColumnLetter(colIndex) {
+            var letter = "";
+            var remaining = colIndex;
+            do {
+                letter = String.fromCharCode(65 + (remaining % 26)) + letter;
+                remaining = Math.floor(remaining / 26) - 1;
+            } while (remaining >= 0);
+            return letter;
+        }
 
-            if (text.charCodeAt(0) === 0xfeff) {
-                text = text.slice(1);
+        function getColNum(id) {
+            var num = 0;
+            for (var i = 0; i < id.length; i++) {
+                var ch = id.charCodeAt(i);
+                if (ch >= 65 && ch <= 90) {
+                    num = num * 26 + (ch - 65);
+                } else {
+                    break;
+                }
             }
+            return num;
+        }
 
-            var rows = [];
-            var row = [];
+        function getRowNum(id) {
+            return parseInt(id.replace(/[^0-9]/g, ""), 10) || 1;
+        }
+
+        // ── Chunked file reading ────────────────────────────────────────
+        // UTF‑8: TextDecoder with {stream:true} (reliable, handles boundaries)
+        // Non‑UTF: manual carry‑over at ArrayBuffer level (avoids Chromium
+        //   stream‑mode bugs with GBK/Big5 decoders)
+
+        function readFileInChunks(file, encoding, onChunk, onDone, onError) {
+            var enc = encoding || "utf-8";
+            if (enc === "utf-8" || enc === "utf8") {
+                return readFileInChunksUTF8(file, onChunk, onDone, onError);
+            }
+            // ── Non‑UTF‑8: manual carry‑over ─────────────────────────
+            var offset = 0;
+            var decoder = createTextDecoder(enc);
+            var carryover = new Uint8Array(0);
+            var firstChunk = true;
+
+            function next() {
+                if (offset >= file.size) {
+                    if (carryover.length > 0) {
+                        try { var tail = decoder.decode(carryover); if (tail) onChunk(tail, offset, file.size); } catch (ignored) {}
+                    }
+                    onDone(); return;
+                }
+                var end = Math.min(offset + FILE_CHUNK_SIZE, file.size);
+                var blob = file.slice(offset, end);
+                offset = end;
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        var raw = new Uint8Array(e.target.result);
+                        var combined = carryover.length > 0
+                            ? (function () { var c = new Uint8Array(carryover.length + raw.length); c.set(carryover); c.set(raw, carryover.length); return c; })()
+                            : raw;
+                        var split = findLastCompleteBoundary(combined, enc);
+                        var text = decoder.decode(combined.subarray(0, split));
+                        carryover = combined.subarray(split);
+                        if (firstChunk && text) { firstChunk = false; if (text.charCodeAt(0) === 0xfeff) text = text.slice(1); }
+                        if (text) onChunk(text, offset, file.size);
+                        setTimeout(next, 0);
+                    } catch (err) { onError(err); }
+                };
+                reader.onerror = function (e) { onError(e); };
+                reader.readAsArrayBuffer(blob);
+            }
+            next();
+        }
+
+        function readFileInChunksUTF8(file, onChunk, onDone, onError) {
+            var offset = 0;
+            var decoder = createTextDecoder("utf-8");
+            var firstChunk = true;
+            function next() {
+                if (offset >= file.size) { onDone(); return; }
+                var end = Math.min(offset + FILE_CHUNK_SIZE, file.size);
+                var blob = file.slice(offset, end); offset = end;
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        var text = decoder.decode(e.target.result, { stream: true });
+                        if (firstChunk) { firstChunk = false; if (text.charCodeAt(0) === 0xfeff) text = text.slice(1); }
+                        onChunk(text, offset, file.size);
+                        setTimeout(next, 0);
+                    } catch (err) { onError(err); }
+                };
+                reader.onerror = function (e) { onError(e); };
+                reader.readAsArrayBuffer(blob);
+            }
+            next();
+        }
+
+        function createTextDecoder(encoding) {
+            try { return new TextDecoder(encoding); }
+            catch (e) { return new TextDecoder("utf-8"); }
+        }
+
+        function findLastCompleteBoundary(buffer, encoding) {
+            var len = buffer.length;
+            if (encoding === "utf-8" || encoding === "utf8" || encoding === "ascii") return len;
+            var isGBK = (encoding === "gbk" || encoding === "gb2312" || encoding === "gb18030");
+            var isBig5 = (encoding === "big5" || encoding === "big5-hkscs");
+            if (!isGBK && !isBig5) return Math.max(0, len - 1);
+            for (var i = len - 1; i >= 0; i--) {
+                var b = buffer[i];
+                if (b <= 0x7F) return i + 1;
+                var isLeader = isGBK ? (b >= 0x81 && b <= 0xFE) : (b >= 0xA1 && b <= 0xF9);
+                if (isLeader) return (i + 1 < len) ? i + 2 : i;
+            }
+            return 0;
+        }
+
+        // ── Incremental stateful CSV parser ─────────────────────────────
+        // createParser returns { feed, finish }. Call feed(chunk) for each
+        // text chunk; parser state is carried across chunks so that rows
+        // (and quoted fields) split across chunk boundaries are correctly
+        // reassembled.
+
+        function createParser(delimiter, batchSize, onBatch, scanOnly) {
+            var sep = delimiter || ",";
+            var batch = scanOnly ? null : [];
+            var row = scanOnly ? null : [];
             var field = "";
             var inQuotes = false;
+            var batchIdx = 0;
+            var totalRows = 0;
+            var maxCols = 0;
+            var curCols = 0;
+            var firstRowDone = false;
+            var pendingCR = false;
+            var hasContentAfterNL = false; // scanOnly: content after last newline
 
-            for (var i = 0; i < text.length; i++) {
-                var ch = text[i];
-
-                if (inQuotes) {
-                    if (ch === '"') {
-                        if (text[i + 1] === '"') {
-                            field += '"';
-                            i++;
-                        } else {
-                            inQuotes = false;
-                        }
-                    } else {
-                        field += ch;
+            function flushBatch() {
+                if (!scanOnly && batch && batch.length > 0) {
+                    for (var b = 0; b < batch.length; b++) {
+                        var r = batch[b];
+                        while (r.length < maxCols) r.push("");
                     }
+                    onBatch(batch, batchIdx);
+                    batchIdx++;
+                    batch = [];
+                }
+            }
+
+            function finishRow() {
+                if (scanOnly) {
+                    if (!firstRowDone) { maxCols = curCols; firstRowDone = true; }
+                    curCols = 0;
+                    hasContentAfterNL = false;
                 } else {
-                    if (ch === '"' && field === "") {
-                        inQuotes = true;
-                    } else if (ch === sep) {
-                        row.push(field);
-                        field = "";
-                    } else if (ch === "\n") {
-                        row.push(field);
-                        field = "";
-                        if (row.length > 0 || rows.length > 0) {
-                            rows.push(row);
-                        }
-                        row = [];
-                    } else if (ch === "\r") {
-                        if (text[i + 1] === "\n") i++;
-                        row.push(field);
-                        field = "";
-                        if (row.length > 0 || rows.length > 0) {
-                            rows.push(row);
-                        }
-                        row = [];
+                    row.push(field);
+                    if (row.length > maxCols) maxCols = row.length;
+                    batch.push(row);
+                    row = [];
+                }
+                field = "";
+                totalRows++;
+                if (!scanOnly && batch.length >= batchSize) flushBatch();
+            }
+
+            function feed(text) {
+                for (var i = 0; i < text.length; i++) {
+                    var ch = text[i];
+                    if (pendingCR) { pendingCR = false; if (ch === "\n") continue; finishRow(); }
+                    if (inQuotes) {
+                        if (ch === '"') {
+                            if (text[i + 1] === '"') { if (!scanOnly) field += '"'; i++; }
+                            else { inQuotes = false; }
+                        } else { if (!scanOnly) field += ch; else hasContentAfterNL = true; }
                     } else {
-                        field += ch;
+                        if (ch === '"' && field === "") { inQuotes = true; }
+                        else if (ch === sep) { if (scanOnly) curCols++; else row.push(field); field = ""; }
+                        else if (ch === "\n") { if (scanOnly) curCols++; finishRow(); }
+                        else if (ch === "\r") {
+                            if (text[i + 1] === "\n") { i++; }
+                            else if (i === text.length - 1) { pendingCR = true; if (scanOnly) curCols++; finishRow(); continue; }
+                            if (!pendingCR) { if (scanOnly) curCols++; finishRow(); }
+                        } else { if (!scanOnly) field += ch; else hasContentAfterNL = true; }
                     }
                 }
             }
 
-            row.push(field);
-            if (row.length > 1 || row[0] !== "" || rows.length === 0) {
-                rows.push(row);
+            function finish() {
+                if (pendingCR) pendingCR = false;
+                if (scanOnly) {
+                    if (!firstRowDone) {
+                        if (totalRows === 0 && !hasContentAfterNL && curCols === 0) return { rowCount: 0, colCount: 0 };
+                        curCols++; maxCols = curCols; totalRows++;
+                    } else if (hasContentAfterNL) { totalRows++; }
+                } else {
+                    row.push(field);
+                    var hasC = false;
+                    for (var c = 0; c < row.length; c++) { if (row[c] !== "") { hasC = true; break; } }
+                    if (hasC) { if (row.length > maxCols) maxCols = row.length; batch.push(row); totalRows++; }
+                    flushBatch();
+                }
+                field = "";
+                return { rowCount: totalRows, colCount: maxCols };
             }
 
-            return rows;
+            return { feed: feed, finish: finish };
+        }
+
+        // ── Public streaming API ────────────────────────────────────────
+
+        function scanCSVFile(file, delimiter, encoding, onDone, onError) {
+            if (!file || file.size === 0) { onDone({ rowCount: 0, colCount: 0 }); return; }
+            var parser = createParser(delimiter, 0, null, true);
+            readFileInChunks(file, encoding, function (text) { parser.feed(text); }, function () {
+                onDone(parser.finish());
+            }, onError || function () {});
+        }
+
+        function parseCSVFile(file, delimiter, batchSize, encoding, onBatch, onDone, onError) {
+            if (!file || file.size === 0) { onDone({ rowCount: 0, colCount: 0 }); return; }
+            var parser = createParser(delimiter, batchSize, onBatch, false);
+            readFileInChunks(file, encoding, function (text) { parser.feed(text); }, function () {
+                onDone(parser.finish());
+            }, onError || function () {});
         }
     </script>
 </body>
