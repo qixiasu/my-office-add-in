@@ -223,6 +223,66 @@
             }
         });
 
+        Office.actions.associate("selectToEnd", function selectToEnd(event) {
+            Excel.run(function (context) {
+                var range = context.workbook.getSelectedRange();
+                range.load(["columnIndex", "columnCount", "rowIndex"]);
+                return context.sync().then(function () {
+                    var colIndex = range.columnIndex;
+                    var colCount = range.columnCount;
+                    var startRow = range.rowIndex + 1; // 0-based → 1-based
+                    var worksheet = context.workbook.worksheets.getActiveWorksheet();
+
+                    // 对每一列加载数据
+                    var columnData = [];
+                    for (var i = 0; i < colCount; i++) {
+                        var colLetter = getColumnLetter(colIndex + i);
+                        var dataRange = worksheet.getRange(
+                            colLetter + startRow + ":" + colLetter + MAX_ROWS
+                        );
+                        dataRange.load("values");
+                        columnData.push({ data: dataRange });
+                    }
+
+                    return context.sync().then(function () {
+                        // 从下往上扫描，找每列最后一个有数据的行
+                        var maxDataRow = 0;
+                        for (var j = 0; j < columnData.length; j++) {
+                            var values = columnData[j].data.values;
+                            var lastRow = 0;
+                            for (var r = values.length - 1; r >= 0; r--) {
+                                var v = values[r][0];
+                                if (v !== null && v !== undefined && v !== "") {
+                                    lastRow = startRow + r;
+                                    break;
+                                }
+                            }
+                            if (lastRow > maxDataRow) {
+                                maxDataRow = lastRow;
+                            }
+                        }
+
+                        if (maxDataRow === 0) {
+                            Office.context.ui.messageBox("该列没有数据");
+                            return;
+                        }
+
+                        var startColLetter = getColumnLetter(colIndex);
+                        var endColLetter = getColumnLetter(colIndex + colCount - 1);
+                        var targetRange = worksheet.getRange(
+                            startColLetter + startRow + ":" + endColLetter + maxDataRow
+                        );
+                        targetRange.select();
+                        return context.sync();
+                    });
+                });
+            }).catch(function (error) {
+                Office.context.ui.messageBox("操作失败: " + error.message);
+            }).then(function () {
+                event.completed();
+            });
+        });
+
     </script>
 </head>
 
