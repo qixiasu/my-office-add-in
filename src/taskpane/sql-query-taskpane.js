@@ -464,56 +464,117 @@ function clearSql() {
 
 // —— 结果导出 ——
 
+var _sheetDialogActive = false;
+
+function showSheetNameDialog(callback) {
+  if (_sheetDialogActive) return;
+  _sheetDialogActive = true;
+
+  var defaultName = "查询结果";
+
+  var overlay = document.createElement("div");
+  overlay.id = "sheetNameOverlay";
+  overlay.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:1000;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Segoe UI Web',-apple-system,sans-serif;";
+
+  var dialog = document.createElement("div");
+  dialog.style.cssText = "background:#fff;border-radius:8px;padding:24px;min-width:260px;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,0.2);";
+
+  var title = document.createElement("div");
+  title.textContent = "请输入工作表名称";
+  title.style.cssText = "font-size:14px;font-weight:600;margin-bottom:16px;color:#333;";
+
+  var input = document.createElement("input");
+  input.type = "text";
+  input.value = defaultName;
+  input.style.cssText = "width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #8a8886;border-radius:4px;font-size:13px;font-family:inherit;outline:none;";
+  input.addEventListener("focus", function () { this.style.borderColor = "#0078d4"; });
+  input.addEventListener("blur", function () { this.style.borderColor = "#8a8886"; });
+
+  var btnContainer = document.createElement("div");
+  btnContainer.style.cssText = "margin-top:20px;display:flex;gap:8px;justify-content:flex-end;";
+
+  function cleanup(result) {
+    if (overlay.parentNode) {
+      overlay.parentNode.removeChild(overlay);
+    }
+    _sheetDialogActive = false;
+    callback(result);
+  }
+
+  var cancelBtn = document.createElement("button");
+  cancelBtn.textContent = "取消";
+  cancelBtn.style.cssText = "padding:6px 20px;border:1px solid #8a8886;border-radius:4px;background:#fff;cursor:pointer;font-size:13px;font-family:inherit;";
+  cancelBtn.addEventListener("click", function () { cleanup(defaultName); });
+
+  var okBtn = document.createElement("button");
+  okBtn.textContent = "确定";
+  okBtn.style.cssText = "padding:6px 20px;border:none;border-radius:4px;background:#0078d4;color:#fff;cursor:pointer;font-size:13px;font-family:inherit;";
+  okBtn.addEventListener("click", function () { cleanup(input.value.trim() || defaultName); });
+
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { cleanup(input.value.trim() || defaultName); }
+    if (e.key === "Escape") { cleanup(defaultName); }
+  });
+
+  btnContainer.appendChild(cancelBtn);
+  btnContainer.appendChild(okBtn);
+  dialog.appendChild(title);
+  dialog.appendChild(input);
+  dialog.appendChild(btnContainer);
+  overlay.appendChild(dialog);
+  document.body.appendChild(overlay);
+
+  setTimeout(function () { input.focus(); input.select(); }, 50);
+}
+
 function writeResultToSheet() {
   if (!currentQueryResult) return;
 
-  var defaultName = "查询结果";
-  var sheetName = prompt("请输入工作表名称:", defaultName);
-  if (sheetName === null || sheetName.trim() === "") {
-    sheetName = defaultName;
-  }
-  var rows = currentQueryResult.rows;
-  var columns = currentQueryResult.columns;
+  showSheetNameDialog(function (sheetName) {
+    var rows = currentQueryResult.rows;
+    var columns = currentQueryResult.columns;
 
-  Excel.run(function (context) {
-    var sheetCollection = context.workbook.worksheets;
-    sheetCollection.load("items/name");
-    return context.sync().then(function () {
-      // 生成不重复的名称
-      var finalName = sheetName;
-      var counter = 1;
-      var exists = true;
-      while (exists) {
-        exists = false;
-        for (var i = 0; i < sheetCollection.items.length; i++) {
-          if (sheetCollection.items[i].name === finalName) {
-            exists = true;
-            finalName = sheetName + " (" + counter + ")";
-            counter++;
-            break;
+    Excel.run(function (context) {
+      var sheetCollection = context.workbook.worksheets;
+      sheetCollection.load("items/name");
+      return context.sync().then(function () {
+        // 生成不重复的名称
+        var finalName = sheetName;
+        var counter = 1;
+        var exists = true;
+        while (exists) {
+          exists = false;
+          for (var i = 0; i < sheetCollection.items.length; i++) {
+            if (sheetCollection.items[i].name === finalName) {
+              exists = true;
+              finalName = sheetName + " (" + counter + ")";
+              counter++;
+              break;
+            }
           }
         }
-      }
 
-      var newSheet = sheetCollection.add(finalName);
-      newSheet.position = 0;
+        var newSheet = sheetCollection.add(finalName);
+        newSheet.position = 0;
 
-      var totalRows = rows.length + 1;
-      var range = newSheet.getRangeByIndexes(0, 0, totalRows, columns.length);
-      var values = [columns];
-      for (var r = 0; r < rows.length; r++) {
-        values.push(rows[r]);
-      }
-      range.values = values;
-      range.format.autofitColumns();
-      newSheet.activate();
+        var totalRows = rows.length + 1;
+        var range = newSheet.getRangeByIndexes(0, 0, totalRows, columns.length);
+        var values = [columns];
+        for (var r = 0; r < rows.length; r++) {
+          values.push(rows[r]);
+        }
+        range.values = values;
+        range.format.autofitColumns();
+        newSheet.activate();
 
-      return context.sync();
+        return context.sync();
+      });
+    }).then(function () {
+      setStatusText("queryStatus", "已将 " + rows.length + " 行结果写入新工作表", "success");
+    }).catch(function (error) {
+      var msg = (error && error.message) ? error.message : String(error || "未知错误");
+      setStatusText("queryStatus", "写入失败: " + msg, "error");
     });
-  }).then(function () {
-    setStatusText("queryStatus", "已将 " + rows.length + " 行结果写入新工作表", "success");
-  }).catch(function (error) {
-    setStatusText("queryStatus", "写入失败: " + error.message, "error");
   });
 }
 
