@@ -411,6 +411,7 @@ async function runQuery() {
   if (result.type === "modification") {
     statusEl.textContent = "完成，影响 " + result.rowsAffected + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
     statusEl.className = "status-message status-success";
+    document.getElementById("resultActions").style.display = "none";
     document.getElementById("resultDisplay").style.display = "none";
     currentQueryResult = null;
     persistenceManager.scheduleSave();
@@ -445,6 +446,7 @@ async function runQuery() {
     bodyHtml += "</tr>";
   }
   document.getElementById("resultBody").innerHTML = bodyHtml;
+  document.getElementById("resultActions").style.display = "block";
   document.getElementById("resultDisplay").style.display = "block";
 
   if (result.rowCount > MAX_DISPLAY_ROWS) {
@@ -456,6 +458,7 @@ async function runQuery() {
 
 function clearSql() {
   document.getElementById("sqlInput").value = "";
+  document.getElementById("resultActions").style.display = "none";
   document.getElementById("resultDisplay").style.display = "none";
   document.getElementById("queryStatus").className = "status-message status-idle";
   document.getElementById("queryStatus").textContent = "";
