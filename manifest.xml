@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>399bd8ea-ebf6-4d3a-b838-d2e4deaac2f3</Id>
-  <Version>1.0.11</Version>
+  <Version>1.1.11</Version>
   <ProviderName>QinXuan</ProviderName>
   <DefaultLocale>zh-CN</DefaultLocale>
   <DisplayName DefaultValue="Excel 数据处理工具"/>
@@ -114,6 +114,30 @@
                     <bt:Image size="80" resid="FillSeriesIcon.80x80"/>
                   </Icon>
                   <Action xsi:type="ShowTaskpane"><TaskpaneId>FillSeriesTaskpaneId</TaskpaneId><SourceLocation resid="FillSeriesTaskpane.Url"/></Action>
+                </Control>
+              </Group>
+              <Group id="DatabaseQueryGroup">
+                <Label resid="DatabaseQueryGroup.Label"/>
+                <Icon>
+                    <bt:Image size="16" resid="DbIcon.16x16"/>
+                    <bt:Image size="32" resid="DbIcon.32x32"/>
+                    <bt:Image size="80" resid="DbIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="SqlQueryButton">
+                    <Label resid="SqlQueryButton.Label"/>
+                    <Supertip>
+                        <Title resid="SqlQueryButton.Label"/>
+                        <Description resid="SqlQueryButton.Tooltip"/>
+                    </Supertip>
+                    <Icon>
+                        <bt:Image size="16" resid="DbIcon.16x16"/>
+                        <bt:Image size="32" resid="DbIcon.32x32"/>
+                        <bt:Image size="80" resid="DbIcon.80x80"/>
+                    </Icon>
+                    <Action xsi:type="ShowTaskpane">
+                        <TaskpaneId>SqlQueryTaskpaneId</TaskpaneId>
+                        <SourceLocation resid="SqlQueryTaskpane.Url"/>
+                    </Action>
                 </Control>
               </Group>
               <Group id="QuickSelectGroup">
@@ -232,6 +256,9 @@
         <bt:Image id="SelectToRightIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/select-to-right-16.png"/>
         <bt:Image id="SelectToRightIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/select-to-right-32.png"/>
         <bt:Image id="SelectToRightIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/select-to-right-80.png"/>
+        <bt:Image id="DbIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/database-16.png"/>
+        <bt:Image id="DbIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/database-32.png"/>
+        <bt:Image id="DbIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/database-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/commands.html"/>
@@ -242,6 +269,7 @@
         <bt:Url id="CountValuesTaskpane.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/count-values-taskpane.html"/>
         <bt:Url id="ExpandTaskpane.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/expand-taskpane.html"/>
         <bt:Url id="SplitSheetTaskpane.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/split-sheet-taskpane.html"/>
+        <bt:Url id="SqlQueryTaskpane.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/sql-query-taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="CustomTab.Label" DefaultValue="Excel 工具箱"/>
@@ -259,6 +287,8 @@
         <bt:String id="SelectToEndButton.Label" DefaultValue="向下选区"/>
         <bt:String id="SelectToRightButton.Label" DefaultValue="向右选区"/>
         <bt:String id="QuickSelectGroup.Label" DefaultValue="快速选区"/>
+        <bt:String id="DatabaseQueryGroup.Label" DefaultValue="数据库"/>
+        <bt:String id="SqlQueryButton.Label" DefaultValue="数据库查询"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
@@ -270,6 +300,7 @@
         <bt:String id="SplitSheetButton.Tooltip" DefaultValue="将数据按某一列的值拆分为多个新工作表"/>
         <bt:String id="SelectToEndButton.Tooltip" DefaultValue="从选中单元格向下选到该列最后一个有数据的单元格"/>
         <bt:String id="SelectToRightButton.Tooltip" DefaultValue="从选中单元格向右选到该行最后一个有数据的单元格"/>
+        <bt:String id="SqlQueryButton.Tooltip" DefaultValue="将工作表数据导入 SQLite 数据库，使用 SQL 进行多表关联查询与分析"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

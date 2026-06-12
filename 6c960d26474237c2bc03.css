@@ -1,0 +1,430 @@
+/* src/taskpane/sql-query-taskpane.css */
+
+.sql-query-container {
+  padding: 16px;
+}
+
+.sql-query-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 标签导航 */
+.tab-nav {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: #0078d4;
+  background: #f3f9ff;
+}
+
+.tab-btn.active {
+  color: #0078d4;
+  border-bottom-color: #0078d4;
+  font-weight: 600;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* 表单 */
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #0078d4;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+}
+
+.selection-info {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  font-size: 12px;
+  color: #888;
+  background: #f8f8f8;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+/* 按钮 */
+.sql-button {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sql-button-primary {
+  background: #0078d4;
+  color: #fff;
+}
+
+.sql-button-primary:hover {
+  background: #106ebe;
+}
+
+.sql-button-primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 6px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #f0f0f0;
+  border-color: #aaa;
+}
+
+.btn-danger {
+  color: #d32f2f;
+  border-color: #e0a0a0;
+}
+
+.btn-danger:hover {
+  background: #fff5f5;
+}
+
+/* 状态消息 */
+.status-message {
+  font-size: 12px;
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 2px;
+}
+
+.status-idle { color: #888; }
+.status-loading { background: #fff8e1; color: #f57f17; }
+.status-success { background: #e8f5e9; color: #2e7d32; }
+.status-error { background: #ffebee; color: #c62828; }
+
+/* 分隔线 */
+.section-divider {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  margin: 16px 0 8px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+/* 表列表 */
+.table-list {
+  margin-bottom: 8px;
+}
+
+.table-list-empty {
+  font-size: 12px;
+  color: #aaa;
+  text-align: center;
+  padding: 12px;
+}
+
+.table-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border: 1px solid #e8e8e8;
+  border-radius: 2px;
+  margin-bottom: 6px;
+  background: #fafafa;
+}
+
+.table-item-info {
+  flex: 1;
+}
+
+.table-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.table-item-columns {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.table-item-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.table-item-actions button {
+  font-size: 11px;
+  padding: 3px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.table-item-actions button:hover {
+  background: #f0f0f0;
+}
+
+/* 数据库文件操作 */
+.db-file-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.db-file-actions button {
+  flex: 1;
+}
+
+/* 数据表格 */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.data-table th {
+  background: #f3f3f3;
+  padding: 6px 8px;
+  text-align: left;
+  border: 1px solid #e0e0e0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 4px 8px;
+  border: 1px solid #e0e0e0;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.data-table tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+/* 预览区域 */
+.schema-display {
+  margin-bottom: 8px;
+}
+
+.row-count {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.preview-display {
+  max-height: 200px;
+  overflow: auto;
+}
+
+.preview-display .data-table {
+  min-width: 100%;
+}
+
+/* 结果区域 */
+.result-display {
+  max-height: 300px;
+  overflow: auto;
+  margin-bottom: 8px;
+}
+
+.result-display .data-table {
+  min-width: 100%;
+}
+
+.result-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.result-actions button {
+  flex: 1;
+}
+
+.browse-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.browse-actions button {
+  flex: 1;
+}
+
+/* SQL 编辑器 */
+.sql-editor {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+  min-height: 80px;
+}
+
+.sql-editor:focus {
+  outline: none;
+  border-color: #0078d4;
+}
+
+.query-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.query-actions .sql-button {
+  width: auto;
+  flex: 1;
+}
+
+/* 查询历史 */
+.query-history {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.history-item {
+  padding: 6px 8px;
+  border: 1px solid #e8e8e8;
+  border-radius: 2px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.history-item:hover {
+  background: #f3f9ff;
+}
+
+.history-item-sql {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 11px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item-meta {
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+/* 自定义确认对话框 */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-dialog {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  min-width: 260px;
+  max-width: 320px;
+}
+
+.confirm-message {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.confirm-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.confirm-buttons .btn-secondary,
+.confirm-buttons .sql-button {
+  width: auto;
+  min-width: 72px;
+}
