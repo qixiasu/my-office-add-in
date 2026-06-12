@@ -154,10 +154,59 @@ function refreshTableList() {
   tableListEl.innerHTML = html;
 }
 
+/**
+ * 自定义确认对话框（替代 window.confirm，因 Office.js 覆写后抛出异常）
+ * @param {string} message - 提示信息
+ * @returns {Promise<boolean>}
+ */
+function showConfirm(message) {
+  return new Promise(function (resolve) {
+    var overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+
+    var dialog = document.createElement('div');
+    dialog.className = 'confirm-dialog';
+
+    var msgEl = document.createElement('p');
+    msgEl.className = 'confirm-message';
+    msgEl.textContent = message;
+
+    var btnGroup = document.createElement('div');
+    btnGroup.className = 'confirm-buttons';
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn-secondary';
+    cancelBtn.textContent = '取消';
+
+    var okBtn = document.createElement('button');
+    okBtn.className = 'sql-button sql-button-primary';
+    okBtn.textContent = '确定';
+
+    btnGroup.appendChild(cancelBtn);
+    btnGroup.appendChild(okBtn);
+    dialog.appendChild(msgEl);
+    dialog.appendChild(btnGroup);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+
+    function cleanup(result) {
+      document.body.removeChild(overlay);
+      resolve(result);
+    }
+
+    cancelBtn.addEventListener('click', function () { cleanup(false); });
+    okBtn.addEventListener('click', function () { cleanup(true); });
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) cleanup(false);
+    });
+  });
+}
+
 // —— 删除表（全局函数，供 onclick 调用） ——
 
-window.deleteTable = function (tableName) {
-  if (!confirm('确定要删除表 "' + tableName + '" 吗？')) return;
+window.deleteTable = async function (tableName) {
+  var confirmed = await showConfirm('确定要删除表 "' + tableName + '" 吗？');
+  if (!confirmed) return;
 
   dbManager.exec('DROP TABLE "' + tableName + '"');
   persistenceManager.scheduleSave();
@@ -177,15 +226,18 @@ function runImport() {
 
   Excel.run(function (context) {
     var range = context.workbook.getSelectedRange();
-    range.load(["address", "values"]);
+    range.load(["address"]);
+    var usedRange = range.getUsedRange();
+    usedRange.load(["rowCount", "values"]);
     return context.sync().then(function () {
-      var values = range.values;
-      if (!values || values.length === 0) {
+      // 使用 getUsedRange() 判断实际数据行数（支持全列选区如 A:D）
+      if (usedRange.rowCount === 0 || !usedRange.values) {
         statusEl.className = "status-message status-error";
         statusEl.textContent = "错误：选中区域没有数据";
         importBtn.disabled = false;
         return;
       }
+      var values = usedRange.values;
 
       var tableNameInput = document.getElementById("tableNameInput");
       var tableName = tableNameInput.value.trim();
@@ -298,11 +350,12 @@ function onBrowseTableChange() {
   }
 }
 
-function clearSelectedTable() {
+async function clearSelectedTable() {
   var select = document.getElementById("browseTableSelect");
   var tableName = select.value;
   if (!tableName) return;
-  if (!confirm('确定要清空表 "' + tableName + '" 的所有数据吗？')) return;
+  var confirmed = await showConfirm('确定要清空表 "' + tableName + '" 的所有数据吗？');
+  if (!confirmed) return;
 
   dbManager.exec("DELETE FROM \"" + tableName + "\"");
   persistenceManager.scheduleSave();
@@ -310,11 +363,12 @@ function clearSelectedTable() {
   setStatusText("queryStatus", tableName + " 已清空", "success");
 }
 
-function dropSelectedTable() {
+async function dropSelectedTable() {
   var select = document.getElementById("browseTableSelect");
   var tableName = select.value;
   if (!tableName) return;
-  if (!confirm('确定要删除表 "' + tableName + '" 吗？此操作不可恢复！')) return;
+  var confirmed = await showConfirm('确定要删除表 "' + tableName + '" 吗？此操作不可恢复！');
+  if (!confirmed) return;
 
   dbManager.exec('DROP TABLE "' + tableName + '"');
   persistenceManager.scheduleSave();
@@ -327,7 +381,7 @@ function dropSelectedTable() {
 
 // —— SQL 查询 ——
 
-function runQuery() {
+async function runQuery() {
   var sqlInput = document.getElementById("sqlInput");
   var sql = sqlInput.value.trim();
   if (!sql) return;
@@ -337,7 +391,8 @@ function runQuery() {
   // DROP/DELETE/UPDATE 二次确认
   var upperSql = sql.toUpperCase().trim();
   if (upperSql.startsWith("DROP") || upperSql.startsWith("DELETE") || upperSql.startsWith("UPDATE")) {
-    if (!confirm("确定要执行危险操作吗？\n\n" + sql)) {
+    var confirmed = await showConfirm("确定要执行危险操作吗？\n\n" + sql);
+    if (!confirmed) {
       return;
     }
   }
