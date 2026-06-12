@@ -275,6 +275,80 @@
             });
         });
 
+        Office.actions.associate("selectToRight", function selectToRight(event) {
+            Excel.run(function (context) {
+                var range = context.workbook.getSelectedRange();
+                range.load(["columnIndex", "columnCount", "rowIndex", "rowCount"]);
+                var worksheet = context.workbook.worksheets.getActiveWorksheet();
+                var usedRange = worksheet.getUsedRange();
+                usedRange.load(["columnIndex", "columnCount"]);
+                return context.sync().then(function () {
+                    var startRow = range.rowIndex;
+                    var rowCount = range.rowCount;
+                    var startCol = range.columnIndex + 1; // 0-based → 1-based
+
+                    // 通过 usedRange 确定工作表的实际数据右边界
+                    var sheetLastCol = usedRange.columnIndex + usedRange.columnCount;
+                    var endCol = Math.min(sheetLastCol, startCol + MAX_ROWS - 1);
+
+                    if (startCol > endCol) {
+                        console.warn("selectToRight: 所选区域没有数据");
+                        return;
+                    }
+
+                    // 对每一行加载数据
+                    var rowData = [];
+                    for (var i = 0; i < rowCount; i++) {
+                        var rowNum = startRow + i + 1;
+                        var dataRange = worksheet.getRange(
+                            getColumnLetter(startCol) + rowNum + ":" + getColumnLetter(endCol) + rowNum
+                        );
+                        dataRange.load("values");
+                        rowData.push({ data: dataRange });
+                    }
+
+                    return context.sync().then(function () {
+                        // 从右往左扫描，找每行最后一个有数据的列
+                        var maxDataCol = 0;
+                        for (var j = 0; j < rowData.length; j++) {
+                            var values = rowData[j].data.values;
+                            if (!values || !values[0]) { continue; }
+                            var lastCol = 0;
+                            for (var c = values[0].length - 1; c >= 0; c--) {
+                                var v = values[0][c];
+                                if (v !== null && v !== undefined && v !== "") {
+                                    lastCol = startCol + c;
+                                    break;
+                                }
+                            }
+                            if (lastCol > maxDataCol) {
+                                maxDataCol = lastCol;
+                            }
+                        }
+
+                        if (maxDataCol === 0) {
+                            console.warn("selectToRight: 所选区域没有数据");
+                            return;
+                        }
+
+                        var startColLetter = getColumnLetter(range.columnIndex);
+                        var endColLetter = getColumnLetter(maxDataCol - 1);
+                        var firstRowNum = range.rowIndex + 1;
+                        var lastRowNum = range.rowIndex + range.rowCount;
+                        var targetRange = worksheet.getRange(
+                            startColLetter + firstRowNum + ":" + endColLetter + lastRowNum
+                        );
+                        targetRange.select();
+                        return context.sync();
+                    });
+                });
+            }).catch(function (error) {
+                console.error("selectToRight failed:", error);
+            }).then(function () {
+                event.completed();
+            });
+        });
+
     </script>
 </head>
 
