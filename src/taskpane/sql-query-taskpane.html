@@ -127,15 +127,15 @@
             <div id="queryStatus" class="status-message status-idle"></div>
 
             <div class="section-divider">查询结果</div>
+            <div id="resultActions" class="result-actions" style="display:none">
+                <button id="writeSheetBtn" class="btn-secondary" title="将查询结果写入新的工作表">📝 写入新工作表</button>
+                <button id="copyResultBtn" class="btn-secondary" title="复制结果为文本">📋 复制结果</button>
+            </div>
             <div id="resultDisplay" class="result-display" style="display:none">
                 <table class="data-table">
                     <thead id="resultHead"></thead>
                     <tbody id="resultBody"></tbody>
                 </table>
-                <div class="result-actions">
-                    <button id="writeSheetBtn" class="btn-secondary" title="将查询结果写入新的工作表">📝 写入新工作表</button>
-                    <button id="copyResultBtn" class="btn-secondary" title="复制结果为文本">📋 复制结果</button>
-                </div>
             </div>
 
             <!-- 查询历史 -->

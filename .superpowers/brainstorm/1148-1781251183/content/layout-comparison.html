@@ -1,0 +1,91 @@
+<h2>SQL 查询结果按钮位置调整</h2>
+<p class="subtitle">对比改动前后的布局差异</p>
+
+<div class="split">
+  <!-- Before: Current Layout -->
+  <div class="mockup" style="flex:1">
+    <div class="mockup-header" style="background:#f44336;color:#fff;">当前布局</div>
+    <div class="mockup-body" style="text-align:left;padding:12px;font-size:12px;">
+
+      <div style="background:#e8e8e8;padding:8px;border-radius:4px;margin-bottom:8px;font-size:11px;color:#666;">SQL 编辑器 (textarea)</div>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <div style="flex:1;background:#0078d4;color:#fff;padding:8px;border-radius:4px;text-align:center;font-size:12px;">▶ 执行</div>
+        <div style="flex:1;background:#f0f0f0;padding:8px;border-radius:4px;text-align:center;font-size:12px;">🧹 清空</div>
+      </div>
+
+      <div style="background:#fff8e1;padding:6px;border-radius:4px;margin-bottom:8px;font-size:11px;color:#f57f17;">状态：查询完成，返回 100 行</div>
+
+      <div style="font-size:11px;font-weight:600;color:#888;border-bottom:1px solid #e8e8e8;padding-bottom:4px;margin-bottom:8px;">查询结果</div>
+
+      <div style="max-height:120px;overflow:auto;border:1px solid #e8e8e8;border-radius:4px;margin-bottom:8px;">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <thead><tr style="background:#f3f3f3;"><th style="padding:4px;border:1px solid #e0e0e0;">ID</th><th style="padding:4px;border:1px solid #e0e0e0;">Name</th><th style="padding:4px;border:1px solid #e0e0e0;">Value</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:4px;border:1px solid #e0e0e0;">1</td><td style="padding:4px;border:1px solid #e0e0e0;">数据 1</td><td style="padding:4px;border:1px solid #e0e0e0;">100</td></tr>
+            <tr><td style="padding:4px;border:1px solid #e0e0e0;">2</td><td style="padding:4px;border:1px solid #e0e0e0;">数据 2</td><td style="padding:4px;border:1px solid #e0e0e0;">200</td></tr>
+            <tr><td style="padding:4px;border:1px solid #e0e0e0;">3</td><td style="padding:4px;border:1px solid #e0e0e0;">数据 3</td><td style="padding:4px;border:1px solid #e0e0e0;">300</td></tr>
+            <tr><td colspan="3" style="padding:4px;text-align:center;color:#aaa;font-style:italic;">... 更多数据行 ...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 按钮在底部 - 被大量数据遮挡 -->
+      <div style="background:#ffcdd2;border:2px dashed #f44336;padding:8px;border-radius:4px;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:600;color:#c62828;margin-bottom:4px;">⚠ 按钮藏在底部！</div>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;background:#fff;border:1px solid #d0d0d0;padding:6px;border-radius:4px;text-align:center;font-size:11px;">📝 写入新工作表</div>
+          <div style="flex:1;background:#fff;border:1px solid #d0d0d0;padding:6px;border-radius:4px;text-align:center;font-size:11px;">📋 复制结果</div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;font-weight:600;color:#888;border-bottom:1px solid #e8e8e8;padding-bottom:4px;margin-top:12px;">查询历史</div>
+    </div>
+  </div>
+
+  <!-- After: Proposed Layout -->
+  <div class="mockup" style="flex:1">
+    <div class="mockup-header" style="background:#4caf50;color:#fff;">改动后布局</div>
+    <div class="mockup-body" style="text-align:left;padding:12px;font-size:12px;">
+
+      <div style="background:#e8e8e8;padding:8px;border-radius:4px;margin-bottom:8px;font-size:11px;color:#666;">SQL 编辑器 (textarea)</div>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <div style="flex:1;background:#0078d4;color:#fff;padding:8px;border-radius:4px;text-align:center;font-size:12px;">▶ 执行</div>
+        <div style="flex:1;background:#f0f0f0;padding:8px;border-radius:4px;text-align:center;font-size:12px;">🧹 清空</div>
+      </div>
+
+      <div style="background:#fff8e1;padding:6px;border-radius:4px;margin-bottom:8px;font-size:11px;color:#f57f17;">状态：查询完成，返回 100 行</div>
+
+      <!-- 按钮移到结果上方，紧接执行按钮下方 -->
+      <div style="background:#c8e6c9;border:2px dashed #4caf50;padding:8px;border-radius:4px;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:600;color:#2e7d32;margin-bottom:4px;">✓ 按钮移到结果上方</div>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;background:#fff;border:1px solid #d0d0d0;padding:6px;border-radius:4px;text-align:center;font-size:11px;">📝 写入新工作表</div>
+          <div style="flex:1;background:#fff;border:1px solid #d0d0d0;padding:6px;border-radius:4px;text-align:center;font-size:11px;">📋 复制结果</div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;font-weight:600;color:#888;border-bottom:1px solid #e8e8e8;padding-bottom:4px;margin-bottom:8px;">查询结果</div>
+
+      <div style="max-height:120px;overflow:auto;border:1px solid #e8e8e8;border-radius:4px;margin-bottom:8px;">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <thead><tr style="background:#f3f3f3;"><th style="padding:4px;border:1px solid #e0e0e0;">ID</th><th style="padding:4px;border:1px solid #e0e0e0;">Name</th><th style="padding:4px;border:1px solid #e0e0e0;">Value</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:4px;border:1px solid #e0e0e0;">1</td><td style="padding:4px;border:1px solid #e0e0e0;">数据 1</td><td style="padding:4px;border:1px solid #e0e0e0;">100</td></tr>
+            <tr><td style="padding:4px;border:1px solid #e0e0e0;">2</td><td style="padding:4px;border:1px solid #e0e0e0;">数据 2</td><td style="padding:4px;border:1px solid #e0e0e0;">200</td></tr>
+            <tr><td style="padding:4px;border:1px solid #e0e0e0;">3</td><td style="padding:4px;border:1px solid #e0e0e0;">数据 3</td><td style="padding:4px;border:1px solid #e0e0e0;">300</td></tr>
+            <tr><td colspan="3" style="padding:4px;text-align:center;color:#aaa;font-style:italic;">... 更多数据行 ...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="font-size:11px;font-weight:600;color:#888;border-bottom:1px solid #e8e8e8;padding-bottom:4px;margin-top:12px;">查询历史</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>改动方案</h3>
+  <p>将「写入新工作表」和「复制结果」按钮从 <code>resultDisplay</code> 内部（结果表格底部）移到「查询结果」标题之前、状态消息之后。执行查询后用户无需滚动即可点击操作。</p>
+</div>
