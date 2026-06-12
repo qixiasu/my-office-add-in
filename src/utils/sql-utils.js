@@ -324,8 +324,195 @@ function importData(dbManager, tableName, values, firstRowIsHeader) {
   };
 }
 
+var DB_STORE_NAME = "sqlite-db-store";
+var DB_NAME = "sql-query-addin";
+var DB_KEY = "database-buffer";
+
+/**
+ * PersistenceManager - 管理 IndexedDB 持久化和 .db 文件导入导出
+ * @param {DatabaseManager} dbManager
+ */
+function PersistenceManager(dbManager) {
+  this.dbManager = dbManager;
+  this.saveTimeout = null;
+  this.saveDelay = 1000; // 防抖 1 秒
+}
+
+/**
+ * 打开 IndexedDB 数据库
+ * @returns {Promise<IDBDatabase>}
+ */
+PersistenceManager.prototype._openDB = function () {
+  var self = this;
+  return new Promise(function (resolve, reject) {
+    var request = indexedDB.open(DB_NAME, 1);
+
+    request.onupgradeneeded = function (event) {
+      var db = event.target.result;
+      if (!db.objectStoreNames.contains(DB_STORE_NAME)) {
+        db.createObjectStore(DB_STORE_NAME);
+      }
+    };
+
+    request.onsuccess = function (event) {
+      resolve(event.target.result);
+    };
+
+    request.onerror = function () {
+      reject(new Error("无法打开 IndexedDB"));
+    };
+  });
+};
+
+/**
+ * 从 IndexedDB 加载数据库
+ * @returns {Promise<Uint8Array|null>}
+ */
+PersistenceManager.prototype.loadFromIndexedDB = function () {
+  var self = this;
+  return this._openDB().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var transaction = db.transaction([DB_STORE_NAME], "readonly");
+      var store = transaction.objectStore(DB_STORE_NAME);
+      var request = store.get(DB_KEY);
+
+      request.onsuccess = function () {
+        db.close();
+        resolve(request.result || null);
+      };
+
+      request.onerror = function () {
+        db.close();
+        reject(new Error("读取 IndexedDB 失败"));
+      };
+    });
+  });
+};
+
+/**
+ * 保存数据库到 IndexedDB
+ * @returns {Promise<void>}
+ */
+PersistenceManager.prototype.saveToIndexedDB = function () {
+  var self = this;
+  var buffer = this.dbManager.exportBuffer();
+  if (!buffer) return Promise.resolve();
+
+  return this._openDB().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var transaction = db.transaction([DB_STORE_NAME], "readwrite");
+      var store = transaction.objectStore(DB_STORE_NAME);
+      var request = store.put(buffer, DB_KEY);
+
+      request.onsuccess = function () {
+        db.close();
+        resolve();
+      };
+
+      request.onerror = function () {
+        db.close();
+        reject(new Error("保存到 IndexedDB 失败"));
+      };
+    });
+  });
+};
+
+/**
+ * 防抖自动保存
+ */
+PersistenceManager.prototype.scheduleSave = function () {
+  var self = this;
+  if (this.saveTimeout) {
+    clearTimeout(this.saveTimeout);
+  }
+  this.saveTimeout = setTimeout(function () {
+    self.saveToIndexedDB().catch(function (err) {
+      console.error("自动保存失败:", err);
+    });
+    self.saveTimeout = null;
+  }, this.saveDelay);
+};
+
+/**
+ * 导出为 .db 文件（触发浏览器下载）
+ * @param {string} [filename] - 文件名
+ */
+PersistenceManager.prototype.exportToFile = function (filename) {
+  var buffer = this.dbManager.exportBuffer();
+  if (!buffer) return;
+
+  if (!filename) {
+    var now = new Date();
+    var dateStr = now.getFullYear() + "-" +
+      String(now.getMonth() + 1).padStart(2, "0") + "-" +
+      String(now.getDate()).padStart(2, "0");
+    filename = "excel-data-" + dateStr + ".db";
+  }
+
+  var blob = new Blob([buffer], { type: "application/vnd.sqlite3" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * 从 .db 文件加载（通过文件输入）
+ * @param {File} file - 用户选择的 .db 文件
+ * @returns {Promise<void>}
+ */
+PersistenceManager.prototype.importFromFile = function (file) {
+  var self = this;
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function (event) {
+      try {
+        var buffer = new Uint8Array(event.target.result);
+        self.dbManager.importBuffer(buffer);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    };
+    reader.onerror = function () {
+      reject(new Error("读取文件失败"));
+    };
+    reader.readAsArrayBuffer(file);
+  });
+};
+
+/**
+ * 清除 IndexedDB 中的数据（重置）
+ * @returns {Promise<void>}
+ */
+PersistenceManager.prototype.clearStorage = function () {
+  var self = this;
+  return this._openDB().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var transaction = db.transaction([DB_STORE_NAME], "readwrite");
+      var store = transaction.objectStore(DB_STORE_NAME);
+      var request = store.delete(DB_KEY);
+
+      request.onsuccess = function () {
+        db.close();
+        resolve();
+      };
+
+      request.onerror = function () {
+        db.close();
+        reject(new Error("清除 IndexedDB 失败"));
+      };
+    });
+  });
+};
+
 module.exports = {
   DatabaseManager: DatabaseManager,
+  PersistenceManager: PersistenceManager,
   sanitizeColumnName: sanitizeColumnName,
   inferColumnType: inferColumnType,
   importData: importData,
