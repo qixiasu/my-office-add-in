@@ -145,7 +145,7 @@ Office.actions.associate("selectToRight", function selectToRight(event) {
                 }
 
                 var startColLetter = getColumnLetter(range.columnIndex);
-                var endColLetter = getColumnLetter(maxDataCol - 1);
+                var endColLetter = getColumnLetter(maxDataCol);
                 var firstRowNum = range.rowIndex + 1;
                 var lastRowNum = range.rowIndex + range.rowCount;
                 var targetRange = worksheet.getRange(

@@ -285,7 +285,7 @@
                 return context.sync().then(function () {
                     var startRow = range.rowIndex;
                     var rowCount = range.rowCount;
-                    var startCol = range.columnIndex + 1; // 0-based → 1-based
+                    var startCol = range.columnIndex + 1; // 选中单元格右侧第一列（0-based 索引传给 getColumnLetter）
 
                     // 通过 usedRange 确定工作表的实际数据右边界
                     var sheetLastCol = usedRange.columnIndex + usedRange.columnCount;
@@ -332,7 +332,7 @@
                         }
 
                         var startColLetter = getColumnLetter(range.columnIndex);
-                        var endColLetter = getColumnLetter(maxDataCol - 1);
+                        var endColLetter = getColumnLetter(maxDataCol);
                         var firstRowNum = range.rowIndex + 1;
                         var lastRowNum = range.rowIndex + range.rowCount;
                         var targetRange = worksheet.getRange(
