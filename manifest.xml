@@ -78,36 +78,6 @@
                     <SourceLocation resid="SplitSheetTaskpane.Url"/>
                   </Action>
                 </Control>
-                <Control xsi:type="Button" id="SelectToEndButton">
-                  <Label resid="SelectToEndButton.Label"/>
-                  <Supertip>
-                    <Title resid="SelectToEndButton.Label"/>
-                    <Description resid="SelectToEndButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="SelectToEndIcon.16x16"/>
-                    <bt:Image size="32" resid="SelectToEndIcon.32x32"/>
-                    <bt:Image size="80" resid="SelectToEndIcon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>selectToEnd</FunctionName>
-                  </Action>
-                </Control>
-                <Control xsi:type="Button" id="SelectToRightButton">
-                  <Label resid="SelectToRightButton.Label"/>
-                  <Supertip>
-                    <Title resid="SelectToRightButton.Label"/>
-                    <Description resid="SelectToRightButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="SelectToRightIcon.16x16"/>
-                    <bt:Image size="32" resid="SelectToRightIcon.32x32"/>
-                    <bt:Image size="80" resid="SelectToRightIcon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>selectToRight</FunctionName>
-                  </Action>
-                </Control>
               </Group>
               <Group id="DataConversionGroup">
                 <Label resid="DataConversionGroup.Label"/>
