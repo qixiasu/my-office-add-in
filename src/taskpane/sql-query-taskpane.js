@@ -230,3 +230,345 @@ function runImport() {
     importBtn.disabled = false;
   });
 }
+
+// —— 表浏览器 ——
+
+function populateBrowseSelect() {
+  var select = document.getElementById("browseTableSelect");
+  if (!dbManager || !dbManager.isInitialized) {
+    select.innerHTML = '<option value="">-- 请先导入数据 --</option>';
+    return;
+  }
+
+  var tables = dbManager.getTables();
+  if (tables.length === 0) {
+    select.innerHTML = '<option value="">-- 请先导入数据 --</option>';
+    return;
+  }
+
+  var currentValue = select.value;
+  var html = '<option value="">-- 选择表 --</option>';
+  for (var i = 0; i < tables.length; i++) {
+    html += '<option value="' + tables[i].name + '">' + tables[i].name + "</option>";
+  }
+  select.innerHTML = html;
+  if (currentValue) select.value = currentValue;
+}
+
+function onBrowseTableChange() {
+  var tableName = this.value;
+  if (!tableName) {
+    document.getElementById("schemaBody").innerHTML = "";
+    document.getElementById("previewHead").innerHTML = "";
+    document.getElementById("previewBody").innerHTML = "";
+    document.getElementById("rowCount").textContent = "";
+    return;
+  }
+
+  // 表结构
+  var schema = dbManager.getTableSchema(tableName);
+  var schemaHtml = "";
+  for (var i = 0; i < schema.length; i++) {
+    schemaHtml += "<tr><td>" + schema[i].name + "</td><td>" + schema[i].type + "</td></tr>";
+  }
+  document.getElementById("schemaBody").innerHTML = schemaHtml;
+
+  // 行数
+  var count = dbManager.getTableRowCount(tableName);
+  document.getElementById("rowCount").textContent = "共 " + count + " 行";
+
+  // 预览
+  var preview = dbManager.previewTable(tableName, 10);
+  if (preview.type === "query") {
+    var headHtml = "";
+    for (var c = 0; c < preview.columns.length; c++) {
+      headHtml += "<th>" + preview.columns[c] + "</th>";
+    }
+    document.getElementById("previewHead").innerHTML = "<tr>" + headHtml + "</tr>";
+
+    var bodyHtml = "";
+    for (var r = 0; r < preview.rows.length; r++) {
+      bodyHtml += "<tr>";
+      for (var c2 = 0; c2 < preview.rows[r].length; c2++) {
+        bodyHtml += "<td>" + (preview.rows[r][c2] !== null ? preview.rows[r][c2] : "") + "</td>";
+      }
+      bodyHtml += "</tr>";
+    }
+    document.getElementById("previewBody").innerHTML = bodyHtml;
+  }
+}
+
+function clearSelectedTable() {
+  var select = document.getElementById("browseTableSelect");
+  var tableName = select.value;
+  if (!tableName) return;
+  if (!confirm('确定要清空表 "' + tableName + '" 的所有数据吗？')) return;
+
+  dbManager.exec("DELETE FROM \"" + tableName + "\"");
+  persistenceManager.scheduleSave();
+  onBrowseTableChange.call(select);
+  setStatusText("queryStatus", tableName + " 已清空", "success");
+}
+
+function dropSelectedTable() {
+  var select = document.getElementById("browseTableSelect");
+  var tableName = select.value;
+  if (!tableName) return;
+  if (!confirm('确定要删除表 "' + tableName + '" 吗？此操作不可恢复！')) return;
+
+  dbManager.exec('DROP TABLE "' + tableName + '"');
+  persistenceManager.scheduleSave();
+  populateBrowseSelect();
+  select.value = "";
+  onBrowseTableChange.call(select);
+  setStatusText("queryStatus", tableName + " 已删除", "success");
+  refreshTableList();
+}
+
+// —— SQL 查询 ——
+
+function runQuery() {
+  var sqlInput = document.getElementById("sqlInput");
+  var sql = sqlInput.value.trim();
+  if (!sql) return;
+
+  var statusEl = document.getElementById("queryStatus");
+
+  // DROP/DELETE/UPDATE 二次确认
+  var upperSql = sql.toUpperCase().trim();
+  if (upperSql.startsWith("DROP") || upperSql.startsWith("DELETE") || upperSql.startsWith("UPDATE")) {
+    if (!confirm("确定要执行危险操作吗？\n\n" + sql)) {
+      return;
+    }
+  }
+
+  statusEl.className = "status-message status-loading";
+  statusEl.textContent = "执行中...";
+
+  var result = dbManager.exec(sql);
+
+  if (result.type === "error") {
+    statusEl.className = "status-message status-error";
+    statusEl.textContent = "错误: " + result.message;
+    return;
+  }
+
+  if (result.type === "modification") {
+    statusEl.textContent = "完成，影响 " + result.rowsAffected + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
+    statusEl.className = "status-message status-success";
+    document.getElementById("resultDisplay").style.display = "none";
+    currentQueryResult = null;
+    persistenceManager.scheduleSave();
+    refreshTableList();
+    populateBrowseSelect();
+    addQueryHistory(sql, result.type, result.elapsed, result.rowsAffected);
+    return;
+  }
+
+  // SELECT 结果
+  statusEl.textContent = "查询完成，返回 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
+  statusEl.className = "status-message status-success";
+
+  currentQueryResult = result;
+
+  // 渲染结果表格
+  var headHtml = "";
+  for (var c = 0; c < result.columns.length; c++) {
+    headHtml += "<th>" + result.columns[c] + "</th>";
+  }
+  document.getElementById("resultHead").innerHTML = "<tr>" + headHtml + "</tr>";
+
+  var MAX_DISPLAY_ROWS = 500;
+  var displayRows = result.rows.slice(0, MAX_DISPLAY_ROWS);
+  var bodyHtml = "";
+  for (var r = 0; r < displayRows.length; r++) {
+    bodyHtml += "<tr>";
+    for (var c2 = 0; c2 < displayRows[r].length; c2++) {
+      var val = displayRows[r][c2];
+      bodyHtml += "<td>" + (val !== null ? val : "") + "</td>";
+    }
+    bodyHtml += "</tr>";
+  }
+  document.getElementById("resultBody").innerHTML = bodyHtml;
+  document.getElementById("resultDisplay").style.display = "block";
+
+  if (result.rowCount > MAX_DISPLAY_ROWS) {
+    statusEl.textContent += " (仅显示前 " + MAX_DISPLAY_ROWS + " 行)";
+  }
+
+  addQueryHistory(sql, result.type, result.elapsed, result.rowCount);
+}
+
+function clearSql() {
+  document.getElementById("sqlInput").value = "";
+  document.getElementById("resultDisplay").style.display = "none";
+  document.getElementById("queryStatus").className = "status-message status-idle";
+  document.getElementById("queryStatus").textContent = "";
+  currentQueryResult = null;
+}
+
+// —— 结果导出 ——
+
+function writeResultToSheet() {
+  if (!currentQueryResult) return;
+
+  Excel.run(function (context) {
+    var sheetCollection = context.workbook.worksheets;
+    var newSheet = sheetCollection.add("查询结果");
+    newSheet.position = 0; // 放到最前面
+
+    var columns = currentQueryResult.columns;
+    var rows = currentQueryResult.rows;
+    var totalRows = rows.length + 1; // +1 表头
+
+    var range = newSheet.getRangeByIndexes(0, 0, totalRows, columns.length);
+    var values = [columns];
+    for (var r = 0; r < rows.length; r++) {
+      values.push(rows[r]);
+    }
+    range.values = values;
+    range.format.autofitColumns();
+
+    newSheet.activate();
+    setStatusText("queryStatus", "已将 " + rows.length + " 行结果写入新工作表", "success");
+  }).catch(function (error) {
+    setStatusText("queryStatus", "写入失败: " + error.message, "error");
+  });
+}
+
+function copyResult() {
+  if (!currentQueryResult) return;
+
+  var text = currentQueryResult.columns.join("\t") + "\n";
+  for (var r = 0; r < currentQueryResult.rows.length; r++) {
+    text += currentQueryResult.rows[r].join("\t") + "\n";
+  }
+
+  navigator.clipboard.writeText(text).then(function () {
+    setStatusText("queryStatus", "已复制 " + currentQueryResult.rows.length + " 行到剪贴板", "success");
+  }).catch(function () {
+    // fallback
+    var textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    setStatusText("queryStatus", "已复制到剪贴板", "success");
+  });
+}
+
+// —— 查询历史 ——
+
+function addQueryHistory(sql, type, elapsed, rowInfo) {
+  var MAX_HISTORY = 50;
+  var storageKey = "sql-query-history";
+
+  var history = [];
+  try {
+    var stored = localStorage.getItem(storageKey);
+    if (stored) history = JSON.parse(stored);
+  } catch (e) { /* ignore */ }
+
+  var entry = {
+    sql: sql,
+    type: type,
+    elapsed: elapsed,
+    rowInfo: rowInfo,
+    timestamp: new Date().toLocaleString(),
+  };
+
+  history.unshift(entry);
+  if (history.length > MAX_HISTORY) {
+    history = history.slice(0, MAX_HISTORY);
+  }
+
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(history));
+  } catch (e) { /* ignore */ }
+
+  renderQueryHistory();
+}
+
+function renderQueryHistory() {
+  var container = document.getElementById("queryHistory");
+
+  var history = [];
+  try {
+    var stored = localStorage.getItem("sql-query-history");
+    if (stored) history = JSON.parse(stored);
+  } catch (e) { /* ignore */ }
+
+  if (history.length === 0) {
+    container.innerHTML = '<div class="table-list-empty">暂无查询记录</div>';
+    return;
+  }
+
+  var html = "";
+  for (var i = 0; i < history.length; i++) {
+    var entry = history[i];
+    var meta = entry.timestamp + " · " + entry.elapsed.toFixed(2) + "s";
+    if (entry.type === "query") meta += " · " + entry.rowInfo + " 行";
+    else meta += " · 影响 " + entry.rowInfo + " 行";
+
+    html += '<div class="history-item" data-sql="' + escapeHtml(entry.sql) + '">' +
+      '<div class="history-item-sql">' + escapeHtml(truncateSql(entry.sql)) + '</div>' +
+      '<div class="history-item-meta">' + meta + '</div>' +
+      '</div>';
+  }
+  container.innerHTML = html;
+
+  // 绑定点击回填
+  var items = container.querySelectorAll(".history-item");
+  for (var j = 0; j < items.length; j++) {
+    items[j].addEventListener("click", function () {
+      document.getElementById("sqlInput").value = this.getAttribute("data-sql");
+      switchTab("query");
+    });
+  }
+}
+
+// —— .db 文件加载 ——
+
+function loadDbFile(file) {
+  var statusEl = document.getElementById("importStatus");
+  statusEl.className = "status-message status-loading";
+  statusEl.textContent = "正在加载数据库文件...";
+
+  persistenceManager.importFromFile(file).then(function () {
+    statusEl.className = "status-message status-success";
+    statusEl.textContent = "数据库文件已加载";
+    persistenceManager.scheduleSave();
+    refreshTableList();
+    populateBrowseSelect();
+  }).catch(function (err) {
+    statusEl.className = "status-message status-error";
+    statusEl.textContent = "加载失败: " + err.message;
+  });
+}
+
+// —— 工具函数 ——
+
+function setStatusText(elId, message, type) {
+  var el = document.getElementById(elId);
+  el.textContent = message;
+  el.className = "status-message status-" + type;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function truncateSql(sql) {
+  if (sql.length > 80) {
+    return sql.substring(0, 80) + "...";
+  }
+  return sql;
+}
+
+// 初始化查询历史
+renderQueryHistory();
