@@ -26,6 +26,10 @@ module.exports = async (env, options) => {
       "count-values-taskpane": ["./src/taskpane/count-values-taskpane.js", "./src/taskpane/count-values-taskpane.html"],
       "expand-taskpane": ["./src/taskpane/expand-taskpane.js", "./src/taskpane/expand-taskpane.html"],
       "split-sheet-taskpane": ["./src/taskpane/split-sheet-taskpane.js", "./src/taskpane/split-sheet-taskpane.html"],
+      "sql-query-taskpane": [
+        "./src/taskpane/sql-query-taskpane.js",
+        "./src/taskpane/sql-query-taskpane.html",
+      ],
     },
     output: {
       clean: true,
@@ -78,6 +82,10 @@ module.exports = async (env, options) => {
             from: "src/commands/csv-import-dialog.html",
             to: "csv-import-dialog.html",
           },
+          {
+            from: "node_modules/sql.js/dist/sql-wasm.wasm",
+            to: "assets/sql-wasm.wasm",
+          },
         ],
       }),
       new HtmlWebpackPlugin({
@@ -120,6 +128,11 @@ module.exports = async (env, options) => {
         filename: "split-sheet-taskpane.html",
         template: "./src/taskpane/split-sheet-taskpane.html",
         chunks: ["polyfill", "split-sheet-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "sql-query-taskpane.html",
+        template: "./src/taskpane/sql-query-taskpane.html",
+        chunks: ["polyfill", "sql-query-taskpane"],
       }),
       new HtmlWebpackPlugin({
         filename: "index.html",
