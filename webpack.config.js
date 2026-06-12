@@ -83,8 +83,8 @@ module.exports = async (env, options) => {
             to: "csv-import-dialog.html",
           },
           {
-            from: "node_modules/sql.js/dist/sql-wasm.wasm",
-            to: "assets/sql-wasm.wasm",
+            from: "node_modules/sql.js/dist/sql-wasm-browser.wasm",
+            to: "assets/sql-wasm-browser.wasm",
           },
         ],
       }),
