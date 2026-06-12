@@ -324,6 +324,59 @@ function importData(dbManager, tableName, values, firstRowIsHeader) {
   };
 }
 
+/**
+ * 向已存在的表追加数据行（供分块导入的后续批次使用）
+ * @param {DatabaseManager} dbManager
+ * @param {string} tableName
+ * @param {Array<Array>} rows - 数据行二维数组
+ * @returns {{ success: boolean, rowsInserted: number, message?: string }}
+ */
+function insertRows(dbManager, tableName, rows) {
+  if (!rows || rows.length === 0) {
+    return { success: true, rowsInserted: 0 };
+  }
+
+  // 获取表结构以确定列数
+  var schema = dbManager.getTableSchema(tableName);
+  if (schema.length === 0) {
+    return { success: false, rowsInserted: 0, message: "表 " + tableName + " 不存在" };
+  }
+
+  var columnCount = schema.length;
+  var placeholders = schema.map(function () { return "?"; }).join(", ");
+  var insertSql = "INSERT INTO \"" + tableName + "\" VALUES (" + placeholders + ")";
+  var BATCH_SIZE = 500;
+  var totalInserted = 0;
+
+  dbManager.exec("BEGIN TRANSACTION");
+  try {
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      if (row === null || !Array.isArray(row)) continue;
+
+      // 只取前 columnCount 列，补齐长度不足的行
+      var trimmedRow = row.slice(0, columnCount);
+      while (trimmedRow.length < columnCount) {
+        trimmedRow.push(null);
+      }
+
+      dbManager.db.run(insertSql, trimmedRow);
+      totalInserted++;
+
+      if (totalInserted % BATCH_SIZE === 0) {
+        dbManager.exec("COMMIT");
+        dbManager.exec("BEGIN TRANSACTION");
+      }
+    }
+    dbManager.exec("COMMIT");
+  } catch (e) {
+    dbManager.exec("ROLLBACK");
+    return { success: false, rowsInserted: totalInserted, message: e.message };
+  }
+
+  return { success: true, rowsInserted: totalInserted };
+}
+
 var DB_STORE_NAME = "sqlite-db-store";
 var DB_NAME = "sql-query-addin";
 var DB_KEY = "database-buffer";
@@ -516,4 +569,5 @@ module.exports = {
   sanitizeColumnName: sanitizeColumnName,
   inferColumnType: inferColumnType,
   importData: importData,
+  insertRows: insertRows,
 };

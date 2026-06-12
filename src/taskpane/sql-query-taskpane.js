@@ -224,57 +224,113 @@ function runImport() {
   statusEl.className = "status-message status-loading";
   statusEl.textContent = "正在读取选中区域...";
 
+  // 获取表名参数
+  var tableNameInput = document.getElementById("tableNameInput");
+  var tableName = tableNameInput.value.trim();
+  if (!tableName) {
+    var now = new Date();
+    var dateStr = now.getFullYear() + "_" +
+      String(now.getMonth() + 1).padStart(2, "0") + "_" +
+      String(now.getDate()).padStart(2, "0");
+    tableName = "import_" + dateStr;
+  }
+  tableName = tableName.replace(/[^a-zA-Z0-9_]/g, "_");
+  if (/^[0-9]/.test(tableName)) {
+    tableName = "_" + tableName;
+  }
+  if (tableName === "") {
+    tableName = "import_data";
+  }
+  var firstRowIsHeader = document.getElementById("firstRowHeader").checked;
+
+  // 分块大小：每次读取 1 万行，避免一次性加载超大数组导致内存溢出
+  var CHUNK_SIZE = 10000;
+
   Excel.run(function (context) {
     var range = context.workbook.getSelectedRange();
-    range.load(["address"]);
-    var usedRange = range.getUsedRange();
-    usedRange.load(["rowCount", "values"]);
+    range.load(["rowIndex", "columnIndex"]);
     return context.sync().then(function () {
-      // 使用 getUsedRange() 判断实际数据行数（支持全列选区如 A:D）
-      if (usedRange.rowCount === 0 || !usedRange.values) {
-        statusEl.className = "status-message status-error";
-        statusEl.textContent = "错误：选中区域没有数据";
-        importBtn.disabled = false;
-        return;
-      }
-      var values = usedRange.values;
+      var usedRange = range.getUsedRange();
+      usedRange.load(["rowCount", "columnCount", "rowIndex", "columnIndex"]);
+      return context.sync().then(function () {
+        var totalRows = usedRange.rowCount;
+        var totalCols = usedRange.columnCount;
 
-      var tableNameInput = document.getElementById("tableNameInput");
-      var tableName = tableNameInput.value.trim();
-      if (!tableName) {
-        // 自动生成表名
-        var now = new Date();
-        var dateStr = now.getFullYear() + "_" +
-          String(now.getMonth() + 1).padStart(2, "0") + "_" +
-          String(now.getDate()).padStart(2, "0");
-        tableName = "import_" + dateStr;
-      }
-      // 清理表名
-      tableName = tableName.replace(/[^a-zA-Z0-9_]/g, "_");
-      if (/^[0-9]/.test(tableName)) {
-        tableName = "_" + tableName;
-      }
-      if (tableName === "") {
-        tableName = "import_data";
-      }
+        if (totalRows === 0 || !totalCols) {
+          statusEl.className = "status-message status-error";
+          statusEl.textContent = "错误：选中区域没有数据";
+          importBtn.disabled = false;
+          return;
+        }
 
-      var firstRowIsHeader = document.getElementById("firstRowHeader").checked;
+        var worksheet = context.workbook.worksheets.getActiveWorksheet();
+        var totalDataRows = totalRows - (firstRowIsHeader ? 1 : 0);
+        var cumulativeInserted = 0;
+        var tableCreated = false;
 
-      statusEl.textContent = "正在导入数据到表 " + tableName + "...";
+        /**
+         * 递归读取下一块数据（通过 Promise 链避免堆栈溢出）
+         * @param {number} batchStart - 本次起始行号（0-based，相对于 usedRange）
+         * @returns {Promise|undefined}
+         */
+        function readChunk(batchStart) {
+          if (batchStart >= totalRows) {
+            // 全部处理完毕
+            var finalMsg = "成功导入 " + cumulativeInserted + " 行数据到表 " + tableName;
+            statusEl.className = "status-message status-success";
+            statusEl.textContent = finalMsg;
+            importBtn.disabled = false;
+            persistenceManager.scheduleSave();
+            refreshTableList();
+            populateBrowseSelect();
+            return;
+          }
 
-      var result = sqlUtils.importData(dbManager, tableName, values, firstRowIsHeader);
-      if (result.success) {
-        statusEl.className = "status-message status-success";
-        statusEl.textContent = result.message;
-        persistenceManager.scheduleSave();
-        refreshTableList();
-        populateBrowseSelect();
-      } else {
-        statusEl.className = "status-message status-error";
-        statusEl.textContent = "错误: " + result.message;
-      }
+          var batchEnd = Math.min(batchStart + CHUNK_SIZE, totalRows);
+          statusEl.textContent = "正在读取数据... (" + batchStart + "/" + totalRows + " 行)";
 
-      importBtn.disabled = false;
+          var chunkRange = worksheet.getRangeByIndexes(
+            usedRange.rowIndex + batchStart, usedRange.columnIndex,
+            batchEnd - batchStart, totalCols
+          );
+          chunkRange.load("values");
+
+          return context.sync().then(function () {
+            var chunkValues = chunkRange.values;
+            if (!chunkValues || chunkValues.length === 0) {
+              return readChunk(batchEnd);
+            }
+
+            if (!tableCreated) {
+              // 第一批：创建表并插入
+              var result = sqlUtils.importData(dbManager, tableName, chunkValues, firstRowIsHeader);
+              if (!result.success) {
+                statusEl.className = "status-message status-error";
+                statusEl.textContent = "错误: " + result.message;
+                importBtn.disabled = false;
+                return;
+              }
+              tableCreated = true;
+              cumulativeInserted = result.rowsInserted;
+            } else {
+              // 后续批次：仅追加数据
+              var insertResult = sqlUtils.insertRows(dbManager, tableName, chunkValues);
+              if (!insertResult.success) {
+                statusEl.className = "status-message status-error";
+                statusEl.textContent = "错误: " + insertResult.message;
+                importBtn.disabled = false;
+                return;
+              }
+              cumulativeInserted += insertResult.rowsInserted;
+            }
+
+            statusEl.textContent = "已处理 " + cumulativeInserted + "/" + totalDataRows + " 行...";
+            return readChunk(batchEnd);
+          });
+        }
+
+        return readChunk(0);
+      });
     });
   }).catch(function (error) {
     statusEl.className = "status-message status-error";
