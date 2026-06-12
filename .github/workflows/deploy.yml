@@ -21,7 +21,9 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci || npm ci || npm ci
+        env:
+          NODE_OPTIONS: --dns-result-order=ipv4first
 
       - name: Build
         run: npm run build
