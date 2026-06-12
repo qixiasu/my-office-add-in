@@ -467,24 +467,50 @@ function clearSql() {
 function writeResultToSheet() {
   if (!currentQueryResult) return;
 
+  var defaultName = "查询结果";
+  var sheetName = prompt("请输入工作表名称:", defaultName);
+  if (sheetName === null || sheetName.trim() === "") {
+    sheetName = defaultName;
+  }
+  var rows = currentQueryResult.rows;
+  var columns = currentQueryResult.columns;
+
   Excel.run(function (context) {
     var sheetCollection = context.workbook.worksheets;
-    var newSheet = sheetCollection.add("查询结果");
-    newSheet.position = 0; // 放到最前面
+    sheetCollection.load("items/name");
+    return context.sync().then(function () {
+      // 生成不重复的名称
+      var finalName = sheetName;
+      var counter = 1;
+      var exists = true;
+      while (exists) {
+        exists = false;
+        for (var i = 0; i < sheetCollection.items.length; i++) {
+          if (sheetCollection.items[i].name === finalName) {
+            exists = true;
+            finalName = sheetName + " (" + counter + ")";
+            counter++;
+            break;
+          }
+        }
+      }
 
-    var columns = currentQueryResult.columns;
-    var rows = currentQueryResult.rows;
-    var totalRows = rows.length + 1; // +1 表头
+      var newSheet = sheetCollection.add(finalName);
+      newSheet.position = 0;
 
-    var range = newSheet.getRangeByIndexes(0, 0, totalRows, columns.length);
-    var values = [columns];
-    for (var r = 0; r < rows.length; r++) {
-      values.push(rows[r]);
-    }
-    range.values = values;
-    range.format.autofitColumns();
+      var totalRows = rows.length + 1;
+      var range = newSheet.getRangeByIndexes(0, 0, totalRows, columns.length);
+      var values = [columns];
+      for (var r = 0; r < rows.length; r++) {
+        values.push(rows[r]);
+      }
+      range.values = values;
+      range.format.autofitColumns();
+      newSheet.activate();
 
-    newSheet.activate();
+      return context.sync();
+    });
+  }).then(function () {
     setStatusText("queryStatus", "已将 " + rows.length + " 行结果写入新工作表", "success");
   }).catch(function (error) {
     setStatusText("queryStatus", "写入失败: " + error.message, "error");
