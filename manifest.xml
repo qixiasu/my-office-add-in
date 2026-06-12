@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>399bd8ea-ebf6-4d3a-b838-d2e4deaac2f3</Id>
-  <Version>1.0.10</Version>
+  <Version>1.0.11</Version>
   <ProviderName>QinXuan</ProviderName>
   <DefaultLocale>zh-CN</DefaultLocale>
   <DisplayName DefaultValue="Excel 数据处理工具"/>
@@ -78,36 +78,6 @@
                     <SourceLocation resid="SplitSheetTaskpane.Url"/>
                   </Action>
                 </Control>
-                <Control xsi:type="Button" id="SelectToEndButton">
-                  <Label resid="SelectToEndButton.Label"/>
-                  <Supertip>
-                    <Title resid="SelectToEndButton.Label"/>
-                    <Description resid="SelectToEndButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="SelectToEndIcon.16x16"/>
-                    <bt:Image size="32" resid="SelectToEndIcon.32x32"/>
-                    <bt:Image size="80" resid="SelectToEndIcon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>selectToEnd</FunctionName>
-                  </Action>
-                </Control>
-                <Control xsi:type="Button" id="SelectToRightButton">
-                  <Label resid="SelectToRightButton.Label"/>
-                  <Supertip>
-                    <Title resid="SelectToRightButton.Label"/>
-                    <Description resid="SelectToRightButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="SelectToRightIcon.16x16"/>
-                    <bt:Image size="32" resid="SelectToRightIcon.32x32"/>
-                    <bt:Image size="80" resid="SelectToRightIcon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>selectToRight</FunctionName>
-                  </Action>
-                </Control>
               </Group>
               <Group id="DataConversionGroup">
                 <Label resid="DataConversionGroup.Label"/>
@@ -144,6 +114,44 @@
                     <bt:Image size="80" resid="FillSeriesIcon.80x80"/>
                   </Icon>
                   <Action xsi:type="ShowTaskpane"><TaskpaneId>FillSeriesTaskpaneId</TaskpaneId><SourceLocation resid="FillSeriesTaskpane.Url"/></Action>
+                </Control>
+              </Group>
+              <Group id="QuickSelectGroup">
+                <Label resid="QuickSelectGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="ToolsIcon.16x16"/>
+                  <bt:Image size="32" resid="ToolsIcon.32x32"/>
+                  <bt:Image size="80" resid="ToolsIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="SelectToEndButton">
+                  <Label resid="SelectToEndButton.Label"/>
+                  <Supertip>
+                    <Title resid="SelectToEndButton.Label"/>
+                    <Description resid="SelectToEndButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="SelectToEndIcon.16x16"/>
+                    <bt:Image size="32" resid="SelectToEndIcon.32x32"/>
+                    <bt:Image size="80" resid="SelectToEndIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>selectToEnd</FunctionName>
+                  </Action>
+                </Control>
+                <Control xsi:type="Button" id="SelectToRightButton">
+                  <Label resid="SelectToRightButton.Label"/>
+                  <Supertip>
+                    <Title resid="SelectToRightButton.Label"/>
+                    <Description resid="SelectToRightButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="SelectToRightIcon.16x16"/>
+                    <bt:Image size="32" resid="SelectToRightIcon.32x32"/>
+                    <bt:Image size="80" resid="SelectToRightIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>selectToRight</FunctionName>
+                  </Action>
                 </Control>
               </Group>
               <Group id="LookupImportGroup">
@@ -250,6 +258,7 @@
         <bt:String id="ExpandColumnButton.Label" DefaultValue="展开列"/>
         <bt:String id="SelectToEndButton.Label" DefaultValue="向下选区"/>
         <bt:String id="SelectToRightButton.Label" DefaultValue="向右选区"/>
+        <bt:String id="QuickSelectGroup.Label" DefaultValue="快速选区"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
