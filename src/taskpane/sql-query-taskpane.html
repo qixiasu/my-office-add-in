@@ -131,6 +131,13 @@
                 <button id="writeSheetBtn" class="btn-secondary" title="将查询结果写入新的工作表">📝 写入新工作表</button>
                 <button id="copyResultBtn" class="btn-secondary" title="复制结果为文本">📋 复制结果</button>
             </div>
+            <!-- 写入进度条 -->
+            <div id="writeProgress" class="write-progress" style="display:none">
+              <div class="write-progress-bar">
+                <div id="writeProgressFill" class="write-progress-fill"></div>
+              </div>
+              <span id="writeProgressText" class="write-progress-text">正在写入...</span>
+            </div>
             <div id="resultDisplay" class="result-display" style="display:none">
                 <table class="data-table">
                     <thead id="resultHead"></thead>
