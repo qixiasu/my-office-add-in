@@ -500,6 +500,13 @@ async function runQuery() {
       return;
     }
 
+    currentQueryResult = result;
+
+    // 判断是否为截断预览：自动加了 LIMIT 且结果恰好等于上限
+    if (isSelectQuery(sql) && !hasExplicitLimit(sql) && result.rowCount === 200) {
+      isPreviewResult = true;
+    }
+
     // SELECT 结果
     if (isPreviewResult) {
       statusEl.textContent = "预览前 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
@@ -509,13 +516,6 @@ async function runQuery() {
       statusEl.textContent = "查询完成，返回 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
     }
     statusEl.className = "status-message status-success";
-
-    currentQueryResult = result;
-
-    // 判断是否为截断预览：自动加了 LIMIT 且结果恰好等于上限
-    if (isSelectQuery(sql) && !hasExplicitLimit(sql) && result.rowCount === 200) {
-      isPreviewResult = true;
-    }
 
     // 渲染结果表格
     var headHtml = "";
