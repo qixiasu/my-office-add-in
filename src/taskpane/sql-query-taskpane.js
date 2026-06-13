@@ -761,27 +761,94 @@ function writeResultToSheet() {
     var rows, columns;
 
     if (isPreviewResult && currentOriginalSQL) {
-      // 预览模式：重新查询全部数据
-      var writeBtn = document.getElementById("writeSheetBtn");
-      writeBtn.disabled = true;
-      writeBtn.textContent = "⏳ 查询全部数据...";
-      writeBtn.classList.add("sql-button-loading");
+      // 分页流式查询 + 逐批写入（避免 UI 冻结）
+      var CHUNK_SIZE = 5000;
+      var offset = 0;
+      var totalWritten = 0;
+      var columns = null;
+      var sheetCreated = false;
+      var finalSheetName = sheetName;
 
-      var fullResult = dbManager.exec(currentOriginalSQL);
-      if (fullResult.type === "error") {
-        setStatusText("queryStatus", "导出失败: " + fullResult.message, "error");
-        writeBtn.disabled = false;
-        writeBtn.textContent = "📝 写入新工作表";
-        writeBtn.classList.remove("sql-button-loading");
-        return;
+      // 设置 loading 状态
+      setWriteButtonLoading(true);
+      document.getElementById("writeProgressText").textContent = "正在导出数据...";
+
+      /**
+       * 处理下一批数据：查询 5000 行 → 写入 Excel → yield → 继续
+       */
+      function processNextChunk() {
+        // yield 给浏览器更新 UI（在同步的 sql.js 执行前）
+        setTimeout(function () {
+          // 1) 查询当前批
+          var paginatedSQL = buildPaginationQuery(currentOriginalSQL, CHUNK_SIZE, offset);
+          var result = dbManager.exec(paginatedSQL);
+
+          if (result.type === "error") {
+            setWriteButtonLoading(false);
+            setStatusText("queryStatus", "导出失败: " + result.message, "error");
+            return;
+          }
+
+          if (result.rowCount === 0) {
+            // 2a) 没有更多数据 → 完成
+            setWriteButtonLoading(false);
+            setStatusText("queryStatus", "已将 " + totalWritten + " 行结果写入新工作表", "success");
+            return;
+          }
+
+          if (!columns && result.columns) {
+            columns = result.columns;
+          }
+
+          var chunkRows = result.rows;
+          var batchStartRow = totalWritten;
+
+          // 2b) 写入当前批到 Excel
+          Excel.run(function (context) {
+            if (!sheetCreated) {
+              // 第一批：创建工作表 + 写入表头 + 写入数据
+              var sheetCollection = context.workbook.worksheets;
+              sheetCollection.load("items/name");
+              return context.sync().then(function () {
+                finalSheetName = generateUniqueSheetName(sheetCollection, sheetName);
+                var newSheet = sheetCollection.add(finalSheetName);
+                newSheet.position = 0;
+                sheetCreated = true;
+
+                var rangeRows = chunkRows.length + 1; // +1 表头行
+                var range = newSheet.getRangeByIndexes(0, 0, rangeRows, columns.length);
+                var values = [columns];
+                for (var r = 0; r < chunkRows.length; r++) {
+                  values.push(chunkRows[r]);
+                }
+                range.values = values;
+                return context.sync();
+              });
+            } else {
+              // 后续批次：追加数据
+              var sheet = context.workbook.worksheets.getItem(finalSheetName);
+              var range = sheet.getRangeByIndexes(batchStartRow + 1, 0, chunkRows.length, columns.length);
+              range.values = chunkRows;
+              return context.sync();
+            }
+          }).then(function () {
+            // 3) 更新进度，继续下一批
+            totalWritten += chunkRows.length;
+            offset += CHUNK_SIZE;
+            updateWriteProgress(totalWritten);
+            processNextChunk();
+          }).catch(function (error) {
+            // 4) 写入失败
+            setWriteButtonLoading(false);
+            var msg = error && error.message ? error.message : String(error || "未知错误");
+            setStatusText("queryStatus", "写入失败: " + msg, "error");
+          });
+        }, 0);
       }
-      rows = fullResult.rows;
-      columns = fullResult.columns;
 
-      // 重置按钮状态（零行场景会在此返回；写入场景随后会重新设置）
-      writeBtn.disabled = false;
-      writeBtn.textContent = "📝 写入新工作表";
-      writeBtn.classList.remove("sql-button-loading");
+      // 启动循环
+      processNextChunk();
+      return; // 避免执行到非预览模式的写入逻辑
     } else {
       // 非预览模式：直接使用现有结果
       rows = currentQueryResult.rows;
