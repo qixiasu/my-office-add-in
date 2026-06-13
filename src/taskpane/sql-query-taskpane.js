@@ -849,8 +849,10 @@ function writeResultToSheet() {
           }
 
           if (result.type !== "query") {
+            // sql.js: SELECT with OFFSET beyond data returns [] (interpreted as "modification")
+            // Treat as no more data — export complete
             setWriteButtonLoading(false);
-            setStatusText("queryStatus", "导出失败: 查询未返回有效数据", "error");
+            setStatusText("queryStatus", "已将 " + totalWritten + " 行结果写入新工作表", "success");
             return;
           }
 
