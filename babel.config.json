@@ -7,6 +7,22 @@
           "esmodules": false
         }
       }
-    ],
+    ]
+  ],
+  "overrides": [
+    {
+      "test": [
+        "**/cm6-sql-editor*",
+        "**/sql-query-taskpane*"
+      ],
+      "presets": [
+        [
+          "@babel/preset-env",
+          {
+            "targets": "last 2 Chrome versions"
+          }
+        ]
+      ]
+    }
   ]
 }

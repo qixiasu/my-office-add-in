@@ -321,23 +321,13 @@
   flex: 1;
 }
 
-/* SQL 编辑器 */
+/* SQL 编辑器容器 */
 .sql-editor {
-  width: 100%;
-  padding: 8px;
   border: 1px solid #d0d0d0;
   border-radius: 2px;
-  font-family: "Consolas", "Courier New", monospace;
-  font-size: 12px;
-  line-height: 1.5;
-  resize: vertical;
-  box-sizing: border-box;
-  min-height: 80px;
-}
-
-.sql-editor:focus {
-  outline: none;
-  border-color: #0078d4;
+  min-height: 120px;
+  margin-bottom: 8px;
+  overflow: hidden;
 }
 
 .query-actions {

@@ -6,13 +6,15 @@
 /* global console, document, Excel, Office */
 
 var sqlUtils = require("../utils/sql-utils");
+var { createSqlEditor } = require("../utils/cm6-sql-editor");
 
 var dbManager = null;
 var persistenceManager = null;
 var currentQueryResult = null;
 var currentOriginalSQL = null; // 存储原始 SQL（无 LIMIT 追加），供导出时重新查询
 var isPreviewResult = false; // 标记当前结果是否为截断预览
-var PREVIEW_ROW_LIMIT = 200; // 自动追加 LIMIT 的行数上限
+var PREVIEW_ROW_LIMIT = 200;
+var sqlEditor = null; // CodeMirror 6 编辑器实例
 
 // —— 初始化 ——
 
@@ -42,6 +44,7 @@ function initDB() {
       statusEl.textContent = "数据库就绪";
       statusEl.className = "status-message status-success";
       refreshTableList();
+      initSqlEditor();
     })
     .catch(function (err) {
       // 降级：创建空数据库
@@ -51,11 +54,52 @@ function initDB() {
         statusEl.textContent = "新数据库已创建";
         statusEl.className = "status-message status-success";
         refreshTableList();
+        initSqlEditor();
       });
     });
 }
 
 // —— 标签切换 ——
+
+/**
+ * 初始化 CodeMirror 6 SQL 编辑器
+ * 包含编辑器降级逻辑：CM6 加载失败时回退到普通 textarea
+ */
+function initSqlEditor() {
+  var container = document.getElementById("sqlEditorContainer");
+  if (!container) return;
+
+  try {
+    sqlEditor = createSqlEditor(container, {
+      getSchema: function () {
+        if (!dbManager || !dbManager.isInitialized) return {};
+        var tables = dbManager.getTables();
+        var schema = {};
+        for (var i = 0; i < tables.length; i++) {
+          var cols = dbManager.getTableSchema(tables[i].name);
+          schema[tables[i].name] = cols.map(function (c) {
+            return c.name;
+          });
+        }
+        return schema;
+      },
+    });
+
+    // 绑定 Ctrl+Enter 执行
+    sqlEditor.onExecute(function () {
+      runQuery();
+    });
+  } catch (e) {
+    console.error("CM6 初始化失败，降级到 textarea:", e);
+    // 降级方案：插入替换 textarea
+    var textarea = document.createElement("textarea");
+    textarea.id = "sqlInput";
+    textarea.className = "sql-editor";
+    textarea.rows = 6;
+    textarea.placeholder = "输入 SQL 语句\n\n例如: SELECT * FROM 表名\n或: SELECT COUNT(*) FROM 表名";
+    container.parentNode.replaceChild(textarea, container);
+  }
+}
 
 function bindEvents() {
   // 标签切换
@@ -234,6 +278,7 @@ window.deleteTable = async function (tableName) {
   persistenceManager.scheduleSave();
   refreshTableList();
   populateBrowseSelect();
+  if (sqlEditor) sqlEditor.updateSchema();
 };
 
 // —— 导入数据 ——
@@ -308,6 +353,7 @@ function runImport() {
             persistenceManager.scheduleSave();
             refreshTableList();
             populateBrowseSelect();
+            if (sqlEditor) sqlEditor.updateSchema();
             return;
           }
 
@@ -465,8 +511,13 @@ async function dropSelectedTable() {
 // —— SQL 查询 ——
 
 async function runQuery() {
-  var sqlInput = document.getElementById("sqlInput");
-  var sql = sqlInput.value.trim();
+  var sql;
+  if (sqlEditor) {
+    sql = sqlEditor.getValue().trim();
+  } else {
+    var sqlInput = document.getElementById("sqlInput");
+    sql = sqlInput ? sqlInput.value.trim() : "";
+  }
   if (!sql) return;
 
   var statusEl = document.getElementById("queryStatus");
@@ -591,7 +642,12 @@ async function runQuery() {
 }
 
 function clearSql() {
-  document.getElementById("sqlInput").value = "";
+  if (sqlEditor) {
+    sqlEditor.setValue("");
+  } else {
+    var sqlInput = document.getElementById("sqlInput");
+    if (sqlInput) sqlInput.value = "";
+  }
   document.getElementById("resultActions").style.display = "none";
   document.getElementById("resultDisplay").style.display = "none";
   document.getElementById("queryStatus").className = "status-message status-idle";
@@ -793,8 +849,10 @@ function writeResultToSheet() {
           }
 
           if (result.type !== "query") {
+            // sql.js: SELECT with OFFSET beyond data returns [] (interpreted as "modification")
+            // Treat as no more data — export complete
             setWriteButtonLoading(false);
-            setStatusText("queryStatus", "导出失败: 查询未返回有效数据", "error");
+            setStatusText("queryStatus", "已将 " + totalWritten + " 行结果写入新工作表", "success");
             return;
           }
 
@@ -1080,7 +1138,13 @@ function renderQueryHistory() {
   var items = container.querySelectorAll(".history-item");
   for (var j = 0; j < items.length; j++) {
     items[j].addEventListener("click", function () {
-      document.getElementById("sqlInput").value = this.getAttribute("data-sql");
+      var sql = this.getAttribute("data-sql");
+      if (sqlEditor) {
+        sqlEditor.setValue(sql);
+      } else {
+        var sqlInput = document.getElementById("sqlInput");
+        if (sqlInput) sqlInput.value = sql;
+      }
       switchTab("query");
     });
   }
@@ -1101,6 +1165,7 @@ function loadDbFile(file) {
       persistenceManager.scheduleSave();
       refreshTableList();
       populateBrowseSelect();
+      if (sqlEditor) sqlEditor.updateSchema();
     })
     .catch(function (err) {
       statusEl.className = "status-message status-error";
