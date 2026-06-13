@@ -758,7 +758,7 @@ function writeResultToSheet() {
   if (!currentQueryResult) return;
 
   showSheetNameDialog(function (sheetName) {
-    var rows, columns;
+    var rows, columns, writeBtn;
 
     if (isPreviewResult && currentOriginalSQL) {
       // 分页流式查询 + 逐批写入（避免 UI 冻结）
