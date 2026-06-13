@@ -453,18 +453,33 @@ async function runQuery() {
     }
   }
 
+  // —— 禁用按钮、提供视觉反馈 ——
+  var executeBtn = document.getElementById("executeBtn");
+  executeBtn.disabled = true;
+  executeBtn.textContent = "⏳ 执行中...";
+  executeBtn.classList.add("sql-button-loading");
+
   statusEl.className = "status-message status-loading";
   statusEl.textContent = "执行中...";
+
+  // 让浏览器渲染按钮的 disabled 状态后再执行同步查询
+  await new Promise(function (resolve) { setTimeout(resolve, 0); });
 
   var result = dbManager.exec(sql);
 
   if (result.type === "error") {
+    executeBtn.disabled = false;
+    executeBtn.textContent = "▶ 执行";
+    executeBtn.classList.remove("sql-button-loading");
     statusEl.className = "status-message status-error";
     statusEl.textContent = "错误: " + result.message;
     return;
   }
 
   if (result.type === "modification") {
+    executeBtn.disabled = false;
+    executeBtn.textContent = "▶ 执行";
+    executeBtn.classList.remove("sql-button-loading");
     statusEl.textContent = "完成，影响 " + result.rowsAffected + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
     statusEl.className = "status-message status-success";
     document.getElementById("resultActions").style.display = "none";
@@ -510,6 +525,10 @@ async function runQuery() {
   }
 
   addQueryHistory(sql, result.type, result.elapsed, result.rowCount);
+
+  executeBtn.disabled = false;
+  executeBtn.textContent = "▶ 执行";
+  executeBtn.classList.remove("sql-button-loading");
 }
 
 function clearSql() {
