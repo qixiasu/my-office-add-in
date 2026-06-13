@@ -862,11 +862,17 @@ function copyResult() {
   navigator.clipboard
     .writeText(text)
     .then(function () {
-      setStatusText(
-        "queryStatus",
-        "已复制 " + currentQueryResult.rows.length + " 行到剪贴板",
-        "success"
-      );
+      var copyMsg;
+      if (isPreviewResult) {
+        copyMsg =
+          "已复制前 " +
+          currentQueryResult.rows.length +
+          " 行，如需全部数据请使用「写入新工作表」";
+      } else {
+        copyMsg =
+          "已复制 " + currentQueryResult.rows.length + " 行到剪贴板";
+      }
+      setStatusText("queryStatus", copyMsg, "success");
     })
     .catch(function () {
       // fallback
@@ -876,7 +882,17 @@ function copyResult() {
       textarea.select();
       document.execCommand("copy");
       document.body.removeChild(textarea);
-      setStatusText("queryStatus", "已复制到剪贴板", "success");
+      var copyMsg;
+      if (isPreviewResult) {
+        copyMsg =
+          "已复制前 " +
+          currentQueryResult.rows.length +
+          " 行，如需全部数据请使用「写入新工作表」";
+      } else {
+        copyMsg =
+          "已复制 " + currentQueryResult.rows.length + " 行到剪贴板";
+      }
+      setStatusText("queryStatus", copyMsg, "success");
     });
 }
 
