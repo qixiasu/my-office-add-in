@@ -848,6 +848,41 @@ function loadDbFile(file) {
   });
 }
 
+// —— SQL 辅助函数 ——
+
+/**
+ * 判断 SQL 是否为 SELECT 查询
+ * @param {string} sql - 原始 SQL
+ * @returns {boolean}
+ */
+function isSelectQuery(sql) {
+  return /^\s*SELECT\b/i.test(sql.trim());
+}
+
+/**
+ * 判断 SQL 是否已包含 LIMIT 子句
+ * 注意：不解析字符串字面量中的 LIMIT，实际使用中覆盖 99% 场景
+ * @param {string} sql - 原始 SQL
+ * @returns {boolean}
+ */
+function hasExplicitLimit(sql) {
+  return /\bLIMIT\b/i.test(sql);
+}
+
+/**
+ * 为 SELECT 查询构建预览版本（自动追加 LIMIT）
+ * 如果已有 LIMIT 或非 SELECT，返回原 SQL
+ * @param {string} sql - 原始 SQL
+ * @param {number} limit - 预览行数上限
+ * @returns {string}
+ */
+function buildPreviewQuery(sql, limit) {
+  if (isSelectQuery(sql) && !hasExplicitLimit(sql)) {
+    return sql.replace(/;?\s*$/, '') + ' LIMIT ' + limit;
+  }
+  return sql;
+}
+
 // —— 工具函数 ——
 
 function setStatusText(elId, message, type) {
