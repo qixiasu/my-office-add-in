@@ -44,7 +44,7 @@ DatabaseManager.prototype.exec = function (sql) {
   try {
     var startTime = performance.now();
     var results = this.db.exec(sql);
-    var elapsed = performance.now() - startTime;
+    var elapsed = (performance.now() - startTime) / 1000;
 
     if (results.length === 0) {
       // 非 SELECT 语句
