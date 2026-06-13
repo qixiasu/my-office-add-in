@@ -1046,7 +1046,11 @@ function buildPreviewQuery(sql, limit) {
  * @returns {string}
  */
 function buildPaginationQuery(originalSQL, limit, offset) {
-  var sql = originalSQL.replace(/[;\s]*$/, '');
+  if (!isSelectQuery(originalSQL)) {
+    return originalSQL;
+  }
+  // Strip trailing line comments (-- ...) before wrapping
+  var sql = originalSQL.replace(/\s*--.*$/m, '').replace(/[;\s]*$/, '');
   return 'SELECT * FROM (' + sql + ') LIMIT ' + limit + ' OFFSET ' + offset;
 }
 
