@@ -10,9 +10,9 @@ var sqlUtils = require("../utils/sql-utils");
 var dbManager = null;
 var persistenceManager = null;
 var currentQueryResult = null;
-var currentOriginalSQL = null;   // 存储原始 SQL（无 LIMIT 追加），供导出时重新查询
-var isPreviewResult = false;     // 标记当前结果是否为截断预览
-var PREVIEW_ROW_LIMIT = 200;     // 自动追加 LIMIT 的行数上限
+var currentOriginalSQL = null; // 存储原始 SQL（无 LIMIT 追加），供导出时重新查询
+var isPreviewResult = false; // 标记当前结果是否为截断预览
+var PREVIEW_ROW_LIMIT = 200; // 自动追加 LIMIT 的行数上限
 
 // —— 初始化 ——
 
@@ -33,22 +33,26 @@ function initDB() {
   statusEl.textContent = "正在初始化数据库...";
 
   // 尝试从 IndexedDB 加载
-  persistenceManager.loadFromIndexedDB().then(function (buffer) {
-    return dbManager.init(buffer);
-  }).then(function () {
-    statusEl.textContent = "数据库就绪";
-    statusEl.className = "status-message status-success";
-    refreshTableList();
-  }).catch(function (err) {
-    // 降级：创建空数据库
-    statusEl.className = "status-message status-loading";
-    statusEl.textContent = "正在创建新数据库...";
-    return dbManager.init(null).then(function () {
-      statusEl.textContent = "新数据库已创建";
+  persistenceManager
+    .loadFromIndexedDB()
+    .then(function (buffer) {
+      return dbManager.init(buffer);
+    })
+    .then(function () {
+      statusEl.textContent = "数据库就绪";
       statusEl.className = "status-message status-success";
       refreshTableList();
+    })
+    .catch(function (err) {
+      // 降级：创建空数据库
+      statusEl.className = "status-message status-loading";
+      statusEl.textContent = "正在创建新数据库...";
+      return dbManager.init(null).then(function () {
+        statusEl.textContent = "新数据库已创建";
+        statusEl.className = "status-message status-success";
+        refreshTableList();
+      });
     });
-  });
 }
 
 // —— 标签切换 ——
@@ -143,16 +147,27 @@ function refreshTableList() {
   var html = "";
   for (var i = 0; i < tables.length; i++) {
     var schema = dbManager.getTableSchema(tables[i].name);
-    var colNames = schema.map(function (col) { return col.name; }).join(", ");
-    html += '<div class="table-item">' +
+    var colNames = schema
+      .map(function (col) {
+        return col.name;
+      })
+      .join(", ");
+    html +=
+      '<div class="table-item">' +
       '<div class="table-item-info">' +
-      '<div class="table-item-name">' + tables[i].name + '</div>' +
-      '<div class="table-item-columns">' + colNames + '</div>' +
-      '</div>' +
+      '<div class="table-item-name">' +
+      tables[i].name +
+      "</div>" +
+      '<div class="table-item-columns">' +
+      colNames +
+      "</div>" +
+      "</div>" +
       '<div class="table-item-actions">' +
-      '<button onclick="deleteTable(\'' + tables[i].name + '\')">🗑</button>' +
-      '</div>' +
-      '</div>';
+      "<button onclick=\"deleteTable('" +
+      tables[i].name +
+      "')\">🗑</button>" +
+      "</div>" +
+      "</div>";
   }
   tableListEl.innerHTML = html;
 }
@@ -164,26 +179,26 @@ function refreshTableList() {
  */
 function showConfirm(message) {
   return new Promise(function (resolve) {
-    var overlay = document.createElement('div');
-    overlay.className = 'confirm-overlay';
+    var overlay = document.createElement("div");
+    overlay.className = "confirm-overlay";
 
-    var dialog = document.createElement('div');
-    dialog.className = 'confirm-dialog';
+    var dialog = document.createElement("div");
+    dialog.className = "confirm-dialog";
 
-    var msgEl = document.createElement('p');
-    msgEl.className = 'confirm-message';
+    var msgEl = document.createElement("p");
+    msgEl.className = "confirm-message";
     msgEl.textContent = message;
 
-    var btnGroup = document.createElement('div');
-    btnGroup.className = 'confirm-buttons';
+    var btnGroup = document.createElement("div");
+    btnGroup.className = "confirm-buttons";
 
-    var cancelBtn = document.createElement('button');
-    cancelBtn.className = 'btn-secondary';
-    cancelBtn.textContent = '取消';
+    var cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn-secondary";
+    cancelBtn.textContent = "取消";
 
-    var okBtn = document.createElement('button');
-    okBtn.className = 'sql-button sql-button-primary';
-    okBtn.textContent = '确定';
+    var okBtn = document.createElement("button");
+    okBtn.className = "sql-button sql-button-primary";
+    okBtn.textContent = "确定";
 
     btnGroup.appendChild(cancelBtn);
     btnGroup.appendChild(okBtn);
@@ -197,9 +212,13 @@ function showConfirm(message) {
       resolve(result);
     }
 
-    cancelBtn.addEventListener('click', function () { cleanup(false); });
-    okBtn.addEventListener('click', function () { cleanup(true); });
-    overlay.addEventListener('click', function (e) {
+    cancelBtn.addEventListener("click", function () {
+      cleanup(false);
+    });
+    okBtn.addEventListener("click", function () {
+      cleanup(true);
+    });
+    overlay.addEventListener("click", function (e) {
       if (e.target === overlay) cleanup(false);
     });
   });
@@ -232,8 +251,11 @@ function runImport() {
   var tableName = tableNameInput.value.trim();
   if (!tableName) {
     var now = new Date();
-    var dateStr = now.getFullYear() + "_" +
-      String(now.getMonth() + 1).padStart(2, "0") + "_" +
+    var dateStr =
+      now.getFullYear() +
+      "_" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "_" +
       String(now.getDate()).padStart(2, "0");
     tableName = "import_" + dateStr;
   }
@@ -293,8 +315,10 @@ function runImport() {
           statusEl.textContent = "正在读取数据... (" + batchStart + "/" + totalRows + " 行)";
 
           var chunkRange = worksheet.getRangeByIndexes(
-            usedRange.rowIndex + batchStart, usedRange.columnIndex,
-            batchEnd - batchStart, totalCols
+            usedRange.rowIndex + batchStart,
+            usedRange.columnIndex,
+            batchEnd - batchStart,
+            totalCols
           );
           chunkRange.load("values");
 
@@ -416,7 +440,7 @@ async function clearSelectedTable() {
   var confirmed = await showConfirm('确定要清空表 "' + tableName + '" 的所有数据吗？');
   if (!confirmed) return;
 
-  dbManager.exec("DELETE FROM \"" + tableName + "\"");
+  dbManager.exec('DELETE FROM "' + tableName + '"');
   persistenceManager.scheduleSave();
   onBrowseTableChange.call(select);
   setStatusText("queryStatus", tableName + " 已清空", "success");
@@ -450,7 +474,11 @@ async function runQuery() {
 
   // DROP/DELETE/UPDATE 二次确认
   var upperSql = sql.toUpperCase().trim();
-  if (upperSql.startsWith("DROP") || upperSql.startsWith("DELETE") || upperSql.startsWith("UPDATE")) {
+  if (
+    upperSql.startsWith("DROP") ||
+    upperSql.startsWith("DELETE") ||
+    upperSql.startsWith("UPDATE")
+  ) {
     var confirmed = await showConfirm("确定要执行危险操作吗？\n\n" + sql);
     if (!confirmed) {
       return;
@@ -466,7 +494,9 @@ async function runQuery() {
   statusEl.textContent = "执行中...";
 
   // 让浏览器渲染按钮的 disabled 状态后再执行同步查询
-  await new Promise(function (resolve) { setTimeout(resolve, 0); });
+  await new Promise(function (resolve) {
+    setTimeout(resolve, 0);
+  });
 
   try {
     // 预览模式：SELECT 无 LIMIT 时自动追加 LIMIT 200
@@ -487,7 +517,8 @@ async function runQuery() {
     }
 
     if (result.type === "modification") {
-      statusEl.textContent = "完成，影响 " + result.rowsAffected + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
+      statusEl.textContent =
+        "完成，影响 " + result.rowsAffected + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
       statusEl.className = "status-message status-success";
       document.getElementById("resultActions").style.display = "none";
       document.getElementById("resultDisplay").style.display = "none";
@@ -510,11 +541,18 @@ async function runQuery() {
 
     // SELECT 结果
     if (isPreviewResult) {
-      statusEl.textContent = "预览前 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
+      statusEl.textContent =
+        "预览前 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
     } else if (hasExplicitLimit(sql)) {
-      statusEl.textContent = "查询完成，返回 " + result.rowCount + " 行（用户指定 LIMIT）(" + result.elapsed.toFixed(2) + " 秒)";
+      statusEl.textContent =
+        "查询完成，返回 " +
+        result.rowCount +
+        " 行（用户指定 LIMIT）(" +
+        result.elapsed.toFixed(2) +
+        " 秒)";
     } else {
-      statusEl.textContent = "查询完成，返回 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
+      statusEl.textContent =
+        "查询完成，返回 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
     }
     statusEl.className = "status-message status-success";
 
@@ -575,10 +613,12 @@ function showSheetNameDialog(callback) {
 
   var overlay = document.createElement("div");
   overlay.id = "sheetNameOverlay";
-  overlay.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:1000;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Segoe UI Web',-apple-system,sans-serif;";
+  overlay.style.cssText =
+    "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:1000;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI','Segoe UI Web',-apple-system,sans-serif;";
 
   var dialog = document.createElement("div");
-  dialog.style.cssText = "background:#fff;border-radius:8px;padding:24px;min-width:260px;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,0.2);";
+  dialog.style.cssText =
+    "background:#fff;border-radius:8px;padding:24px;min-width:260px;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,0.2);";
 
   var title = document.createElement("div");
   title.textContent = "请输入工作表名称";
@@ -587,9 +627,14 @@ function showSheetNameDialog(callback) {
   var input = document.createElement("input");
   input.type = "text";
   input.value = defaultName;
-  input.style.cssText = "width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #8a8886;border-radius:4px;font-size:13px;font-family:inherit;outline:none;";
-  input.addEventListener("focus", function () { this.style.borderColor = "#0078d4"; });
-  input.addEventListener("blur", function () { this.style.borderColor = "#8a8886"; });
+  input.style.cssText =
+    "width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #8a8886;border-radius:4px;font-size:13px;font-family:inherit;outline:none;";
+  input.addEventListener("focus", function () {
+    this.style.borderColor = "#0078d4";
+  });
+  input.addEventListener("blur", function () {
+    this.style.borderColor = "#8a8886";
+  });
 
   var btnContainer = document.createElement("div");
   btnContainer.style.cssText = "margin-top:20px;display:flex;gap:8px;justify-content:flex-end;";
@@ -604,17 +649,27 @@ function showSheetNameDialog(callback) {
 
   var cancelBtn = document.createElement("button");
   cancelBtn.textContent = "取消";
-  cancelBtn.style.cssText = "padding:6px 20px;border:1px solid #8a8886;border-radius:4px;background:#fff;cursor:pointer;font-size:13px;font-family:inherit;";
-  cancelBtn.addEventListener("click", function () { cleanup(defaultName); });
+  cancelBtn.style.cssText =
+    "padding:6px 20px;border:1px solid #8a8886;border-radius:4px;background:#fff;cursor:pointer;font-size:13px;font-family:inherit;";
+  cancelBtn.addEventListener("click", function () {
+    cleanup(defaultName);
+  });
 
   var okBtn = document.createElement("button");
   okBtn.textContent = "确定";
-  okBtn.style.cssText = "padding:6px 20px;border:none;border-radius:4px;background:#0078d4;color:#fff;cursor:pointer;font-size:13px;font-family:inherit;";
-  okBtn.addEventListener("click", function () { cleanup(input.value.trim() || defaultName); });
+  okBtn.style.cssText =
+    "padding:6px 20px;border:none;border-radius:4px;background:#0078d4;color:#fff;cursor:pointer;font-size:13px;font-family:inherit;";
+  okBtn.addEventListener("click", function () {
+    cleanup(input.value.trim() || defaultName);
+  });
 
   input.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") { cleanup(input.value.trim() || defaultName); }
-    if (e.key === "Escape") { cleanup(defaultName); }
+    if (e.key === "Enter") {
+      cleanup(input.value.trim() || defaultName);
+    }
+    if (e.key === "Escape") {
+      cleanup(defaultName);
+    }
   });
 
   btnContainer.appendChild(cancelBtn);
@@ -625,7 +680,10 @@ function showSheetNameDialog(callback) {
   overlay.appendChild(dialog);
   document.body.appendChild(overlay);
 
-  setTimeout(function () { input.focus(); input.select(); }, 50);
+  setTimeout(function () {
+    input.focus();
+    input.select();
+  }, 50);
 }
 
 /**
@@ -670,8 +728,34 @@ function writeResultToSheet() {
   if (!currentQueryResult) return;
 
   showSheetNameDialog(function (sheetName) {
-    var rows = currentQueryResult.rows;
-    var columns = currentQueryResult.columns;
+    var rows, columns;
+
+    if (isPreviewResult && currentOriginalSQL) {
+      // 预览模式：重新查询全部数据
+      var writeBtn = document.getElementById("writeSheetBtn");
+      writeBtn.disabled = true;
+      writeBtn.textContent = "⏳ 查询全部数据...";
+      writeBtn.classList.add("sql-button-loading");
+
+      var fullResult = dbManager.exec(currentOriginalSQL);
+      if (fullResult.type === "error") {
+        setStatusText("queryStatus", "导出失败: " + fullResult.message, "error");
+        writeBtn.disabled = false;
+        writeBtn.textContent = "📝 写入新工作表";
+        writeBtn.classList.remove("sql-button-loading");
+        return;
+      }
+      rows = fullResult.rows;
+      columns = fullResult.columns;
+
+      writeBtn.textContent = "📝 写入新工作表";
+      writeBtn.classList.remove("sql-button-loading");
+    } else {
+      // 非预览模式：直接使用现有结果
+      rows = currentQueryResult.rows;
+      columns = currentQueryResult.columns;
+    }
+
     if (!rows || rows.length === 0) {
       setStatusText("queryStatus", "没有数据可写入", "error");
       return;
@@ -741,15 +825,17 @@ function writeResultToSheet() {
           range.values = values;
           return context.sync();
         }
-      }).then(function () {
-        batchIndex++;
-        updateProgress(progressFill, progressText, endRow, totalRows);
-        writeNextBatch(); // 递归开始下一批
-      }).catch(function (error) {
-        restoreWriteButton();
-        var msg = (error && error.message) ? error.message : String(error || "未知错误");
-        setStatusText("queryStatus", "写入失败: " + msg, "error");
-      });
+      })
+        .then(function () {
+          batchIndex++;
+          updateProgress(progressFill, progressText, endRow, totalRows);
+          writeNextBatch(); // 递归开始下一批
+        })
+        .catch(function (error) {
+          restoreWriteButton();
+          var msg = error && error.message ? error.message : String(error || "未知错误");
+          setStatusText("queryStatus", "写入失败: " + msg, "error");
+        });
     }
 
     function restoreWriteButton() {
@@ -772,18 +858,25 @@ function copyResult() {
     text += currentQueryResult.rows[r].join("\t") + "\n";
   }
 
-  navigator.clipboard.writeText(text).then(function () {
-    setStatusText("queryStatus", "已复制 " + currentQueryResult.rows.length + " 行到剪贴板", "success");
-  }).catch(function () {
-    // fallback
-    var textarea = document.createElement("textarea");
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textarea);
-    setStatusText("queryStatus", "已复制到剪贴板", "success");
-  });
+  navigator.clipboard
+    .writeText(text)
+    .then(function () {
+      setStatusText(
+        "queryStatus",
+        "已复制 " + currentQueryResult.rows.length + " 行到剪贴板",
+        "success"
+      );
+    })
+    .catch(function () {
+      // fallback
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setStatusText("queryStatus", "已复制到剪贴板", "success");
+    });
 }
 
 // —— 查询历史 ——
@@ -796,7 +889,9 @@ function addQueryHistory(sql, type, elapsed, rowInfo) {
   try {
     var stored = localStorage.getItem(storageKey);
     if (stored) history = JSON.parse(stored);
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    /* ignore */
+  }
 
   var entry = {
     sql: sql,
@@ -813,7 +908,9 @@ function addQueryHistory(sql, type, elapsed, rowInfo) {
 
   try {
     localStorage.setItem(storageKey, JSON.stringify(history));
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    /* ignore */
+  }
 
   renderQueryHistory();
 }
@@ -825,7 +922,9 @@ function renderQueryHistory() {
   try {
     var stored = localStorage.getItem("sql-query-history");
     if (stored) history = JSON.parse(stored);
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    /* ignore */
+  }
 
   if (history.length === 0) {
     container.innerHTML = '<div class="table-list-empty">暂无查询记录</div>';
@@ -839,10 +938,17 @@ function renderQueryHistory() {
     if (entry.type === "query") meta += " · " + entry.rowInfo + " 行";
     else meta += " · 影响 " + entry.rowInfo + " 行";
 
-    html += '<div class="history-item" data-sql="' + escapeHtml(entry.sql) + '">' +
-      '<div class="history-item-sql">' + escapeHtml(truncateSql(entry.sql)) + '</div>' +
-      '<div class="history-item-meta">' + meta + '</div>' +
-      '</div>';
+    html +=
+      '<div class="history-item" data-sql="' +
+      escapeHtml(entry.sql) +
+      '">' +
+      '<div class="history-item-sql">' +
+      escapeHtml(truncateSql(entry.sql)) +
+      "</div>" +
+      '<div class="history-item-meta">' +
+      meta +
+      "</div>" +
+      "</div>";
   }
   container.innerHTML = html;
 
@@ -863,16 +969,19 @@ function loadDbFile(file) {
   statusEl.className = "status-message status-loading";
   statusEl.textContent = "正在加载数据库文件...";
 
-  persistenceManager.importFromFile(file).then(function () {
-    statusEl.className = "status-message status-success";
-    statusEl.textContent = "数据库文件已加载";
-    persistenceManager.scheduleSave();
-    refreshTableList();
-    populateBrowseSelect();
-  }).catch(function (err) {
-    statusEl.className = "status-message status-error";
-    statusEl.textContent = "加载失败: " + err.message;
-  });
+  persistenceManager
+    .importFromFile(file)
+    .then(function () {
+      statusEl.className = "status-message status-success";
+      statusEl.textContent = "数据库文件已加载";
+      persistenceManager.scheduleSave();
+      refreshTableList();
+      populateBrowseSelect();
+    })
+    .catch(function (err) {
+      statusEl.className = "status-message status-error";
+      statusEl.textContent = "加载失败: " + err.message;
+    });
 }
 
 // —— SQL 辅助函数 ——
@@ -905,7 +1014,7 @@ function hasExplicitLimit(sql) {
  */
 function buildPreviewQuery(sql, limit) {
   if (isSelectQuery(sql) && !hasExplicitLimit(sql)) {
-    return sql.replace(/;?\s*$/, '') + ' LIMIT ' + limit;
+    return sql.replace(/;?\s*$/, "") + " LIMIT " + limit;
   }
   return sql;
 }
