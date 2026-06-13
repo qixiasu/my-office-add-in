@@ -453,3 +453,35 @@
 @keyframes sql-spin {
   to { transform: rotate(360deg); }
 }
+
+/* —— 写入进度条 —— */
+
+.write-progress {
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.write-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.write-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #0078d4;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.write-progress-text {
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+  min-width: 120px;
+}
