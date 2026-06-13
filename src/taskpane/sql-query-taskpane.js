@@ -724,6 +724,36 @@ function updateProgress(fillEl, textEl, current, total) {
   textEl.textContent = "已写入 " + current + "/" + total + " 行";
 }
 
+/**
+ * 设置导出按钮的 loading 状态
+ * @param {boolean} isLoading - 是否处于加载中
+ */
+function setWriteButtonLoading(isLoading) {
+  var btn = document.getElementById("writeSheetBtn");
+  var progressContainer = document.getElementById("writeProgress");
+  if (isLoading) {
+    btn.disabled = true;
+    btn.textContent = "⏳ 正在导出数据...";
+    btn.classList.add("sql-button-loading");
+    progressContainer.style.display = "flex";
+    document.getElementById("writeProgressText").textContent = "正在导出数据...";
+  } else {
+    btn.disabled = false;
+    btn.textContent = "📝 写入新工作表";
+    btn.classList.remove("sql-button-loading");
+    progressContainer.style.display = "none";
+  }
+}
+
+/**
+ * 更新导出进度（仅显示绝对行数，无百分比）
+ * @param {number} written - 已写入行数
+ */
+function updateWriteProgress(written) {
+  var textEl = document.getElementById("writeProgressText");
+  textEl.textContent = "已写入 " + written + " 行";
+}
+
 function writeResultToSheet() {
   if (!currentQueryResult) return;
 
