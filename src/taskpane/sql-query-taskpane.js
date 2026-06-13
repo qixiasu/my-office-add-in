@@ -652,7 +652,7 @@ function showSheetNameDialog(callback) {
   cancelBtn.style.cssText =
     "padding:6px 20px;border:1px solid #8a8886;border-radius:4px;background:#fff;cursor:pointer;font-size:13px;font-family:inherit;";
   cancelBtn.addEventListener("click", function () {
-    cleanup(defaultName);
+    cleanup(null);
   });
 
   var okBtn = document.createElement("button");
@@ -668,7 +668,7 @@ function showSheetNameDialog(callback) {
       cleanup(input.value.trim() || defaultName);
     }
     if (e.key === "Escape") {
-      cleanup(defaultName);
+      cleanup(null);
     }
   });
 
@@ -758,6 +758,9 @@ function writeResultToSheet() {
   if (!currentQueryResult) return;
 
   showSheetNameDialog(function (sheetName) {
+    // 用户点击取消则不执行导出
+    if (sheetName === null) return;
+
     var rows, columns, writeBtn;
 
     if (isPreviewResult && currentOriginalSQL) {
