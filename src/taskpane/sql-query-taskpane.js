@@ -789,6 +789,12 @@ function writeResultToSheet() {
             return;
           }
 
+          if (result.type !== "query") {
+            setWriteButtonLoading(false);
+            setStatusText("queryStatus", "导出失败: 查询未返回有效数据", "error");
+            return;
+          }
+
           if (result.rowCount === 0) {
             // 2a) 没有更多数据 → 完成
             setWriteButtonLoading(false);
@@ -1148,7 +1154,9 @@ function buildPaginationQuery(originalSQL, limit, offset) {
   }
   // Strip trailing line comments (-- ...) before wrapping
   var sql = originalSQL.replace(/\s*--.*$/m, '').replace(/[;\s]*$/, '');
-  return 'SELECT * FROM (' + sql + ') LIMIT ' + limit + ' OFFSET ' + offset;
+  // Inner LIMIT preserves ORDER BY in SQLite subqueries (SQLite only honors
+  // ORDER BY in a subquery when LIMIT is also present)
+  return 'SELECT * FROM (' + sql + ' LIMIT 2147483647) LIMIT ' + limit + ' OFFSET ' + offset;
 }
 
 // —— 工具函数 ——

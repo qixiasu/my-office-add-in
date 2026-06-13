@@ -478,6 +478,7 @@
   background-size: 200% 100%;
   animation: write-progress-indeterminate 1.5s ease infinite;
   border-radius: 4px;
+  transition: width 0.3s ease;
 }
 
 @keyframes write-progress-indeterminate {
