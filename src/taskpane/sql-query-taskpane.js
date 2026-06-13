@@ -749,6 +749,7 @@ function writeResultToSheet() {
       columns = fullResult.columns;
 
       // 重置按钮状态（零行场景会在此返回；写入场景随后会重新设置）
+      writeBtn.disabled = false;
       writeBtn.textContent = "📝 写入新工作表";
       writeBtn.classList.remove("sql-button-loading");
     } else {
