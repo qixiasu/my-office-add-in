@@ -12,6 +12,7 @@ var persistenceManager = null;
 var currentQueryResult = null;
 var currentOriginalSQL = null;   // 存储原始 SQL（无 LIMIT 追加），供导出时重新查询
 var isPreviewResult = false;     // 标记当前结果是否为截断预览
+var PREVIEW_ROW_LIMIT = 200;     // 自动追加 LIMIT 的行数上限
 
 // —— 初始化 ——
 
@@ -474,7 +475,7 @@ async function runQuery() {
     isPreviewResult = false;
 
     if (isSelectQuery(sql) && !hasExplicitLimit(sql)) {
-      previewSQL = buildPreviewQuery(sql, 200);
+      previewSQL = buildPreviewQuery(sql, PREVIEW_ROW_LIMIT);
     }
 
     var result = dbManager.exec(previewSQL);
@@ -503,7 +504,7 @@ async function runQuery() {
     currentQueryResult = result;
 
     // 判断是否为截断预览：自动加了 LIMIT 且结果恰好等于上限
-    if (isSelectQuery(sql) && !hasExplicitLimit(sql) && result.rowCount === 200) {
+    if (isSelectQuery(sql) && !hasExplicitLimit(sql) && result.rowCount === PREVIEW_ROW_LIMIT) {
       isPreviewResult = true;
     }
 
