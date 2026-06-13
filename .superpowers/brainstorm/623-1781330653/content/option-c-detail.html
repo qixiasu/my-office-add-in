@@ -1,0 +1,47 @@
+<h2>方案 C：加载状态反馈 — 设计方向</h2>
+<p class="subtitle">在「确定」之后立即显示反馈，但 UI 仍然会冻结</p>
+
+<div class="section">
+  <h3>好处 👍</h3>
+  <ul>
+    <li>改动极小，只需在当前 <code>writeResultToSheet</code> 中加几行</li>
+    <li>用户至少知道系统在干活，不会以为按钮坏了</li>
+    <li>保持现有架构不动</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>局限 ⚠️</h3>
+  <ul>
+    <li><strong>UI 仍然会冻结</strong> — sql.js 同步执行查询期间，浏览器主线程被占满</li>
+    <li>如果数据量大（几十万行），浏览器可能弹出「页面无响应」提示</li>
+    <li>无法显示进度，只有「等待中」</li>
+    <li>长时间冻结可能让用户误以为崩溃了</li>
+  </ul>
+</div>
+
+<h3>你想怎么处理？</h3>
+
+<div class="options">
+  <div class="option" data-choice="pure-c" onclick="toggleSelect(this)">
+    <div class="letter">C1</div>
+    <div class="content">
+      <h3>就方案 C，接受冻结</h3>
+      <p>加载提示 + 冻结，反正大查询不常见。只要提示够清楚就行。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="a-c-hybrid" onclick="toggleSelect(this)">
+    <div class="letter">C2</div>
+    <div class="content">
+      <h3>方案 C + 分页流式（混合）</h3>
+      <p>用 LIMIT/OFFSET 分批查询 + 逐批写入 Excel，每批 5000 行。每批之间 yield 给浏览器更新进度，真正解决冻结问题。改动中等，保持架构简单。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="worker" onclick="toggleSelect(this)">
+    <div class="letter">C3</div>
+    <div class="content">
+      <h3>方案 B — Web Worker</h3>
+      <p>完全异步化，架构最干净但改动最大。</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+<h2>方案 C2 的技术设计</h2>
+<p class="subtitle">分页流式查询 + 逐批写入 Excel，避免 UI 冻结</p>
+
+<div class="mockup">
+  <div class="mockup-header">改进后流程</div>
+  <div class="mockup-body" style="text-align:left;padding:16px;">
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+      <div>1️⃣ 用户输入表名，点击「确定」</div>
+      <div>2️⃣ 按钮变为 <span style="background:#fff3cd;padding:2px 6px;border-radius:3px;">⏳ 正在查询第 1/10 批...</span></div>
+      <div>3️⃣ 执行 <code>SELECT ... LIMIT 5000 OFFSET 0</code> → 瞬间返回</div>
+      <div>4️⃣ 写入 Excel（第 1 批），更新进度 → <span style="background:#d4edda;padding:2px 6px;border-radius:3px;">已写入 5000/50000 行</span></div>
+      <div>5️⃣ 执行 <code>SELECT ... LIMIT 5000 OFFSET 5000</code> → 瞬间返回</div>
+      <div>6️⃣ 写入 Excel（第 2 批），更新进度</div>
+      <div style="color:#999;">⋯ 重复直到完成</div>
+    </div>
+  </div>
+</div>
+
+<h3>关键设计问题</h3>
+
+<div class="section">
+  <h3>分页查询语法</h3>
+  <p>原始 SQL 可能是任意复杂查询（JOIN、GROUP BY、ORDER BY），需要包裹为子查询：</p>
+  <pre style="background:#f5f5f5;padding:8px;border-radius:4px;font-size:12px;">
+SELECT * FROM (原始SQL) LIMIT 5000 OFFSET ?</pre>
+  <p>SQLite 支持这种嵌套，但总扫描量 = 全量数据量。</p>
+</div>
+
+<div class="section">
+  <h3>行的总量？</h3>
+  <p>你处理的数据集大概多少行？几十万？几万？这影响分批策略。</p>
+</div>

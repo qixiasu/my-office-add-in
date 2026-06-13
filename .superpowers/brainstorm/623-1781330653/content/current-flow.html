@@ -1,0 +1,55 @@
+<h2>当前导出流程 — 问题在哪里？</h2>
+<p class="subtitle">用户点击「确定」后 UI 完全冻结</p>
+
+<div class="mockup">
+  <div class="mockup-header">当前：写入新工作表</div>
+  <div class="mockup-body" style="text-align:left;padding:16px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="background:#e8e8e8;padding:4px 8px;border-radius:4px;font-size:12px;">1</span>
+        <span>用户输入表名，点击「确定」</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="background:#f3d5b5;padding:4px 8px;border-radius:4px;font-size:12px;">⏳</span>
+        <span style="color:#c00;"><strong>dbManager.exec(原始SQL) — 全量查询</strong></span>
+      </div>
+      <div style="margin-left:20px;font-size:12px;color:#666;">
+        ↓ sql.js 是同步执行，阻塞主线程<br>
+        ↓ UI 完全无响应，用户以为卡死了
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="background:#c6e0b4;padding:4px 8px;border-radius:4px;font-size:12px;">2</span>
+        <span>分块写入 Excel（有进度条）</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top:20px;">优化的核心目标</h3>
+<p>消除「确定」→「进度条出现」之间的无反馈空白期，让用户知道系统正在工作。</p>
+
+<div class="options">
+  <div class="option" data-choice="chunked" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>分页流式查询</h3>
+      <p>将全量查询拆分为多个 LIMIT/OFFSET 子查询，分批获取数据并逐批写入 Excel，每批之间更新进度。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="worker" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Web Worker 异步化</h3>
+      <p>将 sql.js 迁移到 Web Worker 中运行，主线程永不阻塞，配合消息传递实现完整的异步 UI。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="loading" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>加载状态反馈（轻量方案）</h3>
+      <p>仅在全量查询前显示一个模态加载提示「正在查询全部数据...」，保持当前架构不动。</p>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:16px;font-size:12px;color:#888;">点击选项选择你感兴趣的优化方向，我们接下来深入讨论</p>

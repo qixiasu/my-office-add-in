@@ -1037,6 +1037,19 @@ function buildPreviewQuery(sql, limit) {
   return sql;
 }
 
+/**
+ * 为原始 SQL 构建分页查询语句
+ * 将原始 SQL 包裹为子查询以支持 LIMIT/OFFSET
+ * @param {string} originalSQL - 原始 SQL
+ * @param {number} limit - 每批行数
+ * @param {number} offset - 偏移量
+ * @returns {string}
+ */
+function buildPaginationQuery(originalSQL, limit, offset) {
+  var sql = originalSQL.replace(/[;\s]*$/, '');
+  return 'SELECT * FROM (' + sql + ') LIMIT ' + limit + ' OFFSET ' + offset;
+}
+
 // —— 工具函数 ——
 
 function setStatusText(elId, message, type) {

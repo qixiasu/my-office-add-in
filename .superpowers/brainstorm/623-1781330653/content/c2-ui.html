@@ -1,0 +1,72 @@
+<h2>UI / 用户体验变化</h2>
+<p class="subtitle">改动点对比：红色 = 移除，绿色 = 新增</p>
+
+<div style="display:flex;gap:16px;">
+  <div style="flex:1;background:#fff5f5;padding:16px;border-radius:8px;">
+    <h3 style="margin-top:0;color:#c00;">原来（有冻结）</h3>
+    <pre style="font-size:12px;background:#fff;padding:8px;border-radius:4px;">
+用户点「确定」
+↓
+<span style="color:#c00;">[完全无响应]</span>
+<span style="color:#c00;">dbManager.exec(原始SQL)</span>
+<span style="color:#c00;">冻结 10-30+ 秒</span>
+↓
+进度条出现
+"已写入 5000/50000 行"
+...
+完成 ✅</pre>
+  </div>
+  <div style="flex:1;background:#f0fff0;padding:16px;border-radius:8px;">
+    <h3 style="margin-top:0;color:#090;">改进后（无冻结）</h3>
+    <pre style="font-size:12px;background:#fff;padding:8px;border-radius:4px;">
+用户点「确定」
+↓
+按钮: ⏳ 正在导出数据... ✓
+↓
+<span style="color:#090;">分批查询 + 写入</span>
+<span style="color:#090;">进度实时更新</span>
+↓
+进度条
+"已写入 5000 行"
+...
+"已写入 10000 行"
+...
+完成 ✅</pre>
+  </div>
+</div>
+
+<h3>具体 UI 改动</h3>
+
+<div class="section">
+  <h3>1. 进度条文本</h3>
+  <p>当前: "已写入 12500/50000 行"（写入阶段）</p>
+  <p>改为: <strong>"已写入 12500 行"</strong>（查询+写入全程）</p>
+  <p>由于不预先 COUNT，进度条只显示绝对行数，无百分比。</p>
+</div>
+
+<div class="section">
+  <h3>2. 按钮反馈</h3>
+  <p>用户点击「确定」后，按钮立即变为：</p>
+  <ul>
+    <li><strong>"⏳ 正在导出数据..."</strong>（禁用状态 + loading class）</li>
+    <li>全程保持此状态，直到完成或出错</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>3. 完成/错误提示</h3>
+  <ul>
+    <li>完成 → "已将 N 行结果写入新工作表「名称」" ✅</li>
+    <li>查询出错 → "导出失败: [具体错误]" ❌</li>
+    <li>写入中断 → "写入失败: [具体错误]" 保留已写入部分 ❌</li>
+  </ul>
+</div>
+
+<h3>涉及的 HTML 元素（全部已存在）</h3>
+<ul>
+  <li><code>#writeSheetBtn</code> — 导出按钮，显示 loading 状态</li>
+  <li><code>#writeProgress</code> — 进度容器</li>
+  <li><code>#writeProgressFill</code> — 进度条（宽度设为不可用）</li>
+  <li><code>#writeProgressText</code> — 进度文字 "已写入 N 行"</li>
+  <li><code>#queryStatus</code> — 最终状态消息</li>
+</ul>

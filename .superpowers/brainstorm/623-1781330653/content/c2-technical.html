@@ -1,0 +1,56 @@
+<h2>C2 技术实现方式</h2>
+<p class="subtitle">分页查询 + 逐批写入的循环</p>
+
+<div class="mockup">
+  <div class="mockup-header">核心循环（伪代码）</div>
+  <div class="mockup-body" style="text-align:left;padding:16px;font-size:12px;font-family:monospace;line-height:1.6;">
+    function 导出数据(原始SQL, 工作表名) {<br>
+    &nbsp;&nbsp;var 偏移量 = 0;<br>
+    &nbsp;&nbsp;var 总行数 = 0;<br>
+    &nbsp;&nbsp;var 每批大小 = 5000;<br>
+    <br>
+    &nbsp;&nbsp;function 处理下一批() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;// 1️⃣ yield 给浏览器更新 UI<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(function() {<br>
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 2️⃣ 查一小批<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var sql = 'SELECT * FROM (' + 原始SQL + ') LIMIT 5000 OFFSET ' + 偏移量;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var 结果 = dbManager.exec(sql);  ← 快！只查 5000 行<br>
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 3️⃣ 如果没数据了 → 完成<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (结果.行数 === 0) { 显示完成(); return; }<br>
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 4️⃣ 写入 Excel<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Excel.run(function(ctx) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/* 创建/追加工作表 */<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}).then(function() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;总行数 += 结果.行数;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;偏移量 += 5000;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;更新进度("已写入 " + 总行数 + " 行");<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;处理下一批();  // 递归到下一批<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+    &nbsp;&nbsp;}<br>
+    <br>
+    &nbsp;&nbsp;处理下一批();<br>
+    }
+  </div>
+</div>
+
+<div class="section">
+  <h3>为什么这样能消除冻结？</h3>
+  <ul>
+    <li><strong>每次查询只取 5000 行</strong> — sql.js 在 WASM 中扫描 5000 行几乎瞬间完成（毫秒级）</li>
+    <li><strong>查完后才写入 Excel</strong> — Excel.run 本身是异步的，给浏览器喘息机会</li>
+    <li><strong>setTimeout(0) 在每批之间 yield</strong> — 让浏览器有时间处理 UI 更新、按钮状态、进度条</li>
+    <li><strong>总时间 ≈ 一次全量查询 + 逐批写入</strong> — 总耗时不变，但不再有长时间冻结</li>
+  </ul>
+</div>
+
+<div class="section">
+  <h3>适用场景</h3>
+  <ul>
+    <li>✅ 预览模式（原始 SQL 被自动追加了 LIMIT 200）</li>
+    <li>✅ 用户显式写了 LIMIT 的查询（结果已在内存中，无需分页查询）</li>
+  </ul>
+</div>

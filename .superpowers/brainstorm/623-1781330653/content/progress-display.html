@@ -1,0 +1,46 @@
+<h2>进度显示方式</h2>
+<p class="subtitle">几十万行数据，如何给用户反馈进度？</p>
+
+<div class="section">
+  <h3>场景</h3>
+  <p>对于几十万行数据的分批处理，进度反馈有两种方式：</p>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="count-first" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>先查 COUNT，再显示百分比</h3>
+      <p>先执行 <code>SELECT COUNT(*) FROM (原始SQL)</code> 获取总行数，然后分批处理时显示百分比进度。</p>
+      <div class="pros-cons" style="margin-top:8px;font-size:12px;">
+        <div><strong>好处：</strong>进度精确，用户体验好</div>
+        <div><strong>代价：</strong>COUNT 本身也是全表扫描，会额外增加一次等待（约等于是额外一次冻结）</div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="no-count" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>不查 COUNT，显示行数</h3>
+      <p>不预先统计总数，分批处理时直接显示当前写入行数。</p>
+      <div class="pros-cons" style="margin-top:8px;font-size:12px;">
+        <div><strong>好处：</strong>没有额外查询，立即开始分批获取</div>
+        <div><strong>代价：</strong>无法显示百分比，只知道已处理多少行</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px;">示例对比：</p>
+<div style="display:flex;gap:20px;font-size:13px;">
+  <div style="flex:1;background:#f0f7ff;padding:12px;border-radius:6px;">
+    <strong>方式 A：</strong><br>
+    <span>⏳ 正在查询总数...</span><br>
+    <span>📊 已处理 35% (17500/50000 行)</span>
+  </div>
+  <div style="flex:1;background:#f0f7ff;padding:12px;border-radius:6px;">
+    <strong>方式 B：</strong><br>
+    <span>📋 正在查询第 3 批...</span><br>
+    <span>✏️ 已写入 15000 行</span>
+  </div>
+</div>
