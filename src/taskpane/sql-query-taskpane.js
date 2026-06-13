@@ -443,6 +443,7 @@ async function runQuery() {
   if (!sql) return;
 
   var statusEl = document.getElementById("queryStatus");
+  var executeBtn = document.getElementById("executeBtn");
 
   // DROP/DELETE/UPDATE 二次确认
   var upperSql = sql.toUpperCase().trim();
@@ -454,7 +455,6 @@ async function runQuery() {
   }
 
   // —— 禁用按钮、提供视觉反馈 ——
-  var executeBtn = document.getElementById("executeBtn");
   executeBtn.disabled = true;
   executeBtn.textContent = "⏳ 执行中...";
   executeBtn.classList.add("sql-button-loading");
@@ -465,70 +465,66 @@ async function runQuery() {
   // 让浏览器渲染按钮的 disabled 状态后再执行同步查询
   await new Promise(function (resolve) { setTimeout(resolve, 0); });
 
-  var result = dbManager.exec(sql);
+  try {
+    var result = dbManager.exec(sql);
 
-  if (result.type === "error") {
-    executeBtn.disabled = false;
-    executeBtn.textContent = "▶ 执行";
-    executeBtn.classList.remove("sql-button-loading");
-    statusEl.className = "status-message status-error";
-    statusEl.textContent = "错误: " + result.message;
-    return;
-  }
-
-  if (result.type === "modification") {
-    executeBtn.disabled = false;
-    executeBtn.textContent = "▶ 执行";
-    executeBtn.classList.remove("sql-button-loading");
-    statusEl.textContent = "完成，影响 " + result.rowsAffected + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
-    statusEl.className = "status-message status-success";
-    document.getElementById("resultActions").style.display = "none";
-    document.getElementById("resultDisplay").style.display = "none";
-    currentQueryResult = null;
-    persistenceManager.scheduleSave();
-    refreshTableList();
-    populateBrowseSelect();
-    addQueryHistory(sql, result.type, result.elapsed, result.rowsAffected);
-    return;
-  }
-
-  // SELECT 结果
-  statusEl.textContent = "查询完成，返回 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
-  statusEl.className = "status-message status-success";
-
-  currentQueryResult = result;
-
-  // 渲染结果表格
-  var headHtml = "";
-  for (var c = 0; c < result.columns.length; c++) {
-    headHtml += "<th>" + result.columns[c] + "</th>";
-  }
-  document.getElementById("resultHead").innerHTML = "<tr>" + headHtml + "</tr>";
-
-  var MAX_DISPLAY_ROWS = 500;
-  var displayRows = result.rows.slice(0, MAX_DISPLAY_ROWS);
-  var bodyHtml = "";
-  for (var r = 0; r < displayRows.length; r++) {
-    bodyHtml += "<tr>";
-    for (var c2 = 0; c2 < displayRows[r].length; c2++) {
-      var val = displayRows[r][c2];
-      bodyHtml += "<td>" + (val !== null ? val : "") + "</td>";
+    if (result.type === "error") {
+      statusEl.className = "status-message status-error";
+      statusEl.textContent = "错误: " + result.message;
+      return;
     }
-    bodyHtml += "</tr>";
+
+    if (result.type === "modification") {
+      statusEl.textContent = "完成，影响 " + result.rowsAffected + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
+      statusEl.className = "status-message status-success";
+      document.getElementById("resultActions").style.display = "none";
+      document.getElementById("resultDisplay").style.display = "none";
+      currentQueryResult = null;
+      persistenceManager.scheduleSave();
+      refreshTableList();
+      populateBrowseSelect();
+      addQueryHistory(sql, result.type, result.elapsed, result.rowsAffected);
+      return;
+    }
+
+    // SELECT 结果
+    statusEl.textContent = "查询完成，返回 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
+    statusEl.className = "status-message status-success";
+
+    currentQueryResult = result;
+
+    // 渲染结果表格
+    var headHtml = "";
+    for (var c = 0; c < result.columns.length; c++) {
+      headHtml += "<th>" + result.columns[c] + "</th>";
+    }
+    document.getElementById("resultHead").innerHTML = "<tr>" + headHtml + "</tr>";
+
+    var MAX_DISPLAY_ROWS = 500;
+    var displayRows = result.rows.slice(0, MAX_DISPLAY_ROWS);
+    var bodyHtml = "";
+    for (var r = 0; r < displayRows.length; r++) {
+      bodyHtml += "<tr>";
+      for (var c2 = 0; c2 < displayRows[r].length; c2++) {
+        var val = displayRows[r][c2];
+        bodyHtml += "<td>" + (val !== null ? val : "") + "</td>";
+      }
+      bodyHtml += "</tr>";
+    }
+    document.getElementById("resultBody").innerHTML = bodyHtml;
+    document.getElementById("resultActions").style.display = "block";
+    document.getElementById("resultDisplay").style.display = "block";
+
+    if (result.rowCount > MAX_DISPLAY_ROWS) {
+      statusEl.textContent += " (仅显示前 " + MAX_DISPLAY_ROWS + " 行)";
+    }
+
+    addQueryHistory(sql, result.type, result.elapsed, result.rowCount);
+  } finally {
+    executeBtn.disabled = false;
+    executeBtn.textContent = "▶ 执行";
+    executeBtn.classList.remove("sql-button-loading");
   }
-  document.getElementById("resultBody").innerHTML = bodyHtml;
-  document.getElementById("resultActions").style.display = "block";
-  document.getElementById("resultDisplay").style.display = "block";
-
-  if (result.rowCount > MAX_DISPLAY_ROWS) {
-    statusEl.textContent += " (仅显示前 " + MAX_DISPLAY_ROWS + " 行)";
-  }
-
-  addQueryHistory(sql, result.type, result.elapsed, result.rowCount);
-
-  executeBtn.disabled = false;
-  executeBtn.textContent = "▶ 执行";
-  executeBtn.classList.remove("sql-button-loading");
 }
 
 function clearSql() {
