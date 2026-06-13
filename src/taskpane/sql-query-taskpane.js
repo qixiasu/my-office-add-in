@@ -10,6 +10,8 @@ var sqlUtils = require("../utils/sql-utils");
 var dbManager = null;
 var persistenceManager = null;
 var currentQueryResult = null;
+var currentOriginalSQL = null;   // 存储原始 SQL（无 LIMIT 追加），供导出时重新查询
+var isPreviewResult = false;     // 标记当前结果是否为截断预览
 
 // —— 初始化 ——
 
@@ -466,7 +468,16 @@ async function runQuery() {
   await new Promise(function (resolve) { setTimeout(resolve, 0); });
 
   try {
-    var result = dbManager.exec(sql);
+    // 预览模式：SELECT 无 LIMIT 时自动追加 LIMIT 200
+    var previewSQL = sql;
+    currentOriginalSQL = sql;
+    isPreviewResult = false;
+
+    if (isSelectQuery(sql) && !hasExplicitLimit(sql)) {
+      previewSQL = buildPreviewQuery(sql, 200);
+    }
+
+    var result = dbManager.exec(previewSQL);
 
     if (result.type === "error") {
       statusEl.className = "status-message status-error";
@@ -480,6 +491,8 @@ async function runQuery() {
       document.getElementById("resultActions").style.display = "none";
       document.getElementById("resultDisplay").style.display = "none";
       currentQueryResult = null;
+      currentOriginalSQL = null;
+      isPreviewResult = false;
       persistenceManager.scheduleSave();
       refreshTableList();
       populateBrowseSelect();
@@ -488,10 +501,21 @@ async function runQuery() {
     }
 
     // SELECT 结果
-    statusEl.textContent = "查询完成，返回 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
+    if (isPreviewResult) {
+      statusEl.textContent = "预览前 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
+    } else if (hasExplicitLimit(sql)) {
+      statusEl.textContent = "查询完成，返回 " + result.rowCount + " 行（用户指定 LIMIT）(" + result.elapsed.toFixed(2) + " 秒)";
+    } else {
+      statusEl.textContent = "查询完成，返回 " + result.rowCount + " 行 (" + result.elapsed.toFixed(2) + " 秒)";
+    }
     statusEl.className = "status-message status-success";
 
     currentQueryResult = result;
+
+    // 判断是否为截断预览：自动加了 LIMIT 且结果恰好等于上限
+    if (isSelectQuery(sql) && !hasExplicitLimit(sql) && result.rowCount === 200) {
+      isPreviewResult = true;
+    }
 
     // 渲染结果表格
     var headHtml = "";
@@ -534,6 +558,8 @@ function clearSql() {
   document.getElementById("queryStatus").className = "status-message status-idle";
   document.getElementById("queryStatus").textContent = "";
   currentQueryResult = null;
+  currentOriginalSQL = null;
+  isPreviewResult = false;
 }
 
 // —— 结果导出 ——
