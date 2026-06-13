@@ -715,7 +715,7 @@ function writeResultToSheet() {
         }
       }).then(function () {
         batchIndex++;
-        updateProgress(progressFill, progressText, Math.min(endRow, totalRows), totalRows);
+        updateProgress(progressFill, progressText, endRow, totalRows);
         writeNextBatch(); // 递归开始下一批
       }).catch(function (error) {
         restoreWriteButton();
@@ -735,6 +735,7 @@ function writeResultToSheet() {
         setStatusText("queryStatus", "已将 " + totalRows + " 行结果写入新工作表", "success");
       }).catch(function () {
         // autofitColumns 失败不影响数据写入，只提示
+        console.warn("autofitColumns failed:", arguments[0]);
         restoreWriteButton();
         setStatusText("queryStatus", "已将 " + totalRows + " 行结果写入新工作表", "success");
       });
