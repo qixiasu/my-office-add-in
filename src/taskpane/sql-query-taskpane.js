@@ -727,8 +727,9 @@ function writeResultToSheet() {
     function doAutoFit() {
       Excel.run(function (context) {
         var sheet = context.workbook.worksheets.getItem(finalSheetName);
-        var range = sheet.getUsedRange();
-        range.format.autofitColumns();
+        // 仅对表头行执行列宽自适应（避免扫描全量数据导致 Excel 卡死）
+        var headerRange = sheet.getRange("1:1");
+        headerRange.format.autofitColumns();
         return context.sync();
       }).then(function () {
         restoreWriteButton();
