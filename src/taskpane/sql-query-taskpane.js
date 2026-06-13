@@ -748,6 +748,7 @@ function writeResultToSheet() {
       rows = fullResult.rows;
       columns = fullResult.columns;
 
+      // 重置按钮状态（零行场景会在此返回；写入场景随后会重新设置）
       writeBtn.textContent = "📝 写入新工作表";
       writeBtn.classList.remove("sql-button-loading");
     } else {
@@ -765,7 +766,7 @@ function writeResultToSheet() {
     var totalRows = rows.length;
     var totalCols = columns.length;
 
-    var writeBtn = document.getElementById("writeSheetBtn");
+    writeBtn = document.getElementById("writeSheetBtn");
     var progressContainer = document.getElementById("writeProgress");
     var progressFill = document.getElementById("writeProgressFill");
     var progressText = document.getElementById("writeProgressText");
