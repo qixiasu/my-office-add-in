@@ -601,54 +601,154 @@ function showSheetNameDialog(callback) {
   setTimeout(function () { input.focus(); input.select(); }, 50);
 }
 
+/**
+ * 生成不重复的工作表名
+ * @param {object} sheetCollection - Office.js worksheet 集合（已加载 items/name）
+ * @param {string} baseName - 基础名称
+ * @returns {string}
+ */
+function generateUniqueSheetName(sheetCollection, baseName) {
+  var finalName = baseName;
+  var counter = 1;
+  var exists = true;
+  while (exists) {
+    exists = false;
+    for (var i = 0; i < sheetCollection.items.length; i++) {
+      if (sheetCollection.items[i].name === finalName) {
+        exists = true;
+        finalName = baseName + " (" + counter + ")";
+        counter++;
+        break;
+      }
+    }
+  }
+  return finalName;
+}
+
+/**
+ * 更新进度条和文字
+ * @param {HTMLElement} fillEl - 进度条填充元素
+ * @param {HTMLElement} textEl - 进度文字元素
+ * @param {number} current - 当前已写入行数
+ * @param {number} total - 总行数
+ */
+function updateProgress(fillEl, textEl, current, total) {
+  var pct = Math.round((current / total) * 100);
+  fillEl.style.width = pct + "%";
+  fillEl.setAttribute("aria-valuenow", pct);
+  textEl.textContent = "已写入 " + current + "/" + total + " 行";
+}
+
 function writeResultToSheet() {
   if (!currentQueryResult) return;
 
   showSheetNameDialog(function (sheetName) {
     var rows = currentQueryResult.rows;
     var columns = currentQueryResult.columns;
+    if (!rows || rows.length === 0) {
+      setStatusText("queryStatus", "没有数据可写入", "error");
+      return;
+    }
 
-    Excel.run(function (context) {
-      var sheetCollection = context.workbook.worksheets;
-      sheetCollection.load("items/name");
-      return context.sync().then(function () {
-        // 生成不重复的名称
-        var finalName = sheetName;
-        var counter = 1;
-        var exists = true;
-        while (exists) {
-          exists = false;
-          for (var i = 0; i < sheetCollection.items.length; i++) {
-            if (sheetCollection.items[i].name === finalName) {
-              exists = true;
-              finalName = sheetName + " (" + counter + ")";
-              counter++;
-              break;
+    var CHUNK_SIZE = 5000;
+    var totalRows = rows.length;
+    var totalCols = columns.length;
+
+    var writeBtn = document.getElementById("writeSheetBtn");
+    var progressContainer = document.getElementById("writeProgress");
+    var progressFill = document.getElementById("writeProgressFill");
+    var progressText = document.getElementById("writeProgressText");
+
+    // 禁用按钮、显示 spinner、显示进度条
+    writeBtn.disabled = true;
+    writeBtn.textContent = "⏳ 写入中...";
+    writeBtn.classList.add("sql-button-loading");
+    progressContainer.style.display = "flex";
+    updateProgress(progressFill, progressText, 0, totalRows);
+
+    var batchIndex = 0;
+    var finalSheetName = sheetName;
+    var sheetCreated = false;
+
+    function writeNextBatch() {
+      var startRow = batchIndex * CHUNK_SIZE;
+      if (startRow >= totalRows) {
+        // 全部写入完成 → 执行 autofitColumns
+        doAutoFit();
+        return;
+      }
+      var endRow = Math.min(startRow + CHUNK_SIZE, totalRows);
+      var batchSize = endRow - startRow;
+
+      Excel.run(function (context) {
+        if (!sheetCreated) {
+          // 第一批：创建表 + 写表头 + 写数据
+          var sheetCollection = context.workbook.worksheets;
+          sheetCollection.load("items/name");
+          return context.sync().then(function () {
+            finalSheetName = generateUniqueSheetName(sheetCollection, sheetName);
+            var newSheet = sheetCollection.add(finalSheetName);
+            newSheet.position = 0;
+            sheetCreated = true;
+
+            // 写入表头 + 第一批数据行
+            var rangeRows = batchSize + 1; // +1 是表头行
+            var range = newSheet.getRangeByIndexes(0, 0, rangeRows, totalCols);
+            var values = [columns];
+            for (var r = startRow; r < endRow; r++) {
+              values.push(rows[r]);
             }
+            range.values = values;
+            return context.sync();
+          });
+        } else {
+          // 后续批次：通过已记录的表名获取工作表，追加数据
+          var sheet = context.workbook.worksheets.getItem(finalSheetName);
+          // +1 跳过表头行
+          var range = sheet.getRangeByIndexes(startRow + 1, 0, batchSize, totalCols);
+          var values = [];
+          for (var r = startRow; r < endRow; r++) {
+            values.push(rows[r]);
           }
+          range.values = values;
+          return context.sync();
         }
-
-        var newSheet = sheetCollection.add(finalName);
-        newSheet.position = 0;
-
-        var totalRows = rows.length + 1;
-        var range = newSheet.getRangeByIndexes(0, 0, totalRows, columns.length);
-        var values = [columns];
-        for (var r = 0; r < rows.length; r++) {
-          values.push(rows[r]);
-        }
-        range.values = values;
-        range.format.autofitColumns();
-        newSheet.activate();
-
-        return context.sync();
+      }).then(function () {
+        batchIndex++;
+        updateProgress(progressFill, progressText, Math.min(endRow, totalRows), totalRows);
+        writeNextBatch(); // 递归开始下一批
+      }).catch(function (error) {
+        restoreWriteButton();
+        var msg = (error && error.message) ? error.message : String(error || "未知错误");
+        setStatusText("queryStatus", "写入失败: " + msg, "error");
       });
-    }).then(function () {
-      setStatusText("queryStatus", "已将 " + rows.length + " 行结果写入新工作表", "success");
-    }).catch(function (error) {
-      var msg = (error && error.message) ? error.message : String(error || "未知错误");
-      setStatusText("queryStatus", "写入失败: " + msg, "error");
-    });
+    }
+
+    function doAutoFit() {
+      Excel.run(function (context) {
+        var sheet = context.workbook.worksheets.getItem(finalSheetName);
+        var range = sheet.getUsedRange();
+        range.format.autofitColumns();
+        return context.sync();
+      }).then(function () {
+        restoreWriteButton();
+        setStatusText("queryStatus", "已将 " + totalRows + " 行结果写入新工作表", "success");
+      }).catch(function () {
+        // autofitColumns 失败不影响数据写入，只提示
+        restoreWriteButton();
+        setStatusText("queryStatus", "已将 " + totalRows + " 行结果写入新工作表", "success");
+      });
+    }
+
+    function restoreWriteButton() {
+      writeBtn.disabled = false;
+      writeBtn.textContent = "📝 写入新工作表";
+      writeBtn.classList.remove("sql-button-loading");
+      progressContainer.style.display = "none";
+    }
+
+    // 启动写入
+    writeNextBatch();
   });
 }
 
