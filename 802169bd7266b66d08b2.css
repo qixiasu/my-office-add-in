@@ -428,3 +428,67 @@
   width: auto;
   min-width: 72px;
 }
+
+/* —— 执行按钮 loading 状态 —— */
+
+.sql-button-loading {
+  position: relative;
+  padding-left: 28px;
+}
+
+.sql-button-loading::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: sql-spin 0.8s linear infinite;
+}
+
+@keyframes sql-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* —— 写入进度条 —— */
+
+.write-progress {
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.write-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.write-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #0078d4 0%, #4da8e8 50%, #0078d4 100%);
+  background-size: 200% 100%;
+  animation: write-progress-indeterminate 1.5s ease infinite;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+@keyframes write-progress-indeterminate {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.write-progress-text {
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+  min-width: 120px;
+}
