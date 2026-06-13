@@ -673,8 +673,9 @@ function writeResultToSheet() {
     function writeNextBatch() {
       var startRow = batchIndex * CHUNK_SIZE;
       if (startRow >= totalRows) {
-        // 全部写入完成 → 执行 autofitColumns
-        doAutoFit();
+        // 全部写入完成
+        restoreWriteButton();
+        setStatusText("queryStatus", "已将 " + totalRows + " 行结果写入新工作表", "success");
         return;
       }
       var endRow = Math.min(startRow + CHUNK_SIZE, totalRows);
@@ -721,24 +722,6 @@ function writeResultToSheet() {
         restoreWriteButton();
         var msg = (error && error.message) ? error.message : String(error || "未知错误");
         setStatusText("queryStatus", "写入失败: " + msg, "error");
-      });
-    }
-
-    function doAutoFit() {
-      Excel.run(function (context) {
-        var sheet = context.workbook.worksheets.getItem(finalSheetName);
-        // 仅对表头行执行列宽自适应（避免扫描全量数据导致 Excel 卡死）
-        var headerRange = sheet.getRange("1:1");
-        headerRange.format.autofitColumns();
-        return context.sync();
-      }).then(function () {
-        restoreWriteButton();
-        setStatusText("queryStatus", "已将 " + totalRows + " 行结果写入新工作表", "success");
-      }).catch(function () {
-        // autofitColumns 失败不影响数据写入，只提示
-        console.warn("autofitColumns failed:", arguments[0]);
-        restoreWriteButton();
-        setStatusText("queryStatus", "已将 " + totalRows + " 行结果写入新工作表", "success");
       });
     }
 
