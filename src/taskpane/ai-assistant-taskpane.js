@@ -3,7 +3,7 @@
  * See LICENSE in the project root for license information.
  */
 
-/* global document, Excel, Office */
+/* global Office */
 
 Office.onReady(function (info) {
   if (info.host === Office.HostType.Excel) {
