@@ -13,7 +13,7 @@
 // =============================================================================
 
 var DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions";
-var DEEPSEEK_MODEL = "deepseek-chat";
+var DEEPSEEK_MODEL = "deepseek-v4-flash";
 
 /**
  * 发送聊天请求到 DeepSeek API

@@ -10,7 +10,7 @@ var aiUtils = require("../utils/ai-utils");
 // ---- 状态 ----
 var apiKey = localStorage.getItem("deepseek_api_key") || "";
 var settings = {
-  model: localStorage.getItem("deepseek_model") || "deepseek-chat",
+  model: localStorage.getItem("deepseek_model") || "deepseek-v4-flash",
   temperature: parseFloat(localStorage.getItem("deepseek_temperature") || "0.3"),
   maxTokens: 4096,
 };
