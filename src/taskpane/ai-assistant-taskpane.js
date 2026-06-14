@@ -16,6 +16,7 @@ var settings = {
 };
 var context = aiUtils.createContext(null);
 var isProcessing = false;
+var selectionTimer = null;
 
 // ---- DOM 引用 ----
 var chatMessages, userInput, sendBtn, statusBar, selectionInfo;
@@ -28,7 +29,15 @@ Office.onReady(function (info) {
     cacheDom();
     bindEvents();
     restoreApiKeyState();
-    refreshSelection();
+    refreshSelection(false);
+
+    // 自动检测选区变化（防抖 500ms）
+    Office.context.document.addHandlerAsync(Office.EventType.DocumentSelectionChanged, function () {
+      if (selectionTimer) clearTimeout(selectionTimer);
+      selectionTimer = setTimeout(function () {
+        refreshSelection(true);
+      }, 500);
+    });
   }
 });
 
@@ -68,6 +77,10 @@ function bindEvents() {
   settingsModal.addEventListener("click", function (e) {
     if (e.target === settingsModal) closeSettings();
   });
+  // 手动刷新选区
+  document.getElementById("refreshSelectionBtn").addEventListener("click", function () {
+    refreshSelection(false);
+  });
 }
 
 function restoreApiKeyState() {
@@ -82,7 +95,7 @@ function restoreApiKeyState() {
 }
 
 // ---- 选区刷新 ----
-function refreshSelection() {
+function refreshSelection(silent) {
   setStatus("正在获取选区...", "loading");
   Excel.run(function (ctx) {
     return aiUtils.getSelectionSummary(ctx).then(function (summary) {
@@ -96,15 +109,17 @@ function refreshSelection() {
         summary.columnCount +
         "列)";
       setStatus("已就绪", "idle");
-      addAssistantMessage(
-        "已获取选区 " +
-          summary.address +
-          "（" +
-          summary.rowCount +
-          "行，" +
-          summary.columnCount +
-          "列），请问你想做什么？"
-      );
+      if (!silent) {
+        addAssistantMessage(
+          "已获取选区 " +
+            summary.address +
+            "（" +
+            summary.rowCount +
+            "行，" +
+            summary.columnCount +
+            "列），请问你想做什么？"
+        );
+      }
     });
   }).catch(function (err) {
     selectionInfo.textContent = "未选中数据";
@@ -439,10 +454,7 @@ function scrollToBottom() {
 
 function setStatus(message, type) {
   statusBar.className = "ai-status-bar ai-status-" + type;
-  var currentSel = selectionInfo.textContent;
-  statusBar.innerHTML =
-    '<span id="selectionInfo">' + escapeHtml(currentSel) + "</span> | " + escapeHtml(message);
-  selectionInfo = document.getElementById("selectionInfo");
+  document.getElementById("statusText").textContent = message ? " | " + message : "";
 }
 
 // ---- 设置 ----

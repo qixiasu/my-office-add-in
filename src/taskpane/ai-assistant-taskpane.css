@@ -135,6 +135,24 @@
   color: #888;
   border-top: 1px solid #e0e0e0;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-status-bar .ai-status-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #0078d4;
+  padding: 0 2px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.ai-status-bar .ai-status-btn:hover {
+  opacity: 1;
 }
 
 .ai-status-idle { background: #fafafa; }
