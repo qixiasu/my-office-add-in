@@ -372,10 +372,29 @@ var SAMPLE_SIZE = 10; // 默认样本行数
  */
 function getSelectionSummary(context) {
   var range = context.workbook.getSelectedRange();
-  range.load(["address", "columnCount", "rowCount", "values"]);
+
+  // 先获取选区地址和列数
+  range.load(["address", "columnCount"]);
+
+  // 用 getUsedRange 限制到有数据的区域（兼容选中整列的情况）
+  var usedRange = range.getUsedRange();
+  usedRange.load("values");
 
   return context.sync().then(function () {
-    var values = range.values; // 二维数组
+    var values = usedRange.values;
+
+    // 处理 values 为 null 或无数据的情况
+    if (!values || !Array.isArray(values) || values.length === 0) {
+      return {
+        address: range.address,
+        columnCount: range.columnCount || 0,
+        rowCount: 0,
+        headers: [],
+        sampleData: [],
+        stats: {},
+      };
+    }
+
     var headers = values.length > 0 ? values[0].map(String) : [];
     var dataRows = values.slice(1); // 剔除标题行
 
