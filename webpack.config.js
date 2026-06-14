@@ -30,6 +30,10 @@ module.exports = async (env, options) => {
         "./src/taskpane/sql-query-taskpane.js",
         "./src/taskpane/sql-query-taskpane.html",
       ],
+      "ai-assistant-taskpane": [
+        "./src/taskpane/ai-assistant-taskpane.js",
+        "./src/taskpane/ai-assistant-taskpane.html",
+      ],
     },
     output: {
       clean: true,
@@ -133,6 +137,11 @@ module.exports = async (env, options) => {
         filename: "sql-query-taskpane.html",
         template: "./src/taskpane/sql-query-taskpane.html",
         chunks: ["polyfill", "sql-query-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "ai-assistant-taskpane.html",
+        template: "./src/taskpane/ai-assistant-taskpane.html",
+        chunks: ["polyfill", "ai-assistant-taskpane"],
       }),
       new HtmlWebpackPlugin({
         filename: "index.html",
