@@ -207,6 +207,16 @@ function handleToolCalls(toolCalls) {
           tool_call_id: toolCall.id,
           content: JSON.stringify(result),
         });
+      })
+      .catch(function (err) {
+        // 即使执行失败也要添加 tool 响应，否则上下文出现孤立 tool_calls
+        // 后续调用 DeepSeek API 会报错:
+        // "assistant message with tool_calls must be followed by tool messages"
+        context = aiUtils.addMessage(context, {
+          role: "tool",
+          tool_call_id: toolCall.id,
+          content: JSON.stringify({ error: err.message }),
+        });
       });
   });
 
