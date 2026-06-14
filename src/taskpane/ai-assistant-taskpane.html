@@ -12,16 +12,82 @@
     <!-- Office JavaScript API -->
     <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 
-    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <!-- Fluent UI Core -->
     <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
 
-    <!-- Template styles -->
     <link href="taskpane.css" rel="stylesheet" type="text/css" />
+    <link href="ai-assistant-taskpane.css" rel="stylesheet" type="text/css" />
 </head>
 
 <body class="ms-font-m ms-welcome ms-Fabric">
-    <div id="app">
-        <p>AI 助手面板（开发中）</p>
+    <div class="ai-container">
+        <!-- Header -->
+        <div class="ai-header">
+            <div class="ai-header-title">
+                <span class="ai-header-icon">🤖</span>
+                <span>AI 助手</span>
+            </div>
+            <button id="settingsBtn" class="ai-icon-btn" title="设置">⚙️</button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chatMessages" class="ai-chat-messages">
+            <div class="ai-message ai-message-assistant">
+                <div class="ai-message-content">
+                    👋 你好！我是 AI 助手。选中 Excel 中的数据后，告诉我你想做什么。
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="statusBar" class="ai-status-bar ai-status-idle">
+            <span id="selectionInfo">未选中数据</span>
+        </div>
+
+        <!-- Input Area -->
+        <div class="ai-input-area">
+            <textarea id="userInput" class="ai-input" rows="2" placeholder="输入指令...（Enter 发送，Shift+Enter 换行）"></textarea>
+            <button id="sendBtn" class="ai-send-btn" disabled>发送</button>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="ai-modal" style="display:none;">
+            <div class="ai-modal-content">
+                <div class="ai-modal-header">
+                    <span>⚙️ 设置</span>
+                    <button id="closeSettingsBtn" class="ai-icon-btn">✕</button>
+                </div>
+                <div class="ai-modal-body">
+                    <div class="ai-form-group">
+                        <label for="apiKeyInput" class="ai-label">DeepSeek API Key</label>
+                        <input type="password" id="apiKeyInput" class="ai-form-input" placeholder="sk-..." />
+                    </div>
+                    <div class="ai-form-group">
+                        <label for="modelSelect" class="ai-label">模型</label>
+                        <select id="modelSelect" class="ai-form-input">
+                            <option value="deepseek-chat">deepseek-chat</option>
+                            <option value="deepseek-reasoner">deepseek-reasoner</option>
+                        </select>
+                    </div>
+                    <div class="ai-form-group">
+                        <label for="temperatureInput" class="ai-label">温度 (0-1)</label>
+                        <input type="number" id="temperatureInput" class="ai-form-input" value="0.3" min="0" max="1" step="0.1" />
+                    </div>
+                </div>
+                <div class="ai-modal-footer">
+                    <button id="saveSettingsBtn" class="concat-button concat-button--small">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Box -->
+        <div id="confirmBox" class="confirm-box" style="display:none;">
+            <div id="confirmMsg" class="confirm-msg"></div>
+            <div class="confirm-buttons">
+                <button id="confirmYes" class="concat-button concat-button--small">确定</button>
+                <button id="confirmNo" class="concat-button concat-button--small concat-button--secondary">取消</button>
+            </div>
+        </div>
     </div>
 </body>
 
