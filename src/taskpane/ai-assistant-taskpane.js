@@ -145,10 +145,11 @@ function handleSend() {
 
   addUserMessage(text);
   context = aiUtils.addMessage(context, { role: "user", content: text });
+  toolRoundCount = 0; // 重置工具调用轮次计数
   showLoading();
 
   aiUtils
-    .sendChatRequest(apiKey, aiUtils.trimContext(context), aiUtils.getToolDefinitions(), {
+    .sendChatRequest(apiKey, aiUtils.ensureValidContext(aiUtils.trimContext(context)), aiUtils.getToolDefinitions(), {
       temperature: settings.temperature,
       maxTokens: settings.maxTokens,
     })
@@ -178,6 +179,10 @@ function handleSend() {
 }
 
 // ---- 处理 Tool 调用 ----
+// 递归处理 AI 返回的 tool_calls，支持多轮工具调用（如先分析再写入）
+var MAX_TOOL_ROUNDS = 5;
+var toolRoundCount = 0; // 跨递归调用的总轮次计数
+
 function handleToolCalls(toolCalls) {
   var sequence = Promise.resolve();
 
@@ -220,26 +225,49 @@ function handleToolCalls(toolCalls) {
       });
   });
 
-  return sequence
-    .then(function () {
-      return aiUtils.sendChatRequest(
-        apiKey,
-        aiUtils.trimContext(context),
-        aiUtils.getToolDefinitions(),
-        {
-          temperature: settings.temperature,
-          maxTokens: settings.maxTokens,
-        }
+  // 递归跟进：AI 可能在后续响应中继续调用工具
+  function followUp() {
+    toolRoundCount++;
+    if (toolRoundCount > MAX_TOOL_ROUNDS) {
+      setStatus("达到最大工具调用轮次", "warning");
+      addAssistantMessage(
+        "⚠️ 已达到最大工具调用轮次（" + MAX_TOOL_ROUNDS + "），操作可能未完全完成。请继续输入指令。"
       );
-    })
-    .then(function (response) {
-      return aiUtils.parseResponse(response);
-    })
-    .then(function (parsed) {
-      context = aiUtils.addMessage(context, parsed.message);
-      addAssistantMessage(parsed.message.content || "");
-      setStatus("完成", "success");
-    });
+      return Promise.resolve();
+    }
+
+    return sequence
+      .then(function () {
+        showLoading();
+        return aiUtils.sendChatRequest(
+          apiKey,
+          aiUtils.ensureValidContext(aiUtils.trimContext(context)),
+          aiUtils.getToolDefinitions(),
+          { temperature: settings.temperature, maxTokens: settings.maxTokens }
+        );
+      })
+      .then(function (response) {
+        hideLoading();
+        return aiUtils.parseResponse(response);
+      })
+      .then(function (parsed) {
+        context = aiUtils.addMessage(context, parsed.message);
+
+        if (parsed.toolCalls && parsed.toolCalls.length > 0) {
+          // 先显示本轮文本内容（保持时间顺序），再递归处理新的 tool_calls
+          if (parsed.message.content) {
+            addAssistantMessage(parsed.message.content);
+          }
+          return handleToolCalls(parsed.toolCalls);
+        }
+
+        // 没有更多 tool_calls，显示文本并完成
+        addAssistantMessage(parsed.message.content || "");
+        setStatus("完成", "success");
+      });
+  }
+
+  return followUp();
 }
 
 // ---- Tool 处理函数 ----

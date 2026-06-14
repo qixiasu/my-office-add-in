@@ -358,6 +358,79 @@ function updateSelection(context, selectionSummary) {
   return [systemMsg].concat(others);
 }
 
+/**
+ * 确保上下文合法：每个 assistant 的 tool_calls 都有对应的 role:tool 响应
+ * 如果发现孤立 tool_calls，自动补充占位响应，防止 DeepSeek API 报错
+ * @param {Array} context - 当前上下文
+ * @returns {Array} 修复后的上下文
+ */
+function ensureValidContext(context) {
+  // 防御性检查：非数组输入直接返回
+  if (!Array.isArray(context)) {
+    return context || [];
+  }
+
+  // DeepSeek API 要求：assistant 的 tool_calls 必须立即被对应的 role:tool 响应跟随，
+  // 中间不能夹着 user/assistant 消息。占位响应必须插入到正确位置（紧跟在 tool_calls 之后）。
+  var result = [];
+  var pending = {}; // {callId: count}
+
+  function flushPending() {
+    var ids = Object.keys(pending);
+    for (var k = 0; k < ids.length; k++) {
+      var id = ids[k];
+      var count = pending[id];
+      for (var n = 0; n < count; n++) {
+        result.push({
+          role: "tool",
+          tool_call_id: id,
+          content: JSON.stringify({ error: "上下文修复：自动补充 tool 响应" }),
+        });
+      }
+    }
+    pending = {};
+  }
+
+  for (var i = 0; i < context.length; i++) {
+    var msg = context[i];
+
+    // tool 响应：匹配并消耗 pending 中的 tool_call_id
+    if (msg.role === "tool" && msg.tool_call_id) {
+      if (pending[msg.tool_call_id]) {
+        pending[msg.tool_call_id]--;
+        if (pending[msg.tool_call_id] <= 0) {
+          delete pending[msg.tool_call_id];
+        }
+      }
+      result.push(msg);
+      continue;
+    }
+
+    // 非 tool 消息：如果还有未匹配的 tool_calls，先在此处插入占位响应
+    // 确保 tool 响应紧跟在 assistant tool_calls 之后，不会夹着 user 消息
+    if (Object.keys(pending).length > 0) {
+      flushPending();
+    }
+
+    result.push(msg);
+
+    // 记录 assistant 消息中的 tool_calls
+    if (msg.role === "assistant" && msg.tool_calls && msg.tool_calls.length > 0) {
+      for (var j = 0; j < msg.tool_calls.length; j++) {
+        var callId = msg.tool_calls[j].id;
+        pending[callId] = (pending[callId] || 0) + 1;
+      }
+    }
+  }
+
+  // 末尾可能还有未匹配的 tool_calls
+  if (Object.keys(pending).length > 0) {
+    flushPending();
+  }
+
+  return result;
+}
+
 // =============================================================================
 // Module 4: ExcelDataService
 // =============================================================================
@@ -395,8 +468,11 @@ function getSelectionSummary(context) {
       };
     }
 
-    var headers = values.length > 0 ? values[0].map(String) : [];
-    var dataRows = values.slice(1); // 剔除标题行
+    // 只有多行数据时，第一行才被视为标题行（整列选中、多行区域等）
+    // 单行数据（如选中单个单元格）直接把该行作为数据，不剔除
+    var hasHeader = values.length > 1;
+    var headers = hasHeader ? values[0].map(String) : [];
+    var dataRows = hasHeader ? values.slice(1) : values;
 
     // 提取样本
     var sampleData = dataRows.slice(0, SAMPLE_SIZE);
@@ -544,6 +620,7 @@ module.exports = {
   addMessage: addMessage,
   trimContext: trimContext,
   updateSelection: updateSelection,
+  ensureValidContext: ensureValidContext,
   // ExcelDataService
   getSelectionSummary: getSelectionSummary,
   writeFormula: writeFormula,
