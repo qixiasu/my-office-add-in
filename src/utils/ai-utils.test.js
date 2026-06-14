@@ -76,7 +76,9 @@ describe("ToolRegistry", function () {
     });
 
     it("includes generate_formula", function () {
-      var names = getToolDefinitions().map(function (t) { return t.function.name; });
+      var names = getToolDefinitions().map(function (t) {
+        return t.function.name;
+      });
       expect(names).toContain("generate_formula");
       expect(names).toContain("analyze_data");
       expect(names).toContain("classify_data");
@@ -126,7 +128,7 @@ describe("ContextManager", function () {
         rowCount: 100,
         headers: ["姓名", "年龄"],
         sampleData: [["张三", 28]],
-        stats: { "年龄": { max: 65, min: 18, avg: 35 } },
+        stats: { 年龄: { max: 65, min: 18, avg: 35 } },
       };
       var prompt = buildSystemPrompt(summary);
       expect(prompt).toContain("A1:D100");
@@ -175,7 +177,11 @@ describe("ContextManager", function () {
       // 应保留 system message + 最近 3 轮 = 1 + 6 = 7 条
       expect(trimmed.length).toBeLessThanOrEqual(7);
       // 最早的 q0 应该被裁剪掉
-      var allContent = trimmed.map(function (m) { return m.content; }).join(" ");
+      var allContent = trimmed
+        .map(function (m) {
+          return m.content;
+        })
+        .join(" ");
       expect(allContent).not.toContain("q0");
       expect(allContent).toContain("q4");
     });
