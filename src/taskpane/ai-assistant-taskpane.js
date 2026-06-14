@@ -15,8 +15,6 @@ var settings = {
   maxTokens: 4096,
 };
 var context = aiUtils.createContext(null);
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-var currentSelection = null;
 var isProcessing = false;
 
 // ---- DOM 引用 ----
@@ -88,7 +86,6 @@ function refreshSelection() {
   setStatus("正在获取选区...", "loading");
   Excel.run(function (ctx) {
     return aiUtils.getSelectionSummary(ctx).then(function (summary) {
-      currentSelection = summary;
       context = aiUtils.updateSelection(context, summary);
       selectionInfo.textContent =
         "已选中: " +
@@ -110,7 +107,6 @@ function refreshSelection() {
       );
     });
   }).catch(function (err) {
-    currentSelection = null;
     selectionInfo.textContent = "未选中数据";
     setStatus("无法获取选区: " + err.message, "error");
   });

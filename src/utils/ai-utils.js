@@ -459,7 +459,11 @@ function writeValues(context, rangeAddress, values, insertBefore) {
 
   if (insertBefore) {
     // 插入新列（提取列字母前缀，如 "C2:C100" → "C"）
-    var colLetter = rangeAddress.match(/^[A-Za-z]+/)[0];
+    var colMatch = rangeAddress.match(/^[A-Za-z]+/);
+    if (!colMatch) {
+      return Promise.reject(new Error("无效的范围地址: " + rangeAddress));
+    }
+    var colLetter = colMatch[0];
     worksheet.getRange(colLetter + ":" + colLetter).insert(Excel.InsertShiftDirection.right);
     return context.sync().then(function () {
       var targetRange = worksheet.getRange(rangeAddress);
