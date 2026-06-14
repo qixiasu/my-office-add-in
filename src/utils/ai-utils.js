@@ -509,9 +509,14 @@ function getSelectionSummary(context) {
       }
     }
 
+    // 列数从实际数据中获取（兼容选中整行/整列的场景）
+    // 整行选中时 range.columnCount = 16384，但实际数据只有几列
+    // 整列选中时 range.columnCount = 1（单列），无需修正
+    var actualColumnCount = values.length > 0 && values[0] ? values[0].length : range.columnCount;
+
     return {
       address: range.address,
-      columnCount: range.columnCount,
+      columnCount: actualColumnCount,
       rowCount: Math.max(0, dataRows.length),
       headers: headers,
       sampleData: sampleData,
