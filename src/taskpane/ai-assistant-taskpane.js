@@ -1,10 +1,12 @@
 /*
- * AI Assistant Taskpane
- * Placeholder for development.
- * Actual implementation will be created in subsequent tasks.
+ * Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
+ * See LICENSE in the project root for license information.
  */
-Office.onReady((info) => {
+
+/* global document, Excel, Office */
+
+Office.onReady(function (info) {
   if (info.host === Office.HostType.Excel) {
-    console.log("AI Assistant taskpane loaded");
+    // Placeholder — actual implementation in subsequent tasks
   }
 });
