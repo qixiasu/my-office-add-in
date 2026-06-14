@@ -443,86 +443,144 @@ var SAMPLE_SIZE = 10; // 默认样本行数
  * @param {Excel.RequestContext} context - Excel 请求上下文
  * @returns {Promise} 解析为 {address, columnCount, rowCount, headers, sampleData, stats}
  */
+/**
+ * 返回空选区摘要
+ * @param {string} address
+ * @param {number} columnCount
+ * @returns {object}
+ */
+function emptySelectionSummary(address, columnCount) {
+  return {
+    address: address,
+    columnCount: columnCount || 0,
+    rowCount: 0,
+    headers: [],
+    sampleData: [],
+    stats: {},
+  };
+}
+
 function getSelectionSummary(context) {
   var range = context.workbook.getSelectedRange();
-
-  // 先获取选区地址和列数
-  range.load(["address", "columnCount"]);
-
-  // 用 getUsedRange 限制到有数据的区域（兼容选中整列的情况）
-  var usedRange = range.getUsedRange();
-  usedRange.load("values");
+  range.load(["address", "columnCount", "values"]);
 
   return context.sync().then(function () {
-    var values = usedRange.values;
+    var address = range.address;
+    var colCount = range.columnCount || 0;
+    var values = range.values;
 
-    // 处理 values 为 null 或无数据的情况
-    if (!values || !Array.isArray(values) || values.length === 0) {
-      return {
-        address: range.address,
-        columnCount: range.columnCount || 0,
-        rowCount: 0,
-        headers: [],
-        sampleData: [],
-        stats: {},
+    // values 为 null → 这是整列/整行等大范围选择（Office JS 不加载全部值）
+    // 需要用 getUsedRange 缩小到实际有数据的区域
+    if (values === null) {
+      var usedRange = range.getUsedRange();
+      usedRange.load("values");
+
+      return context
+        .sync()
+        .then(function () {
+          return buildSummary(usedRange.values, address, colCount);
+        })
+        .catch(function () {
+          // 工作表完全空白 → getUsedRange 抛出 ItemNotFound
+          return emptySelectionSummary(address, colCount);
+        });
+    }
+
+    // ── 手动框选区域：直接使用 range.values ──
+    // 即使全是空单元格也视为有效的用户选择
+    return buildSummary(values, address, colCount);
+  });
+}
+
+/**
+ * 从 values 二维数组构建选区摘要
+ * @param {Array|null|undefined} values
+ * @param {string} address
+ * @param {number} colCount
+ * @returns {object}
+ */
+function buildSummary(values, address, colCount) {
+  if (!values || !Array.isArray(values) || values.length === 0) {
+    return emptySelectionSummary(address, colCount);
+  }
+
+  // 检查选区是否包含实际数据（可能全是空单元格）
+  var hasActualData = false;
+  for (var r = 0; r < values.length; r++) {
+    for (var c = 0; c < values[r].length; c++) {
+      if (values[r][c] !== null && values[r][c] !== "" && values[r][c] !== undefined) {
+        hasActualData = true;
+        break;
+      }
+    }
+    if (hasActualData) break;
+  }
+
+  // 全为空单元格：返回实际维度但无数据内容
+  if (!hasActualData) {
+    var dimColCount = values[0] ? values[0].length : colCount;
+    return {
+      address: address,
+      columnCount: dimColCount,
+      rowCount: values.length,
+      headers: [],
+      sampleData: [],
+      stats: {},
+    };
+  }
+
+  // 有实际数据：只有多行数据时，第一行才被视为标题行
+  // 单行数据（如选中单个单元格）直接把该行作为数据，不剔除
+  var hasHeader = values.length > 1;
+  var headers = hasHeader ? values[0].map(String) : [];
+  var dataRows = hasHeader ? values.slice(1) : values;
+
+  // 提取样本
+  var sampleData = dataRows.slice(0, SAMPLE_SIZE);
+
+  // 计算数值列统计
+  var stats = {};
+  for (var colIdx = 0; colIdx < headers.length; colIdx++) {
+    var nums = [];
+    for (var r = 0; r < dataRows.length; r++) {
+      var val = dataRows[r][colIdx];
+      if (typeof val === "number" && !isNaN(val)) {
+        nums.push(val);
+      }
+    }
+    if (nums.length > 1) {
+      var max = nums[0],
+        min = nums[0],
+        sum = 0;
+      for (var k = 0; k < nums.length; k++) {
+        if (nums[k] > max) {
+          max = nums[k];
+        }
+        if (nums[k] < min) {
+          min = nums[k];
+        }
+        sum += nums[k];
+      }
+      stats[headers[colIdx]] = {
+        max: max,
+        min: min,
+        avg: Math.round((sum / nums.length) * 100) / 100,
+        count: nums.length,
       };
     }
+  }
 
-    // 只有多行数据时，第一行才被视为标题行（整列选中、多行区域等）
-    // 单行数据（如选中单个单元格）直接把该行作为数据，不剔除
-    var hasHeader = values.length > 1;
-    var headers = hasHeader ? values[0].map(String) : [];
-    var dataRows = hasHeader ? values.slice(1) : values;
+  // 列数从实际数据中获取（兼容选中整行/整列的场景）
+  var actualColumnCount = values.length > 0 && values[0] ? values[0].length : colCount;
 
-    // 提取样本
-    var sampleData = dataRows.slice(0, SAMPLE_SIZE);
-
-    // 计算数值列统计
-    var stats = {};
-    for (var colIdx = 0; colIdx < headers.length; colIdx++) {
-      var nums = [];
-      for (var r = 0; r < dataRows.length; r++) {
-        var val = dataRows[r][colIdx];
-        if (typeof val === "number" && !isNaN(val)) {
-          nums.push(val);
-        }
-      }
-      if (nums.length > 1) {
-        var max = nums[0],
-          min = nums[0],
-          sum = 0;
-        for (var k = 0; k < nums.length; k++) {
-          if (nums[k] > max) {
-            max = nums[k];
-          }
-          if (nums[k] < min) {
-            min = nums[k];
-          }
-          sum += nums[k];
-        }
-        stats[headers[colIdx]] = {
-          max: max,
-          min: min,
-          avg: Math.round((sum / nums.length) * 100) / 100,
-          count: nums.length,
-        };
-      }
-    }
-
-    // 列数从实际数据中获取（兼容选中整行/整列的场景）
-    // 整行选中时 range.columnCount = 16384，但实际数据只有几列
-    // 整列选中时 range.columnCount = 1（单列），无需修正
-    var actualColumnCount = values.length > 0 && values[0] ? values[0].length : range.columnCount;
-
-    return {
-      address: range.address,
-      columnCount: actualColumnCount,
-      rowCount: Math.max(0, dataRows.length),
-      headers: headers,
-      sampleData: sampleData,
-      stats: stats,
-    };
-  });
+  return {
+    address: address,
+    columnCount: actualColumnCount,
+    rowCount: Math.max(0, dataRows.length),
+    headers: headers,
+    sampleData: sampleData,
+    stats: stats,
+  };
 }
 
 /**

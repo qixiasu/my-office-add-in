@@ -100,30 +100,40 @@ function refreshSelection(silent) {
   Excel.run(function (ctx) {
     return aiUtils.getSelectionSummary(ctx).then(function (summary) {
       context = aiUtils.updateSelection(context, summary);
-      selectionInfo.textContent =
-        "已选中: " +
-        summary.address +
-        " (" +
-        summary.rowCount +
-        "行 × " +
-        summary.columnCount +
-        "列)";
-      setStatus("已就绪", "idle");
-      if (!silent) {
-        addAssistantMessage(
-          "已获取选区 " +
-            summary.address +
-            "（" +
-            summary.rowCount +
-            "行，" +
-            summary.columnCount +
-            "列），请问你想做什么？"
-        );
+      if (summary.rowCount === 0) {
+        selectionInfo.textContent = "选区：" + summary.address + "（无数据）";
+        setStatus("所选区域无数据，请选择有内容的单元格区域", "warning");
+        if (!silent) {
+          addAssistantMessage(
+            "所选区域 " + summary.address + " 为空，请选择包含数据的区域后再提问。"
+          );
+        }
+      } else {
+        selectionInfo.textContent =
+          "已选中: " +
+          summary.address +
+          " (" +
+          summary.rowCount +
+          "行 × " +
+          summary.columnCount +
+          "列)";
+        setStatus("已就绪", "idle");
+        if (!silent) {
+          addAssistantMessage(
+            "已获取选区 " +
+              summary.address +
+              "（" +
+              summary.rowCount +
+              "行，" +
+              summary.columnCount +
+              "列），请问你想做什么？"
+          );
+        }
       }
     });
   }).catch(function (err) {
-    selectionInfo.textContent = "未选中数据";
-    setStatus("无法获取选区: " + err.message, "error");
+    selectionInfo.textContent = "选区获取失败";
+    setStatus("获取选区异常: " + err.message, "error");
   });
 }
 
@@ -149,10 +159,15 @@ function handleSend() {
   showLoading();
 
   aiUtils
-    .sendChatRequest(apiKey, aiUtils.ensureValidContext(aiUtils.trimContext(context)), aiUtils.getToolDefinitions(), {
-      temperature: settings.temperature,
-      maxTokens: settings.maxTokens,
-    })
+    .sendChatRequest(
+      apiKey,
+      aiUtils.ensureValidContext(aiUtils.trimContext(context)),
+      aiUtils.getToolDefinitions(),
+      {
+        temperature: settings.temperature,
+        maxTokens: settings.maxTokens,
+      }
+    )
     .then(function (response) {
       return aiUtils.parseResponse(response);
     })
