@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>399bd8ea-ebf6-4d3a-b838-d2e4deaac2f3</Id>
-  <Version>1.1.14</Version>
+  <Version>1.11.14</Version>
   <ProviderName>QinXuan</ProviderName>
   <DefaultLocale>zh-CN</DefaultLocale>
   <DisplayName DefaultValue="Excel 数据处理工具"/>
@@ -218,6 +218,30 @@
                   </Action>
                 </Control>
               </Group>
+              <Group id="AiAssistantGroup">
+                <Label resid="AiAssistantGroup.Label"/>
+                <Icon>
+                    <bt:Image size="16" resid="AiIcon.16x16"/>
+                    <bt:Image size="32" resid="AiIcon.32x32"/>
+                    <bt:Image size="80" resid="AiIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="AiAssistantButton">
+                    <Label resid="AiAssistantButton.Label"/>
+                    <Supertip>
+                        <Title resid="AiAssistantButton.Label"/>
+                        <Description resid="AiAssistantButton.Tooltip"/>
+                    </Supertip>
+                    <Icon>
+                        <bt:Image size="16" resid="AiIcon.16x16"/>
+                        <bt:Image size="32" resid="AiIcon.32x32"/>
+                        <bt:Image size="80" resid="AiIcon.80x80"/>
+                    </Icon>
+                    <Action xsi:type="ShowTaskpane">
+                        <TaskpaneId>AiAssistantTaskpaneId</TaskpaneId>
+                        <SourceLocation resid="AiAssistantTaskpane.Url"/>
+                    </Action>
+                </Control>
+              </Group>
               <Label resid="CustomTab.Label"/>
             </CustomTab>
           </ExtensionPoint>
@@ -259,6 +283,9 @@
         <bt:Image id="DbIcon.16x16" DefaultValue="https://localhost:3000/assets/database-16.png"/>
         <bt:Image id="DbIcon.32x32" DefaultValue="https://localhost:3000/assets/database-32.png"/>
         <bt:Image id="DbIcon.80x80" DefaultValue="https://localhost:3000/assets/database-80.png"/>
+        <bt:Image id="AiIcon.16x16" DefaultValue="https://localhost:3000/assets/ai-16.png"/>
+        <bt:Image id="AiIcon.32x32" DefaultValue="https://localhost:3000/assets/ai-32.png"/>
+        <bt:Image id="AiIcon.80x80" DefaultValue="https://localhost:3000/assets/ai-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
@@ -270,6 +297,7 @@
         <bt:Url id="ExpandTaskpane.Url" DefaultValue="https://localhost:3000/expand-taskpane.html"/>
         <bt:Url id="SplitSheetTaskpane.Url" DefaultValue="https://localhost:3000/split-sheet-taskpane.html"/>
         <bt:Url id="SqlQueryTaskpane.Url" DefaultValue="https://localhost:3000/sql-query-taskpane.html"/>
+        <bt:Url id="AiAssistantTaskpane.Url" DefaultValue="https://localhost:3000/ai-assistant-taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="CustomTab.Label" DefaultValue="Excel 工具箱"/>
@@ -289,6 +317,8 @@
         <bt:String id="QuickSelectGroup.Label" DefaultValue="快速选区"/>
         <bt:String id="DatabaseQueryGroup.Label" DefaultValue="数据库"/>
         <bt:String id="SqlQueryButton.Label" DefaultValue="数据库查询"/>
+        <bt:String id="AiAssistantGroup.Label" DefaultValue="AI 助手"/>
+        <bt:String id="AiAssistantButton.Label" DefaultValue="AI 助手"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
@@ -301,6 +331,7 @@
         <bt:String id="SelectToEndButton.Tooltip" DefaultValue="从选中单元格向下选到该列最后一个有数据的单元格"/>
         <bt:String id="SelectToRightButton.Tooltip" DefaultValue="从选中单元格向右选到该行最后一个有数据的单元格"/>
         <bt:String id="SqlQueryButton.Tooltip" DefaultValue="将工作表数据导入 SQLite 数据库，使用 SQL 进行多表关联查询与分析"/>
+        <bt:String id="AiAssistantButton.Tooltip" DefaultValue="打开 AI 助手聊天面板，用自然语言处理 Excel 数据"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
