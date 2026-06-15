@@ -51,7 +51,7 @@
 
         <!-- 预览表格 -->
         <div class="preview-section">
-            <h3 class="section-title">👁 预览（前 5 行）</h3>
+            <h3 class="section-title">预览（前 5 行）</h3>
             <div class="preview-container">
                 <table id="preview-table">
                     <thead><tr><th>原值</th><th>清洗后</th></tr></thead>
@@ -63,13 +63,13 @@
         <!-- 选区信息 -->
         <div class="selection-bar">
             <span id="selection-address" class="label">选区：未选择</span>
-            <button id="refresh-btn" class="refresh-btn" title="刷新选区">↻</button>
+            <button type="button" id="refresh-btn" class="refresh-btn" title="刷新选区" aria-label="刷新选区">↻</button>
         </div>
 
         <!-- 操作按钮 -->
         <div class="action-bar">
-            <button id="execute-btn" class="cleaning-btn-primary" disabled>🚀 执行清洗</button>
-            <button id="undo-btn" class="cleaning-btn-secondary" disabled>↩ 撤销</button>
+            <button type="button" id="execute-btn" class="cleaning-btn-primary" disabled>🚀 执行清洗</button>
+            <button type="button" id="undo-btn" class="cleaning-btn-secondary" disabled>↩ 撤销</button>
         </div>
 
         <!-- 状态 -->
