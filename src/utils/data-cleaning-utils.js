@@ -34,8 +34,28 @@ function trimSpaces(values, mode) {
  * @returns {Array<Array>} 新二维数组
  */
 function removeEmptyRows(values, mode, columnIndex, ratioThreshold) {
-  // TODO: implement
-  return values;
+  return values.filter(function (row) {
+    if (mode === "all") {
+      return row.some(function (cell) {
+        return cell !== null && cell !== undefined && cell !== "";
+      });
+    }
+    if (mode === "column") {
+      var val = row[columnIndex];
+      return val !== null && val !== undefined && val !== "";
+    }
+    if (mode === "ratio") {
+      var emptyCount = 0;
+      for (var i = 0; i < row.length; i++) {
+        if (row[i] === null || row[i] === undefined || row[i] === "") {
+          emptyCount++;
+        }
+      }
+      var emptyRatio = (emptyCount / row.length) * 100;
+      return emptyRatio < ratioThreshold;
+    }
+    return true;
+  });
 }
 
 /**
