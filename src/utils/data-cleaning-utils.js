@@ -65,8 +65,25 @@ function removeEmptyRows(values, mode, columnIndex, ratioThreshold) {
  * @returns {Array<Array>} 新二维数组
  */
 function convertCase(values, mode) {
-  // TODO: implement
-  return values;
+  return values.map(function (row) {
+    return row.map(function (cell) {
+      if (typeof cell !== "string") return cell;
+      switch (mode) {
+        case "upper":
+          return cell.toUpperCase();
+        case "lower":
+          return cell.toLowerCase();
+        case "capitalize":
+          return cell.charAt(0).toUpperCase() + cell.slice(1);
+        case "camel":
+          return cell.replace(/[^a-zA-Z0-9]+(.)/g, function (_, chr) {
+            return chr.toUpperCase();
+          });
+        default:
+          return cell;
+      }
+    });
+  });
 }
 
 /**
