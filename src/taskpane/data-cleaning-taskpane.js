@@ -239,37 +239,43 @@ function loadSelection() {
 
   Excel.run(function (context) {
     var range = context.workbook.getSelectedRange();
-    range.load(["address", "values"]);
+    range.load("address");
     return context.sync().then(function () {
       var address = range.address;
-      var values = range.values;
 
-      if (!values || !Array.isArray(values) || values.length === 0) {
-        state.rawValues = null;
-        state.headerRow = null;
-        state.dataRows = null;
-        state.selectionAddress = address || "未知";
-        updateUIForEmpty();
-        setStatus("请选中包含数据的目标区域", "error");
-        return;
-      }
+      // 收缩到实际有数据的区域（解决整列/整行选中时 values 为 null 的问题）
+      var usedRange = range.getUsedRange();
+      usedRange.load("values");
+      return context.sync().then(function () {
+        var values = usedRange.values;
 
-      state.selectionAddress = address;
-      state.rawValues = values;
+        if (!values || !Array.isArray(values) || values.length === 0) {
+          state.rawValues = null;
+          state.headerRow = null;
+          state.dataRows = null;
+          state.selectionAddress = address || "未知";
+          updateUIForEmpty();
+          setStatus("请选中包含数据的目标区域", "error");
+          return;
+        }
 
-      // 多行时首行为表头
-      if (values.length > 1) {
-        state.headerRow = values[0].map(String);
-        state.dataRows = values.slice(1);
-      } else {
-        state.headerRow = null;
-        state.dataRows = values;
-      }
+        state.selectionAddress = address;
+        state.rawValues = values;
 
-      document.getElementById("selection-address").textContent = "选区：" + address;
-      enableExecuteIfReady();
-      updatePreview();
-      setStatus("已读取 " + state.dataRows.length + " 行数据", "success");
+        // 只有多行数据时首行才视为表头；单行数据时第一行就是数据本身
+        if (values.length > 1) {
+          state.headerRow = values[0].map(String);
+          state.dataRows = values.slice(1);
+        } else {
+          state.headerRow = null;
+          state.dataRows = values;
+        }
+
+        document.getElementById("selection-address").textContent = "选区：" + address;
+        enableExecuteIfReady();
+        updatePreview();
+        setStatus("已读取 " + state.dataRows.length + " 行数据", "success");
+      });
     });
   }).catch(function (error) {
     setStatus("读取选区失败: " + error.message, "error");
