@@ -289,7 +289,11 @@ function updatePreview() {
   if (!opConfig) return;
 
   var params = opConfig.getParams();
-  var previewData = state.dataRows.slice(0, MAX_PREVIEW_ROWS);
+  // Use allValues (header + dataRows) to match executeClean's input, then slice to preview limit
+  var allValues = state.headerRow
+    ? [state.headerRow].concat(state.dataRows)
+    : state.dataRows;
+  var previewData = allValues.slice(0, MAX_PREVIEW_ROWS);
   var resultData = opConfig.execute(previewData, params);
 
   for (var i = 0; i < previewData.length; i++) {
@@ -374,7 +378,9 @@ function undoClean() {
   setStatus("撤销中...", "loading");
 
   Excel.run(function (context) {
-    var writeRange = context.workbook.getSelectedRange();
+    // Use the captured selection address so undo writes to the ORIGINAL range,
+    // not whatever range happens to be selected now.
+    var writeRange = context.workbook.getRange(state.selectionAddress);
     writeRange.values = state.undoData;
     return context.sync();
   }).then(function () {
