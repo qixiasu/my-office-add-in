@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>数据清洗</title>
+  <link rel="stylesheet" href="https://localhost:3000/taskpane.css" />
+  <link rel="stylesheet" href="https://localhost:3000/data-cleaning-taskpane.css" />
+</head>
+<body>
+  <div id="container" class="ms-welcome">
+    <header class="ms-welcome__header ms-bgColor-neutralLighter">
+      <h1 class="ms-font-xl">🧹 数据清洗</h1>
+    </header>
+    <section class="ms-welcome__main">
+      <!-- 选区信息 -->
+      <div id="selection-bar" class="section">
+        <div class="flex-row">
+          <span id="selection-address" class="label">选区：未选择</span>
+          <button id="refresh-btn" class="btn-secondary" title="刷新选区">↻</button>
+        </div>
+      </div>
+
+      <!-- 操作选择 -->
+      <div id="operation-section" class="section">
+        <h3 class="section-title">🔧 选择操作</h3>
+        <div id="operation-grid" class="op-grid">
+          <button class="op-btn" data-op="trimSpaces">修剪空格</button>
+          <button class="op-btn" data-op="removeEmpty">删除空行</button>
+          <button class="op-btn" data-op="convertCase">大小写转换</button>
+          <button class="op-btn" data-op="removeInvisible">清除不可见</button>
+          <button class="op-btn" data-op="removeDuplicates">移除重复行</button>
+        </div>
+      </div>
+
+      <!-- 参数设置 -->
+      <div id="params-section" class="section">
+        <h3 class="section-title">⚙️ 参数设置</h3>
+        <div id="params-container"></div>
+      </div>
+
+      <!-- 预览 -->
+      <div id="preview-section" class="section">
+        <h3 class="section-title">👁 预览（前 5 行）</h3>
+        <div id="preview-container">
+          <table id="preview-table">
+            <thead><tr id="preview-header"><th>原值</th><th>清洗后</th></tr></thead>
+            <tbody id="preview-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 执行 & 撤销 -->
+      <div id="action-bar" class="section flex-row">
+        <button id="execute-btn" class="btn-primary" disabled>🚀 执行清洗</button>
+        <button id="undo-btn" class="btn-secondary" disabled>↩ 撤销</button>
+      </div>
+
+      <!-- 状态 -->
+      <div id="status" class="status-message status-idle"></div>
+    </section>
+  </div>
+</body>
+</html>
