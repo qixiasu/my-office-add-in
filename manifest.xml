@@ -85,9 +85,9 @@
                     <Description resid="DataCleaningButton.Tooltip"/>
                   </Supertip>
                   <Icon>
-                    <bt:Image size="16" resid="ToolsIcon.16x16"/>
-                    <bt:Image size="32" resid="ToolsIcon.32x32"/>
-                    <bt:Image size="80" resid="ToolsIcon.80x80"/>
+                    <bt:Image size="16" resid="DataCleaningIcon.16x16"/>
+                    <bt:Image size="32" resid="DataCleaningIcon.32x32"/>
+                    <bt:Image size="80" resid="DataCleaningIcon.80x80"/>
                   </Icon>
                   <Action xsi:type="ShowTaskpane">
                     <TaskpaneId>DataCleaningTaskpaneId</TaskpaneId>
@@ -302,6 +302,9 @@
         <bt:Image id="AiIcon.16x16" DefaultValue="https://localhost:3000/assets/ai-16.png"/>
         <bt:Image id="AiIcon.32x32" DefaultValue="https://localhost:3000/assets/ai-32.png"/>
         <bt:Image id="AiIcon.80x80" DefaultValue="https://localhost:3000/assets/ai-80.png"/>
+        <bt:Image id="DataCleaningIcon.16x16" DefaultValue="https://localhost:3000/assets/data-cleaning-16.png"/>
+        <bt:Image id="DataCleaningIcon.32x32" DefaultValue="https://localhost:3000/assets/data-cleaning-32.png"/>
+        <bt:Image id="DataCleaningIcon.80x80" DefaultValue="https://localhost:3000/assets/data-cleaning-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
