@@ -93,8 +93,21 @@ function convertCase(values, mode) {
  * @returns {Array<Array>} 新二维数组
  */
 function removeInvisible(values, mode) {
-  // TODO: implement
-  return values;
+  var patterns = {
+    control: /[\x00-\x1F\x7F]/g,
+    whitespace: /[\t\n\r\x0B\x0C\x1F]/g,
+    "zero-width": /[​‌‍﻿⁠‎‏]/g,
+    all: /[\x00-\x1F\x7F​‌‍﻿⁠‎‏]/g,
+  };
+
+  var regex = patterns[mode] || patterns.all;
+
+  return values.map(function (row) {
+    return row.map(function (cell) {
+      if (typeof cell !== "string") return cell;
+      return cell.replace(regex, "");
+    });
+  });
 }
 
 /**
