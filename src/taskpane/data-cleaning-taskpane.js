@@ -17,6 +17,32 @@ var state = {
   undoData: null,       // 撤销快照
 };
 
+// ===== 引导文案配置 =====
+var GUIDE_TEXTS = {
+  trimSpaces: "1. 选中要清洗的单元格区域 2. 选择修剪模式 3. 查看预览后执行",
+  removeEmpty: "1. 选中数据区域 2. 选择判定方式 3. 查看预览后执行",
+  convertCase: "1. 选中要转换的单元格 2. 选择转换模式 3. 查看预览后执行",
+  removeInvisible: "1. 选中单元格区域 2. 选择清除类型 3. 查看预览后执行",
+  removeDuplicates: "1. 选中数据区域 2. 选择依据列和保留规则 3. 查看预览后执行",
+};
+
+// ===== 标签切换 =====
+function switchTab(opKey) {
+    // 高亮标签
+    var tabBtns = document.querySelectorAll(".tab-btn");
+    for (var i = 0; i < tabBtns.length; i++) {
+        tabBtns[i].classList.remove("selected");
+    }
+    var activeTab = document.querySelector('.tab-btn[data-op="' + opKey + '"]');
+    if (activeTab) activeTab.classList.add("selected");
+
+    // 更新引导卡片
+    var guideText = document.getElementById("guide-text");
+    if (guideText && GUIDE_TEXTS[opKey]) {
+        guideText.textContent = GUIDE_TEXTS[opKey];
+    }
+}
+
 // ===== 操作参数配置 =====
 var OPERATION_PARAMS = {
   trimSpaces: {
@@ -188,13 +214,18 @@ Office.onReady(function (info) {
     document.getElementById("execute-btn").addEventListener("click", executeClean);
     document.getElementById("undo-btn").addEventListener("click", undoClean);
 
-    // 操作按钮点击
-    var opBtns = document.querySelectorAll(".op-btn");
-    for (var i = 0; i < opBtns.length; i++) {
-      opBtns[i].addEventListener("click", function () {
-        selectOperation(this.dataset.op);
+    // 标签按钮点击切换
+    var tabBtns = document.querySelectorAll(".tab-btn");
+    for (var i = 0; i < tabBtns.length; i++) {
+      tabBtns[i].addEventListener("click", function () {
+        var opKey = this.dataset.op;
+        switchTab(opKey);
+        selectOperation(opKey);
       });
     }
+
+    // 默认选中第一个标签
+    switchTab("trimSpaces");
 
     // 打开面板时自动加载选区
     loadSelection();
