@@ -284,3 +284,47 @@
     color: #999;
     font-size: 13px;
 }
+
+/* 自定义确认对话框（替代 window.confirm，因 Office.js 沙箱环境下不可用） */
+.confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirm-dialog {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    min-width: 260px;
+    max-width: 320px;
+}
+
+.confirm-message {
+    margin: 0 0 16px 0;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.confirm-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.confirm-buttons .btn-secondary,
+.confirm-buttons .execute-btn {
+    width: auto;
+    min-width: 72px;
+}

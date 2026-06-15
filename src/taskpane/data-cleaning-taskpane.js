@@ -9,12 +9,13 @@ var LARGE_DATA_THRESHOLD = 10000;
 
 // 当前状态
 var state = {
-  selectionAddress: null,
+  selectionAddress: null,  // 完整选区地址（来自 getSelectedRange）
+  usedRangeAddress: null,  // 当前实际数据区域地址（来自 getUsedRange，用于写回）
   rawValues: null,      // 原始数据（二维数组）— 用于撤销
   headerRow: null,      // 表头数组（如果有多行数据）
   dataRows: null,       // 数据行（不含表头）
   selectedOp: null,     // 当前选中的操作
-  undoData: null,       // 撤销快照
+  undoData: null,       // 撤销快照（原始 rawValues）
 };
 
 // ===== 引导文案配置 =====
@@ -246,8 +247,10 @@ function loadSelection() {
       // 收缩到实际有数据的区域（解决整列/整行选中时 values 为 null 的问题）
       var usedRange = range.getUsedRange();
       usedRange.load("values");
+      usedRange.load("address");
       return context.sync().then(function () {
         var values = usedRange.values;
+        var usedAddr = usedRange.address;
 
         if (!values || !Array.isArray(values) || values.length === 0) {
           state.rawValues = null;
@@ -260,6 +263,8 @@ function loadSelection() {
         }
 
         state.selectionAddress = address;
+        // Strip sheet name prefix so it works with worksheet.getRange()
+        state.usedRangeAddress = usedAddr.indexOf("!") !== -1 ? usedAddr.split("!")[1] : usedAddr;
         state.rawValues = values;
 
         // 只有多行数据时首行才视为表头；单行数据时第一行就是数据本身
@@ -336,7 +341,8 @@ function updatePreview() {
   for (var i = 0; i < previewData.length; i++) {
     var tr = document.createElement("tr");
     var originalStr = previewData[i].map(formatCell).join(" | ");
-    var cleanedStr = (resultData[i] || []).map(formatCell).join(" | ");
+    var cleanedRow = resultData[i];
+    var cleanedStr = cleanedRow ? cleanedRow.map(formatCell).join(" | ") : "(该行已删除)";
     tr.innerHTML =
       "<td>" + escapeHtml(originalStr) + "</td>" +
       "<td>" + escapeHtml(cleanedStr) + "</td>";
@@ -360,13 +366,13 @@ function escapeHtml(str) {
 
 // ===== 执行 =====
 
-function executeClean() {
+async function executeClean() {
   if (!state.selectedOp || !state.dataRows || state.dataRows.length === 0) {
     return;
   }
 
   if (state.dataRows.length > LARGE_DATA_THRESHOLD) {
-    var confirmed = confirm(
+    var confirmed = await showConfirm(
       "数据量较大（" + state.dataRows.length + " 行），确定继续执行？"
     );
     if (!confirmed) return;
@@ -391,10 +397,35 @@ function executeClean() {
         : state.dataRows;
       var cleaned = opConfig.execute(allValues, params);
 
-      // 写回 Excel
-      var writeRange = context.workbook.getSelectedRange();
-      writeRange.values = cleaned;
-      return context.sync();
+      var worksheet = context.workbook.worksheets.getActiveWorksheet();
+
+      // 计算目标范围（根据清洗后数据的实际维度）
+      var numCols = cleaned.length > 0 ? cleaned[0].length : 0;
+      var lastColLetter = numCols > 0 ? String.fromCharCode(64 + numCols) : "A";
+      var targetRange = "A1:" + lastColLetter + cleaned.length;
+
+      // 行数减少的操作：先清空整个 usedRange，再写回清洗后数据，最后删多余行
+      if (cleaned.length < allValues.length) {
+        var usedR = worksheet.getUsedRange();
+        usedR.load("address");
+        return context.sync().then(function () {
+          var usedAddr = usedR.address.split("!")[1]; // strip sheet name
+          worksheet.getRange(usedAddr).clear();
+          worksheet.getRange(targetRange).values = cleaned;
+
+          // 删除清洗后多出来的行（从 cleaned.length+1 开始删）
+          var extraRowCount = allValues.length - cleaned.length;
+          for (var eri = 0; eri < extraRowCount; eri++) {
+            worksheet.getRange("A" + (cleaned.length + 1 + eri)).delete(Excel.DeleteShiftDirection.up);
+          }
+          return context.sync();
+        });
+      } else {
+        // 行数不变或增加：直接写回（用 usedRangeAddress 确保范围正确）
+        var writeRange = worksheet.getRange(state.usedRangeAddress);
+        writeRange.values = cleaned;
+        return context.sync();
+      }
     });
   }).then(function () {
     setStatus("清洗完成！已处理 " + state.dataRows.length + " 行", "success");
@@ -415,9 +446,13 @@ function undoClean() {
   setStatus("撤销中...", "loading");
 
   Excel.run(function (context) {
-    // Use the captured selection address so undo writes to the ORIGINAL range,
-    // not whatever range happens to be selected now.
-    var writeRange = context.workbook.getRange(state.selectionAddress);
+    var worksheet = context.workbook.worksheets.getActiveWorksheet();
+    // 用 undoData 的实际维度计算目标范围，避免维度不匹配
+    var numRows = state.undoData.length;
+    var numCols = numRows > 0 ? state.undoData[0].length : 0;
+    var lastColLetter = numCols > 0 ? String.fromCharCode(64 + numCols) : "A";
+    var targetRange = "A1:" + lastColLetter + numRows;
+    var writeRange = worksheet.getRange(targetRange);
     writeRange.values = state.undoData;
     return context.sync();
   }).then(function () {
