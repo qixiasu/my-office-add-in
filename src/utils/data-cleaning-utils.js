@@ -118,8 +118,35 @@ function removeInvisible(values, mode) {
  * @returns {Array<Array>} 新二维数组
  */
 function removeDuplicates(values, keyColumns, keep) {
-  // TODO: implement
-  return values;
+  var seen = [];
+  var result = [];
+
+  for (var i = 0; i < values.length; i++) {
+    var row = values[i];
+    var key = keyColumns
+      ? keyColumns.map(function (col) { return row[col]; }).join("|||")
+      : row.join("|||");
+
+    var foundIdx = -1;
+    for (var j = 0; j < seen.length; j++) {
+      if (seen[j] === key) {
+        foundIdx = j;
+        break;
+      }
+    }
+
+    if (foundIdx === -1) {
+      seen.push(key);
+      result.push(row);
+    } else if (keep === "last") {
+      result.splice(foundIdx, 1);
+      seen.splice(foundIdx, 1);
+      seen.push(key);
+      result.push(row);
+    }
+  }
+
+  return result;
 }
 
 module.exports = {
