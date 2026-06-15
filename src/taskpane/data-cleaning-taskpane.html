@@ -1,65 +1,80 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+
 <!DOCTYPE html>
 <html>
+
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>数据清洗</title>
-  <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-  <link rel="stylesheet" href="https://localhost:3000/taskpane.css" />
-  <link rel="stylesheet" href="https://localhost:3000/data-cleaning-taskpane.css" />
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>数据清洗</title>
+
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <!-- Fluent UI -->
+    <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
+
+    <!-- Template styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+    <link href="data-cleaning-taskpane.css" rel="stylesheet" type="text/css" />
 </head>
-<body>
-  <div id="container" class="ms-welcome">
-    <header class="ms-welcome__header ms-bgColor-neutralLighter">
-      <h1 class="ms-font-xl">🧹 数据清洗</h1>
-    </header>
-    <section class="ms-welcome__main">
-      <!-- 选区信息 -->
-      <div id="selection-bar" class="section">
-        <div class="flex-row">
-          <span id="selection-address" class="label">选区：未选择</span>
-          <button id="refresh-btn" class="btn-secondary" title="刷新选区">↻</button>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+    <div class="cleaning-container">
+        <!-- 标题 -->
+        <h1 class="cleaning-title">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#0078d4">
+                <path d="M14 3a1 1 0 0 1 1 1v5.586l2.707 2.707A1 1 0 0 1 17 14.414V15a1 1 0 0 1-2 0v-1a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1a1 1 0 0 1-2 0v-.586a1 1 0 0 1 .293-.707L11 9.586V4a1 1 0 0 1 1-1h2z"/>
+            </svg>
+            数据清洗
+        </h1>
+
+        <!-- 引导卡片（动态内容，由 JS 控制） -->
+        <div class="guide-card" id="guide-card">
+            <p id="guide-text"></p>
         </div>
-      </div>
 
-      <!-- 操作选择 -->
-      <div id="operation-section" class="section">
-        <h3 class="section-title">🔧 选择操作</h3>
-        <div id="operation-grid" class="op-grid">
-          <button class="op-btn" data-op="trimSpaces">修剪空格</button>
-          <button class="op-btn" data-op="removeEmpty">删除空行</button>
-          <button class="op-btn" data-op="convertCase">大小写转换</button>
-          <button class="op-btn" data-op="removeInvisible">清除不可见</button>
-          <button class="op-btn" data-op="removeDuplicates">移除重复行</button>
+        <!-- 标签栏 -->
+        <div class="tab-bar" id="tab-bar">
+            <button class="tab-btn selected" data-op="trimSpaces">修剪空格</button>
+            <button class="tab-btn" data-op="removeEmpty">删除空行</button>
+            <button class="tab-btn" data-op="convertCase">大小写转换</button>
+            <button class="tab-btn" data-op="removeInvisible">清除不可见</button>
+            <button class="tab-btn" data-op="removeDuplicates">移除重复行</button>
         </div>
-      </div>
 
-      <!-- 参数设置 -->
-      <div id="params-section" class="section">
-        <h3 class="section-title">⚙️ 参数设置</h3>
-        <div id="params-container"></div>
-      </div>
-
-      <!-- 预览 -->
-      <div id="preview-section" class="section">
-        <h3 class="section-title">👁 预览（前 5 行）</h3>
-        <div id="preview-container">
-          <table id="preview-table">
-            <thead><tr id="preview-header"><th>原值</th><th>清洗后</th></tr></thead>
-            <tbody id="preview-body"></tbody>
-          </table>
+        <!-- 参数设置区域 -->
+        <div class="params-section" id="params-section">
+            <div id="params-container"></div>
         </div>
-      </div>
 
-      <!-- 执行 & 撤销 -->
-      <div id="action-bar" class="section flex-row">
-        <button id="execute-btn" class="btn-primary" disabled>🚀 执行清洗</button>
-        <button id="undo-btn" class="btn-secondary" disabled>↩ 撤销</button>
-      </div>
+        <!-- 预览表格 -->
+        <div class="preview-section">
+            <h3 class="section-title">👁 预览（前 5 行）</h3>
+            <div class="preview-container">
+                <table id="preview-table">
+                    <thead><tr><th>原值</th><th>清洗后</th></tr></thead>
+                    <tbody id="preview-body"></tbody>
+                </table>
+            </div>
+        </div>
 
-      <!-- 状态 -->
-      <div id="status" class="status-message status-idle"></div>
-    </section>
-  </div>
+        <!-- 选区信息 -->
+        <div class="selection-bar">
+            <span id="selection-address" class="label">选区：未选择</span>
+            <button id="refresh-btn" class="refresh-btn" title="刷新选区">↻</button>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="action-bar">
+            <button id="execute-btn" class="cleaning-btn-primary" disabled>🚀 执行清洗</button>
+            <button id="undo-btn" class="cleaning-btn-secondary" disabled>↩ 撤销</button>
+        </div>
+
+        <!-- 状态 -->
+        <div id="status" class="status-message status-idle"></div>
+    </div>
 </body>
+
 </html>
