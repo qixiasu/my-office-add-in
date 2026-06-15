@@ -34,6 +34,10 @@ module.exports = async (env, options) => {
         "./src/taskpane/ai-assistant-taskpane.js",
         "./src/taskpane/ai-assistant-taskpane.html",
       ],
+      "data-cleaning-taskpane": [
+        "./src/taskpane/data-cleaning-taskpane.js",
+        "./src/taskpane/data-cleaning-taskpane.html",
+      ],
     },
     output: {
       clean: true,
@@ -142,6 +146,11 @@ module.exports = async (env, options) => {
         filename: "ai-assistant-taskpane.html",
         template: "./src/taskpane/ai-assistant-taskpane.html",
         chunks: ["polyfill", "ai-assistant-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "data-cleaning-taskpane.html",
+        template: "./src/taskpane/data-cleaning-taskpane.html",
+        chunks: ["polyfill", "data-cleaning-taskpane"],
       }),
       new HtmlWebpackPlugin({
         filename: "index.html",
