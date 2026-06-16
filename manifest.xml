@@ -10,6 +10,7 @@
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/tools-32.png"/>
   <SupportUrl DefaultValue="https://qixiasu.github.io/my-office-add-in/"/>
   <AppDomains>
+    <AppDomain>https://qixiasu.github.io</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Workbook"/>
