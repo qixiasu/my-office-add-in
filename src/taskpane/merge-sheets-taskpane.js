@@ -5,12 +5,30 @@ var mergeSheetsUtils = require("../utils/merge-sheets-utils");
 var pendingConfirmation = null;
 var allSheets = [];
 
-Office.onReady(function (info) {
-  if (info.host === Office.HostType.Excel) {
-    initEventListeners();
-    loadSheetList();
-  }
-});
+function initOffice() {
+  Office.onReady(function (info) {
+    if (info.host === Office.HostType.Excel) {
+      initEventListeners();
+      loadSheetList();
+    }
+  });
+}
+
+if (typeof Office !== "undefined") {
+  initOffice();
+} else {
+  // Wait for Office.js to load from CDN (handles HMR re-evaluation timing)
+  var checkOffice = setInterval(function () {
+    if (typeof Office !== "undefined") {
+      clearInterval(checkOffice);
+      initOffice();
+    }
+  }, 50);
+  // Timeout after 10 seconds
+  setTimeout(function () {
+    clearInterval(checkOffice);
+  }, 10000);
+}
 
 function initEventListeners() {
   document.getElementById("selectAllBtn").onclick = function () {
