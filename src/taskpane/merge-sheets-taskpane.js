@@ -24,10 +24,7 @@ if (typeof Office !== "undefined") {
       initOffice();
     }
   }, 50);
-  // Timeout after 10 seconds
-  setTimeout(function () {
-    clearInterval(checkOffice);
-  }, 10000);
+  setTimeout(function () { clearInterval(checkOffice); }, 10000);
 }
 
 function initEventListeners() {
@@ -58,6 +55,8 @@ function setAllCheckboxes(checked) {
   var checkboxes = document.querySelectorAll(".merge-sheet-checkbox");
   checkboxes.forEach(function (cb) {
     cb.checked = checked;
+    var idx = parseInt(cb.dataset.index, 10);
+    allSheets[idx].checked = checked;
   });
 }
 
@@ -260,9 +259,9 @@ function executeMerge() {
       }
 
       if (confirmAction === "rename") {
-        var allSheetNames = existingSheets.items.map(function (ws) {
-          return ws.name;
-        });
+        existingSheets.load("items/name");
+        await context.sync();
+        var allSheetNames = existingSheets.items.map(function (ws) { return ws.name; });
         targetName = mergeSheetsUtils.generateUniqueSheetName("合并结果", allSheetNames);
       }
       // If overwrite, use same name
@@ -271,6 +270,7 @@ function executeMerge() {
     // Step 5: Create or clear target sheet and write data
     var finalSheet;
     finalSheet = context.workbook.worksheets.getItemOrNullObject(targetName);
+    finalSheet.load("name");
     await context.sync();
     if (finalSheet.name === targetName) {
       finalSheet.delete();
