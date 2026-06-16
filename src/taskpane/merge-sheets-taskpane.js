@@ -162,7 +162,6 @@ function executeMerge() {
   Excel.run(async function (context) {
     // Step 1: Read column count for each selected sheet
     var sheetsWithMeta = [];
-    var baseIndex = 0;
 
     for (var i = 0; i < allSheets.length; i++) {
       if (allSheets[i].checked) {
@@ -174,10 +173,8 @@ function executeMerge() {
         sheetsWithMeta.push({
           name: allSheets[i].name,
           headerRow: allSheets[i].headerRow,
-          columnCount: usedRange.columnCount,
-          index: baseIndex
+          columnCount: usedRange.columnCount
         });
-        baseIndex++;
       }
     }
 
@@ -255,14 +252,12 @@ function executeMerge() {
 
     // Step 5: Create or clear target sheet and write data
     var finalSheet;
-    try {
-      finalSheet = context.workbook.worksheets.getItem(targetName);
+    finalSheet = context.workbook.worksheets.getItemOrNullObject(targetName);
+    await context.sync();
+    if (finalSheet.name === targetName) {
       finalSheet.delete();
       await context.sync();
-    } catch (e) {
-      // Sheet doesn't exist, will be created
     }
-
     finalSheet = context.workbook.worksheets.add(targetName);
     await context.sync();
 
