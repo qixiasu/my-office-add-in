@@ -1,0 +1,63 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>合并 Sheet</title>
+
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+    <link href="merge-sheets-taskpane.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+    <div class="merge-container">
+        <h1 class="merge-title">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#0078d4">
+                <path d="M16 10a1 1 0 0 1-1 1H5a1 1 0 0 1 0-2h10a1 1 0 0 1 1 1z"/>
+                <path d="M8 5a1 1 0 0 1 1 1v3.586l2.707 2.707A1 1 0 0 1 12 14.414V15a1 1 0 0 1-2 0v-1a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v1a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1h5z"/>
+            </svg>
+            合并 Sheet
+        </h1>
+
+        <div class="guide-card">
+            <ol class="guide-steps">
+                <li>勾选要合并的 Sheet（至少2个）</li>
+                <li>设置每个 Sheet 的表头行号（0=无表头）</li>
+                <li>点击执行合并</li>
+            </ol>
+        </div>
+
+        <div class="merge-list-header">
+            <span class="merge-list-title">工作表列表</span>
+            <div class="merge-list-actions">
+                <button id="selectAllBtn" class="merge-btn merge-btn--small">全选</button>
+                <button id="deselectAllBtn" class="merge-btn merge-btn--small">取消全选</button>
+            </div>
+        </div>
+
+        <div id="sheetList" class="merge-sheet-list">
+            <div class="merge-loading">加载中...</div>
+        </div>
+
+        <button id="executeBtn" class="merge-button merge-button--primary">执行合并</button>
+
+        <div id="status" role="status" aria-live="polite" class="merge-status merge-status--idle">状态：等待操作...</div>
+
+        <div id="confirmBox" class="merge-confirm-box" style="display: none;">
+            <div id="confirmMsg" class="merge-confirm-msg"></div>
+            <div class="merge-confirm-buttons">
+                <button id="confirmOverwrite" type="button" class="merge-btn merge-btn--small">覆盖</button>
+                <button id="confirmRename" type="button" class="merge-btn merge-btn--small">重命名</button>
+                <button id="confirmCancel" type="button" class="merge-btn merge-btn--small merge-btn--secondary">取消</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

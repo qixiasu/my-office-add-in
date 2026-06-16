@@ -38,6 +38,10 @@ module.exports = async (env, options) => {
         "./src/taskpane/data-cleaning-taskpane.js",
         "./src/taskpane/data-cleaning-taskpane.html",
       ],
+      "merge-sheets-taskpane": [
+        "./src/taskpane/merge-sheets-taskpane.js",
+        "./src/taskpane/merge-sheets-taskpane.html",
+      ],
     },
     output: {
       clean: true,
@@ -151,6 +155,11 @@ module.exports = async (env, options) => {
         filename: "data-cleaning-taskpane.html",
         template: "./src/taskpane/data-cleaning-taskpane.html",
         chunks: ["polyfill", "data-cleaning-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "merge-sheets-taskpane.html",
+        template: "./src/taskpane/merge-sheets-taskpane.html",
+        chunks: ["polyfill", "merge-sheets-taskpane"],
       }),
       new HtmlWebpackPlugin({
         filename: "index.html",
