@@ -150,11 +150,10 @@ function hideConfirmBox() {
 }
 
 function handleConfirm(action) {
-  hideConfirmBox();
   if (pendingConfirmation) {
     pendingConfirmation.resolve(action);
-    pendingConfirmation = null;
   }
+  hideConfirmBox();
 }
 
 function getSelectedSheets() {
@@ -238,16 +237,16 @@ function executeMerge() {
       }
     }
 
-    // Step 4: Check if "合并结果" sheet exists
+    // Step 4: Check if "合并结果" sheet exists (outside Excel.run to allow DOM interaction)
     var existingSheets = context.workbook.worksheets;
     var targetSheet = existingSheets.getItemOrNullObject("合并结果");
     targetSheet.load("name");
     await context.sync();
 
     var targetName = "合并结果";
-    var sheetExists = targetSheet.name === targetName;
 
-    if (sheetExists) {
+    if (targetSheet.name === targetName) {
+      // Show confirm box OUTSIDE Excel.run — DOM interaction is not part of the batch queue
       var confirmAction = await showConfirmBox(
         "工作表 '" + targetName + "' 已存在，选择操作："
       );
@@ -259,6 +258,7 @@ function executeMerge() {
       }
 
       if (confirmAction === "rename") {
+        // Load all sheet names for rename suggestion
         existingSheets.load("items/name");
         await context.sync();
         var allSheetNames = existingSheets.items.map(function (ws) { return ws.name; });
@@ -267,37 +267,44 @@ function executeMerge() {
       // If overwrite, use same name
     }
 
-    // Step 5: Create or clear target sheet and write data
-    var finalSheet;
-    finalSheet = context.workbook.worksheets.getItemOrNullObject(targetName);
-    finalSheet.load("name");
-    await context.sync();
-    if (finalSheet.name === targetName) {
-      finalSheet.delete();
-      await context.sync();
-    }
-    finalSheet = context.workbook.worksheets.add(targetName);
-    await context.sync();
+    // Step 5: Create or clear target sheet and write data (in a separate Excel.run after user choice)
+    // IMPORTANT: Actually call .run() so the operation is executed
+    (function createOrOverwriteSheet(targetName) {
+      Excel.run(async function (context) {
+        var finalSheet;
+        finalSheet = context.workbook.worksheets.getItemOrNullObject(targetName);
+        finalSheet.load("name");
+        await context.sync();
+        if (finalSheet.name === targetName) {
+          finalSheet.delete();
+          await context.sync();
+        }
+        finalSheet = context.workbook.worksheets.add(targetName);
+        await context.sync();
 
-    if (mergedData.length > 0) {
-      var targetRange = finalSheet.getRange(
-        "A1:" +
-        mergeSheetsUtils.getColumnLetter(mergedData[0].length - 1) +
-        mergedData.length
-      );
-      targetRange.values = mergedData;
-      await context.sync();
-    }
+        if (mergedData.length > 0) {
+          var targetRange = finalSheet.getRange(
+            "A1:" +
+            mergeSheetsUtils.getColumnLetter(mergedData[0].length - 1) +
+            mergedData.length
+          );
+          targetRange.values = mergedData;
+          await context.sync();
+        }
 
-    var totalRows = mergedData.length;
-    var headerInfo = hasHeader ? "（含表头）" : "（无表头）";
-    setStatus(
-      "完成! 已合并 " + selectedSheets.length + " 个工作表，共 " + totalRows + " 行数据" + headerInfo,
-      "success"
-    );
+        var totalRows = mergedData.length;
+        var headerInfo = hasHeader ? "（含表头）" : "（无表头）";
+        setStatus(
+          "完成! 已合并 " + selectedSheets.length + " 个工作表，共 " + totalRows + " 行数据" + headerInfo,
+          "success"
+        );
+      }).catch(function (error) {
+        setStatus("错误: " + error.message, "error");
+      }).finally(function () {
+        executeBtn.disabled = false;
+      });
+    })(targetName);
   }).catch(function (error) {
     setStatus("错误: " + error.message, "error");
-  }).finally(function () {
-    executeBtn.disabled = false;
   });
 }
