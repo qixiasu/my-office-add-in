@@ -42,6 +42,10 @@ module.exports = async (env, options) => {
         "./src/taskpane/merge-sheets-taskpane.js",
         "./src/taskpane/merge-sheets-taskpane.html",
       ],
+      "cross-file-merge-taskpane": [
+        "./src/taskpane/cross-file-merge-taskpane.js",
+        "./src/taskpane/cross-file-merge-taskpane.html",
+      ],
     },
     output: {
       clean: true,
@@ -160,6 +164,11 @@ module.exports = async (env, options) => {
         filename: "merge-sheets-taskpane.html",
         template: "./src/taskpane/merge-sheets-taskpane.html",
         chunks: ["polyfill", "merge-sheets-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "cross-file-merge-taskpane.html",
+        template: "./src/taskpane/cross-file-merge-taskpane.html",
+        chunks: ["polyfill", "cross-file-merge-taskpane"],
       }),
       new HtmlWebpackPlugin({
         filename: "index.html",
