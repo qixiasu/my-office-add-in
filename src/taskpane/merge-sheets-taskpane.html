@@ -26,11 +26,11 @@
         </h1>
 
         <div class="guide-card">
-            <p>
-                <span class="guide-step">1. 勾选要合并的 Sheet（至少2个）</span><br>
-                <span class="guide-step">2. 设置每个 Sheet 的表头行号（0=无表头）</span><br>
-                <span class="guide-step">3. 点击执行合并</span>
-            </p>
+            <ol class="guide-steps">
+                <li>勾选要合并的 Sheet（至少2个）</li>
+                <li>设置每个 Sheet 的表头行号（0=无表头）</li>
+                <li>点击执行合并</li>
+            </ol>
         </div>
 
         <div class="merge-list-header">
@@ -47,14 +47,14 @@
 
         <button id="executeBtn" class="merge-button merge-button--primary">执行合并</button>
 
-        <div id="status" class="merge-status merge-status--idle">状态：等待操作...</div>
+        <div id="status" role="status" aria-live="polite" class="merge-status merge-status--idle">状态：等待操作...</div>
 
         <div id="confirmBox" class="merge-confirm-box" style="display: none;">
             <div id="confirmMsg" class="merge-confirm-msg"></div>
             <div class="merge-confirm-buttons">
-                <button id="confirmOverwrite" class="merge-btn merge-btn--small">覆盖</button>
-                <button id="confirmRename" class="merge-btn merge-btn--small">重命名</button>
-                <button id="confirmCancel" class="merge-btn merge-btn--small merge-btn--secondary">取消</button>
+                <button id="confirmOverwrite" type="button" class="merge-btn merge-btn--small">覆盖</button>
+                <button id="confirmRename" type="button" class="merge-btn merge-btn--small">重命名</button>
+                <button id="confirmCancel" type="button" class="merge-btn merge-btn--small merge-btn--secondary">取消</button>
             </div>
         </div>
     </div>
