@@ -160,29 +160,29 @@ function executeMerge() {
 
       // 步骤4：写入当前工作簿
       return Excel.run(function(context) {
-        // 获取所有 sheet 名称
         var worksheets = context.workbook.worksheets;
         worksheets.load("items/name");
         return context.sync().then(function() {
           var existingNames = worksheets.items.map(function(ws) { return ws.name; });
           var targetSheetName = crossFileMergeUtils.generateUniqueSheetName("合并结果", existingNames);
-
-          // 创建新 sheet
           var newSheet = worksheets.add(targetSheetName);
-          context.sync();
-
-          // 写入数据
-          var columnLetter = crossFileMergeUtils.getColumnLetter(mergeResult.columnCount - 1);
-          var dataRange = newSheet.getRange("A1:" + columnLetter + mergeResult.mergedData.length);
-          dataRange.values = mergeResult.mergedData;
-          context.sync();
-
-          return {
-            sheetName: targetSheetName,
-            fileCount: fileDataList.length,
-            rowCount: mergeResult.mergedData.length,
-            columnCount: mergeResult.columnCount
-          };
+          return context.sync().then(function() {
+            // 获取实际列数（如果 columnCount 为 0，从第一条数据获取）
+            var actualColumnCount = mergeResult.columnCount > 0
+              ? mergeResult.columnCount
+              : (mergeResult.mergedData.length > 0 ? mergeResult.mergedData[0].length : 1);
+            var columnLetter = crossFileMergeUtils.getColumnLetter(actualColumnCount - 1);
+            var dataRange = newSheet.getRange("A1:" + columnLetter + mergeResult.mergedData.length);
+            dataRange.values = mergeResult.mergedData;
+            return context.sync().then(function() {
+              return {
+                sheetName: targetSheetName,
+                fileCount: fileDataList.length,
+                rowCount: mergeResult.mergedData.length,
+                columnCount: actualColumnCount
+              };
+            });
+          });
         });
       });
     })
