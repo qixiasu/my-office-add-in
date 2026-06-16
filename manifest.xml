@@ -111,6 +111,22 @@
                     <SourceLocation resid="MergeSheetsTaskpane.Url"/>
                   </Action>
                 </Control>
+                <Control xsi:type="Button" id="CrossFileMergeButton">
+                  <Label resid="CrossFileMergeButton.Label"/>
+                  <Supertip>
+                    <Title resid="CrossFileMergeButton.Label"/>
+                    <Description resid="CrossFileMergeButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="CrossFileMergeIcon.16x16"/>
+                    <bt:Image size="32" resid="CrossFileMergeIcon.32x32"/>
+                    <bt:Image size="80" resid="CrossFileMergeIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>CrossFileMergeTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="CrossFileMergeTaskpane.Url"/>
+                  </Action>
+                </Control>
               </Group>
               <Group id="DataConversionGroup">
                 <Label resid="DataConversionGroup.Label"/>
@@ -325,6 +341,9 @@
         <bt:Image id="MergeSheetsIcon.16x16" DefaultValue="https://localhost:3000/assets/merge-sheets-16.png"/>
         <bt:Image id="MergeSheetsIcon.32x32" DefaultValue="https://localhost:3000/assets/merge-sheets-32.png"/>
         <bt:Image id="MergeSheetsIcon.80x80" DefaultValue="https://localhost:3000/assets/merge-sheets-80.png"/>
+        <bt:Image id="CrossFileMergeIcon.16x16" DefaultValue="https://localhost:3000/assets/tools-16.png"/>
+        <bt:Image id="CrossFileMergeIcon.32x32" DefaultValue="https://localhost:3000/assets/tools-32.png"/>
+        <bt:Image id="CrossFileMergeIcon.80x80" DefaultValue="https://localhost:3000/assets/tools-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
@@ -339,6 +358,7 @@
         <bt:Url id="AiAssistantTaskpane.Url" DefaultValue="https://localhost:3000/ai-assistant-taskpane.html"/>
         <bt:Url id="DataCleaningTaskpane.Url" DefaultValue="https://localhost:3000/data-cleaning-taskpane.html"/>
         <bt:Url id="MergeSheetsTaskpane.Url" DefaultValue="https://localhost:3000/merge-sheets-taskpane.html"/>
+        <bt:Url id="CrossFileMergeTaskpane.Url" DefaultValue="https://localhost:3000/cross-file-merge-taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="CustomTab.Label" DefaultValue="Excel 工具箱"/>
@@ -362,6 +382,7 @@
         <bt:String id="AiAssistantButton.Label" DefaultValue="AI 助手"/>
         <bt:String id="DataCleaningButton.Label" DefaultValue="数据清洗"/>
         <bt:String id="MergeSheetsButton.Label" DefaultValue="合并 Sheet"/>
+        <bt:String id="CrossFileMergeButton.Label" DefaultValue="跨文件合并"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
@@ -377,6 +398,7 @@
         <bt:String id="AiAssistantButton.Tooltip" DefaultValue="打开 AI 助手聊天面板，用自然语言处理 Excel 数据"/>
         <bt:String id="DataCleaningButton.Tooltip" DefaultValue="修剪空格、删除空行、大小写转换、清除不可见字符、移除重复行"/>
         <bt:String id="MergeSheetsButton.Tooltip" DefaultValue="将多个工作表合并为一个新工作表，支持自定义表头行号"/>
+        <bt:String id="CrossFileMergeButton.Tooltip" DefaultValue="选择多个 Excel 文件，合并它们的当前激活 sheet"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
