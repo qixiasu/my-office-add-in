@@ -341,9 +341,9 @@
         <bt:Image id="MergeSheetsIcon.16x16" DefaultValue="https://localhost:3000/assets/merge-sheets-16.png"/>
         <bt:Image id="MergeSheetsIcon.32x32" DefaultValue="https://localhost:3000/assets/merge-sheets-32.png"/>
         <bt:Image id="MergeSheetsIcon.80x80" DefaultValue="https://localhost:3000/assets/merge-sheets-80.png"/>
-        <bt:Image id="CrossFileMergeIcon.16x16" DefaultValue="https://localhost:3000/assets/tools-16.png"/>
-        <bt:Image id="CrossFileMergeIcon.32x32" DefaultValue="https://localhost:3000/assets/tools-32.png"/>
-        <bt:Image id="CrossFileMergeIcon.80x80" DefaultValue="https://localhost:3000/assets/tools-80.png"/>
+        <bt:Image id="CrossFileMergeIcon.16x16" DefaultValue="https://localhost:3000/assets/cross-file-merge-icon.png"/>
+        <bt:Image id="CrossFileMergeIcon.32x32" DefaultValue="https://localhost:3000/assets/cross-file-merge-icon.png"/>
+        <bt:Image id="CrossFileMergeIcon.80x80" DefaultValue="https://localhost:3000/assets/cross-file-merge-icon.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
