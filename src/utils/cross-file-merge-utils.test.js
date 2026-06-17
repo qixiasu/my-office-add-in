@@ -1,6 +1,60 @@
 var crossFileMergeUtils = require("../utils/cross-file-merge-utils");
 
 describe("crossFileMergeUtils", function () {
+  describe("getSheetNames", function () {
+    beforeEach(function () {
+      // Mock FileReader
+      global.FileReader = function () {};
+      global.XLSX = {
+        read: function (data, opts) {
+          return {
+            SheetNames: ["Sheet1", "Sheet2", "数据表"]
+          };
+        }
+      };
+    });
+
+    afterEach(function () {
+      delete global.FileReader;
+      delete global.XLSX;
+    });
+
+    it("returns sheet names array from workbook", function () {
+      var file = { name: "test.xlsx" };
+      // Mock FileReader.onload
+      global.FileReader = function () {
+        this.onload = null;
+        var self = this;
+        this.readAsArrayBuffer = function () {
+          setTimeout(function () {
+            self.onload({ target: { result: new ArrayBuffer(8) } });
+          }, 0);
+        };
+      };
+
+      return crossFileMergeUtils.getSheetNames(file).then(function (names) {
+        expect(names).toEqual(["Sheet1", "Sheet2", "数据表"]);
+      });
+    });
+
+    it("rejects when file read fails", function () {
+      global.FileReader = function () {
+        this.onerror = null;
+        var self = this;
+        this.readAsArrayBuffer = function () {
+          setTimeout(function () {
+            self.onerror({});
+          }, 0);
+        };
+      };
+
+      var file = { name: "test.xlsx" };
+      return crossFileMergeUtils.getSheetNames(file).catch(function (err) {
+        expect(err.message).toBe("文件读取失败");
+      });
+    });
+  });
+
   describe("getColumnLetter", function () {
     it("returns A for column 0", function () {
       expect(crossFileMergeUtils.getColumnLetter(0)).toBe("A");
@@ -198,6 +252,47 @@ describe("crossFileMergeUtils", function () {
         ["Sheet1", "file1.xlsx", "Alice", 25],
         ["Sheet2", "file2.xlsx", "Bob", 30],
       ]);
+    });
+  });
+
+  describe("parseExcelFile", function () {
+    afterEach(function () {
+      delete global.FileReader;
+      delete global.XLSX;
+    });
+
+    it("parses specified sheet when sheetName parameter is provided", function () {
+      var file = { name: "test.xlsx" };
+      var mockSheet = { A1: { v: "test" } };
+      global.FileReader = function () {
+        this.onload = null;
+        var self = this;
+        this.readAsArrayBuffer = function () {
+          setTimeout(function () {
+            self.onload({ target: { result: new ArrayBuffer(8) } });
+          }, 0);
+        };
+      };
+      global.XLSX = {
+        read: function (data, opts) {
+          return {
+            SheetNames: ["Sheet1", "Sheet2"],
+            Sheets: {
+              "Sheet2": mockSheet
+            }
+          };
+        }
+      };
+      global.XLSX.utils = {
+        sheet_to_json: function (sheet, opts) {
+          return [["A1"], ["B1"]];
+        }
+      };
+
+      return crossFileMergeUtils.parseExcelFile(file, "Sheet2").then(function (result) {
+        expect(result.sheetName).toBe("Sheet2");
+        expect(result.data).toEqual([["A1"], ["B1"]]);
+      });
     });
   });
 });
