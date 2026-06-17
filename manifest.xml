@@ -305,9 +305,9 @@
         <bt:Image id="ToolsIcon.16x16" DefaultValue="https://localhost:3000/assets/tools-16.png"/>
         <bt:Image id="ToolsIcon.32x32" DefaultValue="https://localhost:3000/assets/tools-32.png"/>
         <bt:Image id="ToolsIcon.80x80" DefaultValue="https://localhost:3000/assets/tools-80.png"/>
-        <bt:Image id="ConcatIcon.16x16" DefaultValue="https://localhost:3000/assets/concat-column-16.png"/>
-        <bt:Image id="ConcatIcon.32x32" DefaultValue="https://localhost:3000/assets/concat-column-32.png"/>
-        <bt:Image id="ConcatIcon.80x80" DefaultValue="https://localhost:3000/assets/concat-column-80.png"/>
+        <bt:Image id="ConcatIcon.16x16" DefaultValue="https://localhost:3000/assets/concat-16.png"/>
+        <bt:Image id="ConcatIcon.32x32" DefaultValue="https://localhost:3000/assets/concat-32.png"/>
+        <bt:Image id="ConcatIcon.80x80" DefaultValue="https://localhost:3000/assets/concat-80.png"/>
         <bt:Image id="ImportIcon.16x16" DefaultValue="https://localhost:3000/assets/import-16.png"/>
         <bt:Image id="ImportIcon.32x32" DefaultValue="https://localhost:3000/assets/import-32.png"/>
         <bt:Image id="ImportIcon.80x80" DefaultValue="https://localhost:3000/assets/import-80.png"/>
