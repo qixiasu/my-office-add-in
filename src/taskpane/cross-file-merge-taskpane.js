@@ -134,6 +134,7 @@ function executeMerge() {
         fileDataList.push({
           data: result.data,
           name: item.name,
+          sheetName: result.sheetName,
           columnCount: result.data.length > 0 ? result.data[0].length : 0
         });
         setStatus("已解析 " + fileDataList.length + "/" + selectedFiles.length + " 个文件...", "loading");
