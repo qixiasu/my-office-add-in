@@ -213,3 +213,42 @@
   line-height: 1.6;
   margin-bottom: 24px;
 }
+
+/* Sheet 选择器 */
+.cfm-file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cfm-file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cfm-file-sheet {
+  flex-shrink: 0;
+}
+
+.cfm-sheet-select {
+  padding: 2px 6px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-size: 12px;
+  min-width: 80px;
+  max-width: 150px;
+}
+
+.cfm-sheet-loading {
+  font-size: 12px;
+  color: #888;
+}
+
+.cfm-sheet-error {
+  font-size: 12px;
+  color: #d83b01;
+}
