@@ -118,7 +118,8 @@ function mergeExcelData(fileDataList, headerRowNumber) {
     if (i === 0) {
       if (hasHeader && headerRowIndex >= 0 && headerRowIndex < data.length) {
         var headerRow = data[headerRowIndex].slice();
-        headerRow.unshift("来源文件"); // 添加来源文件列
+        headerRow.unshift("来源文件");   // 第二列：来源文件
+        headerRow.unshift("Sheet名");     // 第一列：Sheet名
         mergedData.push(headerRow);
         columnCount = headerRow.length;
       }
@@ -126,7 +127,8 @@ function mergeExcelData(fileDataList, headerRowNumber) {
       var startRow = hasHeader ? headerRowIndex + 1 : 0;
       for (var r = startRow; r < data.length; r++) {
         var dataRow = data[r].slice();
-        dataRow.unshift(fileName);
+        dataRow.unshift(fileName);              // 第二列：来源文件
+        dataRow.unshift(fileData.sheetName);   // 第一列：Sheet名
         mergedData.push(dataRow);
       }
     } else {
@@ -134,7 +136,8 @@ function mergeExcelData(fileDataList, headerRowNumber) {
       var startRow = hasHeader ? headerRowIndex + 1 : 0;
       for (var r2 = startRow; r2 < data.length; r2++) {
         var dataRow2 = data[r2].slice();
-        dataRow2.unshift(fileName);
+        dataRow2.unshift(fileName);              // 第二列：来源文件
+        dataRow2.unshift(fileData.sheetName);    // 第一列：Sheet名
         mergedData.push(dataRow2);
       }
     }

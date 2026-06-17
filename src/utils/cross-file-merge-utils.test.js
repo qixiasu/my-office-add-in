@@ -135,15 +135,15 @@ describe("crossFileMergeUtils", function () {
 
     it("merges two files without header", function () {
       var fileDataList = [
-        { data: [["A1", "B1"], ["A2", "B2"]], name: "file1.xlsx" },
-        { data: [["A3", "B3"], ["A4", "B4"]], name: "file2.xlsx" },
+        { data: [["A1", "B1"], ["A2", "B2"]], name: "file1.xlsx", sheetName: "Sheet1" },
+        { data: [["A3", "B3"], ["A4", "B4"]], name: "file2.xlsx", sheetName: "Sheet1" },
       ];
       var result = crossFileMergeUtils.mergeExcelData(fileDataList, 0);
       expect(result.mergedData).toEqual([
-        ["file1.xlsx", "A1", "B1"],
-        ["file1.xlsx", "A2", "B2"],
-        ["file2.xlsx", "A3", "B3"],
-        ["file2.xlsx", "A4", "B4"],
+        ["Sheet1", "file1.xlsx", "A1", "B1"],
+        ["Sheet1", "file1.xlsx", "A2", "B2"],
+        ["Sheet1", "file2.xlsx", "A3", "B3"],
+        ["Sheet1", "file2.xlsx", "A4", "B4"],
       ]);
       expect(result.columnCount).toBe(0); // no header row
     });
@@ -157,6 +157,7 @@ describe("crossFileMergeUtils", function () {
             ["Bob", 30],
           ],
           name: "file1.xlsx",
+          sheetName: "Sheet1",
         },
         {
           data: [
@@ -164,16 +165,17 @@ describe("crossFileMergeUtils", function () {
             ["Charlie", 35],
           ],
           name: "file2.xlsx",
+          sheetName: "Sheet1",
         },
       ];
       var result = crossFileMergeUtils.mergeExcelData(fileDataList, 1);
       expect(result.mergedData).toEqual([
-        ["来源文件", "Name", "Age"],
-        ["file1.xlsx", "Alice", 25],
-        ["file1.xlsx", "Bob", 30],
-        ["file2.xlsx", "Charlie", 35],
+        ["Sheet名", "来源文件", "Name", "Age"],
+        ["Sheet1", "file1.xlsx", "Alice", 25],
+        ["Sheet1", "file1.xlsx", "Bob", 30],
+        ["Sheet1", "file2.xlsx", "Charlie", 35],
       ]);
-      expect(result.columnCount).toBe(3);
+      expect(result.columnCount).toBe(4);
     });
 
     it("adds source column to all rows including second file", function () {
@@ -181,18 +183,20 @@ describe("crossFileMergeUtils", function () {
         {
           data: [["Name", "Age"], ["Alice", 25]],
           name: "file1.xlsx",
+          sheetName: "Sheet1",
         },
         {
           data: [["Name", "Age"], ["Bob", 30]],
           name: "file2.xlsx",
+          sheetName: "Sheet2",
         },
       ];
       var result = crossFileMergeUtils.mergeExcelData(fileDataList, 1);
       // Second file's header is skipped, source column added to all data rows
       expect(result.mergedData).toEqual([
-        ["来源文件", "Name", "Age"],
-        ["file1.xlsx", "Alice", 25],
-        ["file2.xlsx", "Bob", 30],
+        ["Sheet名", "来源文件", "Name", "Age"],
+        ["Sheet1", "file1.xlsx", "Alice", 25],
+        ["Sheet2", "file2.xlsx", "Bob", 30],
       ]);
     });
   });
