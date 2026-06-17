@@ -41,11 +41,36 @@ function onFileSelected(e) {
   if (!files || files.length === 0) return;
 
   selectedFiles = Array.from(files).map(function(file) {
-    return { file: file, name: file.name };
+    return {
+      file: file,
+      name: file.name,
+      sheetName: null,
+      sheetNames: [],
+      loadingSheets: true,
+      loadError: null
+    };
   });
 
   renderFileList();
   updateExecuteButton();
+
+  // 异步获取每个文件的 sheet 列表
+  selectedFiles.forEach(function(item, index) {
+    crossFileMergeUtils.getSheetNames(item.file)
+      .then(function(names) {
+        item.sheetNames = names;
+        item.sheetName = names[0]; // 默认选第一个
+        item.loadingSheets = false;
+        renderFileList(); // 重新渲染以显示下拉框
+      })
+      .catch(function(err) {
+        item.sheetNames = [];
+        item.sheetName = null;
+        item.loadingSheets = false;
+        item.loadError = err.message;
+        renderFileList();
+      });
+  });
 }
 
 function onHeaderRowChanged(e) {
@@ -64,16 +89,39 @@ function renderFileList() {
 
   var html = "";
   selectedFiles.forEach(function(item, index) {
+    var sheetSelect = "";
+    if (item.loadingSheets) {
+      sheetSelect = '<span class="cfm-sheet-loading">加载中...</span>';
+    } else if (item.loadError) {
+      sheetSelect = '<span class="cfm-sheet-error" title="' + escapeHtml(item.loadError) + '">加载失败</span>';
+    } else if (item.sheetNames.length === 0) {
+      sheetSelect = '<span class="cfm-sheet-error">无 sheet</span>';
+    } else {
+      var options = item.sheetNames.map(function(name) {
+        var selected = name === item.sheetName ? ' selected' : '';
+        return '<option value="' + escapeHtml(name) + '"' + selected + '>' + escapeHtml(name) + '</option>';
+      }).join('');
+      sheetSelect = '<select class="cfm-sheet-select" data-index="' + index + '">' + options + '</select>';
+    }
+
     html +=
       '<div class="cfm-file-item" data-index="' + index + '">' +
-      '<span class="cfm-file-name" title="' + escapeHtml(item.name) + '">' +
-      escapeHtml(item.name) +
-      '</span>' +
-      '<button class="cfm-file-remove" data-index="' + index + '">移除</button>' +
+        '<span class="cfm-file-name" title="' + escapeHtml(item.name) + '">' + escapeHtml(item.name) + '</span>' +
+        '<span class="cfm-file-sheet">' + sheetSelect + '</span>' +
+        '<button class="cfm-file-remove" data-index="' + index + '">移除</button>' +
       '</div>';
   });
 
   listEl.innerHTML = html;
+
+  // 绑定下拉框 change 事件
+  var sheetSelects = listEl.querySelectorAll(".cfm-sheet-select");
+  sheetSelects.forEach(function(select) {
+    select.onchange = function() {
+      var idx = parseInt(select.dataset.index, 10);
+      selectedFiles[idx].sheetName = select.value;
+    };
+  });
 
   // Bind remove buttons
   var removeButtons = listEl.querySelectorAll(".cfm-file-remove");
@@ -129,7 +177,7 @@ function executeMerge() {
   // 步骤1：解析所有 Excel 文件
   var fileDataList = [];
   var parsePromises = selectedFiles.map(function(item) {
-    return crossFileMergeUtils.parseExcelFile(item.file)
+    return crossFileMergeUtils.parseExcelFile(item.file, item.sheetName)
       .then(function(result) {
         fileDataList.push({
           data: result.data,
@@ -140,7 +188,7 @@ function executeMerge() {
         setStatus("已解析 " + fileDataList.length + "/" + selectedFiles.length + " 个文件...", "loading");
       })
       .catch(function(err) {
-        throw new Error("解析文件 '" + item.name + "' 失败: " + err.message);
+        throw new Error("解析文件 '" + item.name + "' 的 Sheet '" + item.sheetName + "' 失败: " + err.message);
       });
   });
 
