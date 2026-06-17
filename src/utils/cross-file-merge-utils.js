@@ -43,9 +43,14 @@ function parseExcelFile(file) {
     reader.onload = function (e) {
       try {
         var data = new Uint8Array(e.target.result);
-        var workbook = XLSX.read(data, { type: "array", bookSheets: true });
+        var workbook = XLSX.read(data, { type: "array" });
         var sheetName = workbook.SheetNames[0]; // 当前激活 sheet
         var sheet = workbook.Sheets[sheetName];
+
+        // 防御性检查：工作表不存在
+        if (!sheet) {
+          return reject(new Error("工作表 '" + sheetName + "' 不存在或为空"));
+        }
         var jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // 2D array
         resolve({ data: jsonData, sheetName: sheetName });
       } catch (err) {
