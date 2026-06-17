@@ -33,31 +33,56 @@ function generateUniqueSheetName(baseName, existingNames) {
 }
 
 /**
- * 使用 SheetJS 解析 Excel 文件的当前激活 sheet
+ * 获取 Excel 文件的所有 sheet 名称
  * @param {File} file - Browser File 对象
- * @returns {Promise<{data: Array, sheetName: string}>}
+ * @returns {Promise<string[]>} sheet 名称数组
  */
-function parseExcelFile(file) {
+function getSheetNames(file) {
   return new Promise(function (resolve, reject) {
     var reader = new FileReader();
     reader.onload = function (e) {
       try {
         var data = new Uint8Array(e.target.result);
         var workbook = XLSX.read(data, { type: "array" });
-        var sheetName = workbook.SheetNames[0]; // 当前激活 sheet
-        var sheet = workbook.Sheets[sheetName];
+        resolve(workbook.SheetNames);
+      } catch (err) {
+        reject(new Error("读取文件 sheet 失败: " + err.message));
+      }
+    };
+    reader.onerror = function () {
+      reject(new Error("文件读取失败"));
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/**
+ * 使用 SheetJS 解析 Excel 文件的指定 sheet
+ * @param {File} file - Browser File 对象
+ * @param {string} [sheetName] - 可选，指定 sheet 名称，不传则使用第一个
+ * @returns {Promise<{data: Array, sheetName: string}>}
+ */
+function parseExcelFile(file, sheetName) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        var data = new Uint8Array(e.target.result);
+        var workbook = XLSX.read(data, { type: "array" });
+        var targetSheetName = sheetName || workbook.SheetNames[0];
+        var sheet = workbook.Sheets[targetSheetName];
 
         // 防御性检查：工作表不存在
         if (!sheet) {
-          return reject(new Error("工作表 '" + sheetName + "' 不存在或为空"));
+          return reject(new Error("工作表 '" + targetSheetName + "' 不存在或为空"));
         }
         var jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // 2D array
-        resolve({ data: jsonData, sheetName: sheetName });
+        resolve({ data: jsonData, sheetName: targetSheetName });
       } catch (err) {
         reject(err);
       }
     };
-    reader.onerror = function (e) {
+    reader.onerror = function () {
       reject(new Error("文件读取失败"));
     };
     reader.readAsArrayBuffer(file);
@@ -149,6 +174,7 @@ function mergeExcelData(fileDataList, headerRowNumber) {
 module.exports = {
   getColumnLetter: getColumnLetter,
   generateUniqueSheetName: generateUniqueSheetName,
+  getSheetNames: getSheetNames,
   parseExcelFile: parseExcelFile,
   validateColumnConsistency: validateColumnConsistency,
   mergeExcelData: mergeExcelData,
