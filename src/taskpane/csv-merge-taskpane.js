@@ -51,7 +51,6 @@ function renderFileList() {
     removeBtn.textContent = "×";
     removeBtn.title = "移除文件";
     removeBtn.dataset.index = i;
-    removeBtn.addEventListener("click", onRemoveFile);
 
     item.appendChild(info);
     item.appendChild(removeBtn);
@@ -66,12 +65,26 @@ function updateMergeBtn() {
   mergeBtn.disabled = selectedFiles.length === 0;
 }
 
-function onRemoveFile(e) {
-  var index = parseInt(e.target.dataset.index, 10);
-  selectedFiles.splice(index, 1);
-  renderFileList();
-  updateMergeBtn();
-}
+Office.onReady(function (info) {
+  if (info.host === Office.HostType.Excel) {
+    var fileInput = document.getElementById("fileInput");
+    var mergeBtn = document.getElementById("mergeBtn");
+    var fileListEl = document.getElementById("fileList");
+
+    fileInput.addEventListener("change", onFileInputChange);
+    mergeBtn.addEventListener("click", onMergeClick);
+
+    // Event delegation for remove buttons
+    fileListEl.addEventListener("click", function (e) {
+      var btn = e.target.closest(".remove-btn");
+      if (!btn) return;
+      var index = parseInt(btn.dataset.index, 10);
+      selectedFiles.splice(index, 1);
+      renderFileList();
+      updateMergeBtn();
+    });
+  }
+});
 
 function getHeaderMode() {
   var radios = document.getElementsByName("headerMode");
@@ -92,16 +105,6 @@ function getOutputDelimiter() {
   var sel = document.getElementById("outputDelimiter");
   return sel ? sel.value : ",";
 }
-
-Office.onReady(function (info) {
-  if (info.host === Office.HostType.Excel) {
-    var fileInput = document.getElementById("fileInput");
-    var mergeBtn = document.getElementById("mergeBtn");
-
-    fileInput.addEventListener("change", onFileInputChange);
-    mergeBtn.addEventListener("click", onMergeClick);
-  }
-});
 
 function onFileInputChange(e) {
   var files = e.target.files;
@@ -238,7 +241,7 @@ function applyHeaderMode(filesData, headerMode) {
       for (var j = 1; j < filesData.length; j++) {
         result.filesData.push({
           headers: filesData[j].headers,
-          data: filesData[j].data,
+          data: filesData[j].data.slice(1), // skip the header row
         });
       }
     }
