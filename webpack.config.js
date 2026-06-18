@@ -21,6 +21,7 @@ module.exports = async (env, options) => {
       commands: "./src/commands/commands.js",
       "concat-taskpane": ["./src/taskpane/concat-taskpane.js", "./src/taskpane/concat-taskpane.html"],
       "csv-import-taskpane": ["./src/taskpane/csv-import-taskpane.js", "./src/taskpane/csv-import-taskpane.html"],
+      "csv-merge-taskpane": ["./src/taskpane/csv-merge-taskpane.js", "./src/taskpane/csv-merge-taskpane.html"],
       "vlookup-taskpane": ["./src/taskpane/vlookup-taskpane.js", "./src/taskpane/vlookup-taskpane.html"],
       "fill-series-taskpane": ["./src/taskpane/fill-series-taskpane.js", "./src/taskpane/fill-series-taskpane.html"],
       "count-values-taskpane": ["./src/taskpane/count-values-taskpane.js", "./src/taskpane/count-values-taskpane.html"],
@@ -119,6 +120,11 @@ module.exports = async (env, options) => {
         filename: "csv-import-taskpane.html",
         template: "./src/taskpane/csv-import-taskpane.html",
         chunks: ["polyfill", "csv-import-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "csv-merge-taskpane.html",
+        template: "./src/taskpane/csv-merge-taskpane.html",
+        chunks: ["polyfill", "csv-merge-taskpane"],
       }),
       new HtmlWebpackPlugin({
         filename: "vlookup-taskpane.html",
