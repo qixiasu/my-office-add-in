@@ -174,7 +174,7 @@ function readCSVFileFull(file, delimiter, encoding) {
       function (batch) {
         // First batch: use as headers; subsequent batches: data
         if (headers === null) {
-          headers = batch;
+          headers = batch[0]; // batch is [[col1,col2,...]] — extract the header row
           // No data yet — first batch is column headers
         } else {
           for (var i = 0; i < batch.length; i++) {
