@@ -241,7 +241,7 @@ function applyHeaderMode(filesData, headerMode) {
       for (var j = 1; j < filesData.length; j++) {
         result.filesData.push({
           headers: filesData[j].headers,
-          data: filesData[j].data.slice(1), // skip the header row
+          data: filesData[j].data, // data already excludes header (readCSVFileFull separates headers)
         });
       }
     }

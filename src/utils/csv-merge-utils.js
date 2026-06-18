@@ -57,7 +57,8 @@ function alignColumns(filesData) {
       for (var hi = 0; hi < headers.length; hi++) {
         var colName = headers[hi];
         var srcIdx = colMap[colName];
-        aligned.push(srcIdx !== undefined ? String(row[srcIdx] !== undefined ? row[srcIdx] : '') : '');
+        var cellValue = srcIdx !== undefined && row[srcIdx] !== undefined ? row[srcIdx] : '';
+        aligned.push(cellValue === '' ? '' : String(cellValue));
       }
       data.push(aligned);
     }
