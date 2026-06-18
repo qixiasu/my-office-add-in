@@ -57,7 +57,7 @@ function alignColumns(filesData) {
       for (var hi = 0; hi < headers.length; hi++) {
         var colName = headers[hi];
         var srcIdx = colMap[colName];
-        aligned.push(srcIdx !== undefined ? (row[srcIdx] || '') : '');
+        aligned.push(srcIdx !== undefined ? String(row[srcIdx] !== undefined ? row[srcIdx] : '') : '');
       }
       data.push(aligned);
     }
@@ -127,8 +127,14 @@ function buildCSVBlob(headers, data, encoding, delimiter, filename) {
   var isUTF = enc === 'utf-8' || enc === 'utf8';
   var blobContent = isUTF ? '﻿' + csvText : csvText;
 
-  var blob = new Blob([blobContent], { type: 'text/csv;charset=' + enc });
-  var url = URL.createObjectURL(blob);
+  var blob, url;
+  try {
+    blob = new Blob([blobContent], { type: 'text/csv;charset=' + enc });
+    url = URL.createObjectURL(blob);
+  } catch (e) {
+    console.error('Failed to create Blob or Object URL:', e);
+    return;
+  }
 
   var anchor = document.createElement('a');
   anchor.href = url;
