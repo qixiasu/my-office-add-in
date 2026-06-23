@@ -175,7 +175,7 @@ function refreshSelection(silent) {
 function handleSend() {
   if (isProcessing || !apiKey) {
     if (!apiKey) {
-      addAssistantMessage("请先在设置中配置 DeepSeek API Key ⚙️");
+addAssistantMessage("请先在设置中配置 AI 提供商的 API Key ⚙️");
     }
     return;
   }
