@@ -50,7 +50,8 @@ function getProvider(providerId) {
 
 /**
  * 获取所有 Provider 列表（用于 UI 渲染）
- * @returns {Array} Provider 配置数组
+ * @returns {Array<ProviderConfig>} Provider 配置数组
+ * @description Object.keys is used instead of Object.values for IE11 compatibility
  */
 function getAllProviders() {
   return Object.keys(PROVIDERS).map(function (id) {
@@ -65,7 +66,9 @@ function getAllProviders() {
  */
 function getModelsForProvider(providerId) {
   var provider = PROVIDERS[providerId];
-  if (!provider) return [];
+  if (!provider) {
+    throw new Error("不支持的 AI 提供商: " + providerId);
+  }
   return provider.models;
 }
 
@@ -109,7 +112,10 @@ function sendChatRequest(apiKey, messages, tools, options) {
   }).then(function (response) {
     if (!response.ok) {
       return response.json().then(function (err) {
-        throw new Error(provider.name + " API 错误: " + (err.error?.message || response.statusText));
+        throw new Error(
+      provider.name + " API 错误: " +
+        ((err.error && err.error.message) || response.statusText)
+    );
       });
     }
     return response.json();
