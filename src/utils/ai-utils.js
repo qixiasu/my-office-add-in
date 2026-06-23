@@ -28,9 +28,9 @@ var PROVIDERS = {
     id: "minimax",
     name: "MiniMax",
     apiKeyStorageKey: "provider_minimax_api_key",
-    apiUrl: "https://api.minimaxi.chat/v1/text/chatcompletion_v2",
-    defaultModel: "MiniMax-Text-01",
-    models: [{ id: "MiniMax-Text-01", name: "MiniMax Text 01" }],
+    apiUrl: "https://api.minimaxi.com/anthropic",
+    defaultModel: "MiniMax-M3",
+    models: [{ id: "MiniMax-M3", name: "MiniMax M3" }],
   },
 };
 
