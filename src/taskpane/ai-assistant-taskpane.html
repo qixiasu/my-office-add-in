@@ -61,14 +61,20 @@
                 </div>
                 <div class="ai-modal-body">
                     <div class="ai-form-group">
-                        <label for="apiKeyInput" class="ai-label">DeepSeek API Key</label>
+                        <label for="providerSelect" class="ai-label">AI 提供商</label>
+                        <select id="providerSelect" class="ai-form-input">
+                            <option value="deepseek">DeepSeek</option>
+                            <option value="minimax">MiniMax</option>
+                        </select>
+                    </div>
+                    <div class="ai-form-group">
+                        <label for="apiKeyInput" class="ai-label">API Key</label>
                         <input type="password" id="apiKeyInput" class="ai-form-input" placeholder="sk-..." />
                     </div>
                     <div class="ai-form-group">
                         <label for="modelSelect" class="ai-label">模型</label>
                         <select id="modelSelect" class="ai-form-input">
-                            <option value="deepseek-v4-flash">deepseek-v4-flash</option>
-                            <option value="deepseek-v4-pro">deepseek-v4-pro</option>
+                            <!-- Options dynamically populated by JS based on selected provider -->
                         </select>
                     </div>
                     <div class="ai-form-group">

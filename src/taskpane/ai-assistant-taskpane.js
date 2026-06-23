@@ -8,10 +8,19 @@
 var aiUtils = require("../utils/ai-utils");
 
 // ---- 状态 ----
-var apiKey = localStorage.getItem("deepseek_api_key") || "";
+// 当前 provider，从 localStorage 读取（默认 deepseek）
+var currentProvider = localStorage.getItem("ai_provider") || "deepseek";
+// 当前 provider 的 API Key（按 provider 独立存储）
+var apiKey = localStorage.getItem("provider_" + currentProvider + "_api_key") || "";
+// 设置对象（model 和 temperature 也按 provider 独立存储）
 var settings = {
-  model: localStorage.getItem("deepseek_model") || "deepseek-v4-flash",
-  temperature: parseFloat(localStorage.getItem("deepseek_temperature") || "0.3"),
+  provider: currentProvider,
+  model:
+    localStorage.getItem("provider_" + currentProvider + "_model") ||
+    aiUtils.PROVIDERS[currentProvider].defaultModel,
+  temperature: parseFloat(
+    localStorage.getItem("provider_" + currentProvider + "_temperature") || "0.3"
+  ),
   maxTokens: 4096,
 };
 var context = aiUtils.createContext(null);
@@ -20,7 +29,7 @@ var selectionTimer = null;
 
 // ---- DOM 引用 ----
 var chatMessages, userInput, sendBtn, statusBar, selectionInfo;
-var settingsModal, apiKeyInput, modelSelect, temperatureInput;
+var settingsModal, apiKeyInput, modelSelect, temperatureInput, providerSelect;
 var confirmBox, confirmMsg, confirmYes, confirmNo;
 
 // ---- 初始化 ----
@@ -51,6 +60,7 @@ function cacheDom() {
   apiKeyInput = document.getElementById("apiKeyInput");
   modelSelect = document.getElementById("modelSelect");
   temperatureInput = document.getElementById("temperatureInput");
+  providerSelect = document.getElementById("providerSelect");
   confirmBox = document.getElementById("confirmBox");
   confirmMsg = document.getElementById("confirmMsg");
   confirmYes = document.getElementById("confirmYes");
@@ -81,12 +91,46 @@ function bindEvents() {
   document.getElementById("refreshSelectionBtn").addEventListener("click", function () {
     refreshSelection(false);
   });
+  providerSelect.addEventListener("change", function () {
+    var newProvider = providerSelect.value;
+    // Reload the new provider's saved key, model, and temperature from localStorage
+    apiKeyInput.value = localStorage.getItem("provider_" + newProvider + "_api_key") || "";
+    settings.provider = newProvider;
+    settings.model =
+      localStorage.getItem("provider_" + newProvider + "_model") ||
+      aiUtils.getProvider(newProvider).defaultModel;
+    settings.temperature = parseFloat(
+      localStorage.getItem("provider_" + newProvider + "_temperature") || "0.3"
+    );
+    populateModelSelect(settings.provider, settings.model);
+    temperatureInput.value = settings.temperature;
+  });
+}
+
+/**
+ * 根据 provider 动态填充模型下拉框
+ * @param {string} providerId - Provider 标识符
+ * @param {string} selectedModelId - 当前选中的模型 ID（用于回显）
+ */
+function populateModelSelect(providerId, selectedModelId) {
+  var models = aiUtils.getModelsForProvider(providerId);
+  modelSelect.innerHTML = "";
+  models.forEach(function (model) {
+    var opt = document.createElement("option");
+    opt.value = model.id;
+    opt.textContent = model.name;
+    if (model.id === selectedModelId) {
+      opt.selected = true;
+    }
+    modelSelect.appendChild(opt);
+  });
 }
 
 function restoreApiKeyState() {
   if (apiKey) {
     apiKeyInput.value = apiKey;
-    modelSelect.value = settings.model;
+    providerSelect.value = settings.provider;
+    populateModelSelect(settings.provider, settings.model);
     temperatureInput.value = settings.temperature;
     sendBtn.disabled = !userInput.value.trim();
   } else {
@@ -141,7 +185,7 @@ function refreshSelection(silent) {
 function handleSend() {
   if (isProcessing || !apiKey) {
     if (!apiKey) {
-      addAssistantMessage("请先在设置中配置 DeepSeek API Key ⚙️");
+      addAssistantMessage("请先在设置中配置 AI 提供商的 API Key ⚙️");
     }
     return;
   }
@@ -166,6 +210,8 @@ function handleSend() {
       {
         temperature: settings.temperature,
         maxTokens: settings.maxTokens,
+        providerId: settings.provider,
+        model: settings.model,
       }
     )
     .then(function (response) {
@@ -258,7 +304,12 @@ function handleToolCalls(toolCalls) {
           apiKey,
           aiUtils.ensureValidContext(aiUtils.trimContext(context)),
           aiUtils.getToolDefinitions(),
-          { temperature: settings.temperature, maxTokens: settings.maxTokens }
+          {
+            temperature: settings.temperature,
+            maxTokens: settings.maxTokens,
+            providerId: settings.provider,
+            model: settings.model,
+          }
         );
       })
       .then(function (response) {
@@ -513,7 +564,8 @@ function setStatus(message, type) {
 // ---- 设置 ----
 function openSettings() {
   apiKeyInput.value = apiKey;
-  modelSelect.value = settings.model;
+  providerSelect.value = settings.provider;
+  populateModelSelect(settings.provider, settings.model);
   temperatureInput.value = settings.temperature;
   settingsModal.style.display = "flex";
 }
@@ -524,12 +576,16 @@ function closeSettings() {
 
 function saveSettings() {
   apiKey = apiKeyInput.value.trim();
+  var newProvider = providerSelect.value;
+  settings.provider = newProvider;
   settings.model = modelSelect.value;
   settings.temperature = parseFloat(temperatureInput.value) || 0.3;
 
-  localStorage.setItem("deepseek_api_key", apiKey);
-  localStorage.setItem("deepseek_model", settings.model);
-  localStorage.setItem("deepseek_temperature", String(settings.temperature));
+  // 按 provider 独立存储
+  localStorage.setItem("ai_provider", newProvider);
+  localStorage.setItem("provider_" + newProvider + "_api_key", apiKey);
+  localStorage.setItem("provider_" + newProvider + "_model", settings.model);
+  localStorage.setItem("provider_" + newProvider + "_temperature", String(settings.temperature));
 
   sendBtn.disabled = !userInput.value.trim() || !apiKey || isProcessing;
   closeSettings();

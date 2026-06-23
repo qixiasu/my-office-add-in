@@ -14,6 +14,120 @@ var {
   applyClassification,
 } = require("./ai-utils");
 
+var aiUtils = require("./ai-utils");
+
+// =============================================================================
+// Module 0: ModelProvider
+// =============================================================================
+
+describe("ModelProvider", function () {
+  describe("PROVIDERS", function () {
+    it("contains deepseek and minimax", function () {
+      var ids = Object.keys(aiUtils.PROVIDERS);
+      expect(ids).toContain("deepseek");
+      expect(ids).toContain("minimax");
+    });
+
+    it("each provider has required fields", function () {
+      Object.keys(aiUtils.PROVIDERS).forEach(function (id) {
+        var p = aiUtils.PROVIDERS[id];
+        expect(p.id).toBeDefined();
+        expect(p.name).toBeDefined();
+        expect(p.apiKeyStorageKey).toBeDefined();
+        expect(p.apiUrl).toBeDefined();
+        expect(p.defaultModel).toBeDefined();
+        expect(Array.isArray(p.models)).toBe(true);
+        expect(p.models.length).toBeGreaterThan(0);
+      });
+    });
+
+    it("deepseek has correct apiUrl", function () {
+      expect(aiUtils.PROVIDERS.deepseek.apiUrl).toBe("https://api.deepseek.com/chat/completions");
+    });
+
+    it("minimax has correct apiUrl", function () {
+      expect(aiUtils.PROVIDERS.minimax.apiUrl).toBe(
+        "https://api.minimaxi.chat/v1/text/chatcompletion_v2"
+      );
+    });
+  });
+
+  describe("getProvider", function () {
+    it("returns provider config for deepseek", function () {
+      var p = aiUtils.getProvider("deepseek");
+      expect(p.name).toBe("DeepSeek");
+      expect(p.id).toBe("deepseek");
+    });
+
+    it("returns provider config for minimax", function () {
+      var p = aiUtils.getProvider("minimax");
+      expect(p.name).toBe("MiniMax");
+      expect(p.id).toBe("minimax");
+    });
+
+    it("throws for invalid providerId", function () {
+      expect(function () {
+        aiUtils.getProvider("unknown");
+      }).toThrow();
+    });
+
+    it("error message includes providerId", function () {
+      try {
+        aiUtils.getProvider("unknown");
+        fail("should have thrown");
+      } catch (e) {
+        expect(e.message).toContain("unknown");
+      }
+    });
+  });
+
+  describe("getAllProviders", function () {
+    it("returns array", function () {
+      expect(Array.isArray(aiUtils.getAllProviders())).toBe(true);
+    });
+
+    it("returns at least 2 providers", function () {
+      expect(aiUtils.getAllProviders().length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("each returned provider has id and name", function () {
+      aiUtils.getAllProviders().forEach(function (p) {
+        expect(p.id).toBeDefined();
+        expect(p.name).toBeDefined();
+      });
+    });
+  });
+
+  describe("getModelsForProvider", function () {
+    it("returns models array for deepseek", function () {
+      var models = aiUtils.getModelsForProvider("deepseek");
+      expect(Array.isArray(models)).toBe(true);
+      expect(models.length).toBeGreaterThan(0);
+    });
+
+    it("deepseek models have id and name", function () {
+      var models = aiUtils.getModelsForProvider("deepseek");
+      models.forEach(function (m) {
+        expect(m.id).toBeDefined();
+        expect(m.name).toBeDefined();
+      });
+    });
+
+    it("returns models array for minimax", function () {
+      var models = aiUtils.getModelsForProvider("minimax");
+      expect(Array.isArray(models)).toBe(true);
+      expect(models.length).toBeGreaterThan(0);
+    });
+
+    it("throws for unknown provider", function () {
+      // After fix in ai-utils.js, getModelsForProvider now throws like getProvider
+      expect(function () {
+        aiUtils.getModelsForProvider("unknown");
+      }).toThrow();
+    });
+  });
+});
+
 // =============================================================================
 // Module 1: DeepSeekClient
 // =============================================================================
