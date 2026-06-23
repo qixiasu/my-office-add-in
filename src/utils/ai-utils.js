@@ -9,35 +9,98 @@
  */
 
 // =============================================================================
+// Module 0: ModelProvider 配置
+// =============================================================================
+
+var PROVIDERS = {
+  deepseek: {
+    id: "deepseek",
+    name: "DeepSeek",
+    apiKeyStorageKey: "provider_deepseek_api_key",
+    apiUrl: "https://api.deepseek.com/chat/completions",
+    defaultModel: "deepseek-v4-flash",
+    models: [
+      { id: "deepseek-v4-flash", name: "DeepSeek V4 Flash" },
+      { id: "deepseek-v4-pro", name: "DeepSeek V4 Pro" },
+    ],
+  },
+  minimax: {
+    id: "minimax",
+    name: "MiniMax",
+    apiKeyStorageKey: "provider_minimax_api_key",
+    apiUrl: "https://api.minimaxi.chat/v1/text/chatcompletion_v2",
+    defaultModel: "MiniMax-Text-01",
+    models: [{ id: "MiniMax-Text-01", name: "MiniMax Text 01" }],
+  },
+};
+
+/**
+ * 根据 providerId 获取 Provider 配置
+ * @param {string} providerId - Provider 标识符
+ * @returns {Object} Provider 配置对象
+ * @throws {Error} 如果 providerId 无效
+ */
+function getProvider(providerId) {
+  var provider = PROVIDERS[providerId];
+  if (!provider) {
+    throw new Error("不支持的 AI 提供商: " + providerId);
+  }
+  return provider;
+}
+
+/**
+ * 获取所有 Provider 列表（用于 UI 渲染）
+ * @returns {Array} Provider 配置数组
+ */
+function getAllProviders() {
+  return Object.keys(PROVIDERS).map(function (id) {
+    return PROVIDERS[id];
+  });
+}
+
+/**
+ * 获取指定 Provider 的模型列表
+ * @param {string} providerId
+ * @returns {Array} 模型数组 [{id, name}]
+ */
+function getModelsForProvider(providerId) {
+  var provider = PROVIDERS[providerId];
+  if (!provider) return [];
+  return provider.models;
+}
+
+// =============================================================================
 // Module 1: DeepSeekClient
 // =============================================================================
 
-var DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions";
-var DEEPSEEK_MODEL = "deepseek-v4-flash";
-
 /**
- * 发送聊天请求到 DeepSeek API
- * @param {string} apiKey - DeepSeek API Key
+ * 发送聊天请求到 AI Provider API
+ * @param {string} apiKey - Provider API Key
  * @param {Array} messages - 消息数组 [{role, content, ...}]
  * @param {Array} tools - Function Calling 工具定义
  * @param {Object} [options] - 可选参数
  * @param {number} [options.temperature=0.3] - 生成温度
  * @param {number} [options.maxTokens=4096] - 最大 Token 数
+ * @param {string} [options.providerId="deepseek"] - Provider 标识符
+ * @param {string} [options.model] - 模型名（覆盖 provider 默认值）
  * @returns {Promise<Object>} API 响应
  */
 function sendChatRequest(apiKey, messages, tools, options) {
   options = options || {};
+  var providerId = options.providerId || "deepseek";
+  var provider = getProvider(providerId);
+  var model = options.model || provider.defaultModel;
   var temperature = options.temperature !== undefined ? options.temperature : 0.3;
   var maxTokens = options.maxTokens || 4096;
 
-  return fetch(DEEPSEEK_API_URL, {
+  return fetch(provider.apiUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: "Bearer " + apiKey,
     },
     body: JSON.stringify({
-      model: DEEPSEEK_MODEL,
+      model: model,
       messages: messages,
       tools: tools,
       temperature: temperature,
@@ -46,7 +109,7 @@ function sendChatRequest(apiKey, messages, tools, options) {
   }).then(function (response) {
     if (!response.ok) {
       return response.json().then(function (err) {
-        throw new Error("DeepSeek API 错误: " + (err.error?.message || response.statusText));
+        throw new Error(provider.name + " API 错误: " + (err.error?.message || response.statusText));
       });
     }
     return response.json();
@@ -671,6 +734,11 @@ function applyClassification(context, sourceRange, classifyFn, outputColumn) {
 // =============================================================================
 
 module.exports = {
+  // Provider 管理
+  PROVIDERS: PROVIDERS,
+  getProvider: getProvider,
+  getAllProviders: getAllProviders,
+  getModelsForProvider: getModelsForProvider,
   // DeepSeekClient
   sendChatRequest: sendChatRequest,
   parseResponse: parseResponse,
