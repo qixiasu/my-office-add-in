@@ -258,7 +258,7 @@ function loadSelection() {
           state.dataRows = null;
           state.selectionAddress = address || "未知";
           updateUIForEmpty();
-          setStatus("请选中包含数据的目标区域", "error");
+          setStatus("请先在 Excel 中选择待处理的数据区域", "error");
           return;
         }
 
@@ -283,7 +283,16 @@ function loadSelection() {
       });
     });
   }).catch(function (error) {
-    setStatus("读取选区失败: " + error.message, "error");
+    // 空选区时 Excel 抛出 "请求的资源不存在"
+    if (error.message && error.message.indexOf("请求的资源不存在") !== -1) {
+      state.rawValues = null;
+      state.headerRow = null;
+      state.dataRows = null;
+      updateUIForEmpty();
+      setStatus("请先在 Excel 中选择待处理的数据区域", "error");
+    } else {
+      setStatus("读取选区失败: " + error.message, "error");
+    }
   });
 }
 
