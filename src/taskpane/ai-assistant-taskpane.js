@@ -15,9 +15,12 @@ var apiKey = localStorage.getItem("provider_" + currentProvider + "_api_key") ||
 // 设置对象（model 和 temperature 也按 provider 独立存储）
 var settings = {
   provider: currentProvider,
-  model: localStorage.getItem("provider_" + currentProvider + "_model")
-    || aiUtils.PROVIDERS[currentProvider].defaultModel,
-  temperature: parseFloat(localStorage.getItem("provider_" + currentProvider + "_temperature") || "0.3"),
+  model:
+    localStorage.getItem("provider_" + currentProvider + "_model") ||
+    aiUtils.PROVIDERS[currentProvider].defaultModel,
+  temperature: parseFloat(
+    localStorage.getItem("provider_" + currentProvider + "_temperature") || "0.3"
+  ),
   maxTokens: 4096,
 };
 var context = aiUtils.createContext(null);
@@ -93,9 +96,12 @@ function bindEvents() {
     // Reload the new provider's saved key, model, and temperature from localStorage
     apiKeyInput.value = localStorage.getItem("provider_" + newProvider + "_api_key") || "";
     settings.provider = newProvider;
-    settings.model = localStorage.getItem("provider_" + newProvider + "_model")
-      || aiUtils.getProvider(newProvider).defaultModel;
-    settings.temperature = parseFloat(localStorage.getItem("provider_" + newProvider + "_temperature") || "0.3");
+    settings.model =
+      localStorage.getItem("provider_" + newProvider + "_model") ||
+      aiUtils.getProvider(newProvider).defaultModel;
+    settings.temperature = parseFloat(
+      localStorage.getItem("provider_" + newProvider + "_temperature") || "0.3"
+    );
     populateModelSelect(settings.provider, settings.model);
     temperatureInput.value = settings.temperature;
   });
@@ -298,7 +304,12 @@ function handleToolCalls(toolCalls) {
           apiKey,
           aiUtils.ensureValidContext(aiUtils.trimContext(context)),
           aiUtils.getToolDefinitions(),
-          { temperature: settings.temperature, maxTokens: settings.maxTokens, providerId: settings.provider, model: settings.model }
+          {
+            temperature: settings.temperature,
+            maxTokens: settings.maxTokens,
+            providerId: settings.provider,
+            model: settings.model,
+          }
         );
       })
       .then(function (response) {

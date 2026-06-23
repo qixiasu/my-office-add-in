@@ -113,9 +113,8 @@ function sendChatRequest(apiKey, messages, tools, options) {
     if (!response.ok) {
       return response.json().then(function (err) {
         throw new Error(
-      provider.name + " API 错误: " +
-        ((err.error && err.error.message) || response.statusText)
-    );
+          provider.name + " API 错误: " + ((err.error && err.error.message) || response.statusText)
+        );
       });
     }
     return response.json();
