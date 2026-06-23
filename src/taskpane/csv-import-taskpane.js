@@ -27,7 +27,11 @@ Office.onReady(function (info) {
     var delimiterInput = document.getElementById("delimiterInput");
     var prevBtn = document.getElementById("prevBtn");
     var nextBtn = document.getElementById("nextBtn");
+    var selectFilesBtn = document.getElementById("selectFilesBtn");
 
+    selectFilesBtn.addEventListener("click", function() {
+      fileInput.click();
+    });
     fileInput.addEventListener("change", onFileSelected);
     delimiterInput.addEventListener("input", onDelimiterChanged);
     prevBtn.addEventListener("click", onPrev);
@@ -92,10 +96,11 @@ function onFileSelected(e) {
   selectedEncoding = getEncoding();
 
   // Stream‑scan the file in 1-MB chunks — NEVER loads full file into memory
+  // Note: scanning uses default encoding; re-scan will happen in step 2 if encoding changes
   csvUtils.scanCSVFile(
     file,
     delimiter,
-    selectedEncoding,
+    "utf-8", // always scan with utf-8 first; re-scan when user confirms encoding
     function done(stats) {
       rowCount = stats.rowCount;
       colCount = stats.colCount;
@@ -110,8 +115,9 @@ function onFileSelected(e) {
         return;
       }
 
-      showPanel(2);
-      setStatus("状态：等待操作...", "idle");
+      // Don't auto-advance — let user confirm encoding in step 1 first
+      setStatus("已读取 " + rowCount + " 行，" + colCount + " 列，请选择编码后点击下一步", "success");
+      updateNextButton();
     },
     function error(err) {
       setStatus("错误: 文件读取失败", "error");

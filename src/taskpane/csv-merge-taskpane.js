@@ -40,14 +40,14 @@ function renderFileList() {
   for (var i = 0; i < selectedFiles.length; i++) {
     var file = selectedFiles[i];
     var item = document.createElement("div");
-    item.className = "file-list-item";
+    item.className = "cfm-file-item";
 
     var info = document.createElement("span");
-    info.className = "file-info";
+    info.className = "cfm-file-name";
     info.textContent = file.name + " (" + formatFileSize(file.size) + ")";
 
     var removeBtn = document.createElement("button");
-    removeBtn.className = "remove-btn";
+    removeBtn.className = "cfm-file-remove";
     removeBtn.textContent = "×";
     removeBtn.title = "移除文件";
     removeBtn.dataset.index = i;
@@ -68,15 +68,19 @@ function updateMergeBtn() {
 Office.onReady(function (info) {
   if (info.host === Office.HostType.Excel) {
     var fileInput = document.getElementById("fileInput");
+    var selectFilesBtn = document.getElementById("selectFilesBtn");
     var mergeBtn = document.getElementById("mergeBtn");
     var fileListEl = document.getElementById("fileList");
 
+    selectFilesBtn.addEventListener("click", function() {
+      fileInput.click();
+    });
     fileInput.addEventListener("change", onFileInputChange);
     mergeBtn.addEventListener("click", onMergeClick);
 
     // Event delegation for remove buttons
     fileListEl.addEventListener("click", function (e) {
-      var btn = e.target.closest(".remove-btn");
+      var btn = e.target.closest(".cfm-file-remove");
       if (!btn) return;
       var index = parseInt(btn.dataset.index, 10);
       selectedFiles.splice(index, 1);

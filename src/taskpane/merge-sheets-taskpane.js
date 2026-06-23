@@ -237,7 +237,15 @@ function executeMerge() {
       }
     }
 
-    // Step 4: Check if "合并结果" sheet exists (outside Excel.run to allow DOM interaction)
+    // Step 4: Check row count limit before writing
+    var rowValidation = mergeSheetsUtils.validateRowCount(mergedData.length);
+    if (!rowValidation.valid) {
+      executeBtn.disabled = false;
+      setStatus(rowValidation.error, "error");
+      return;
+    }
+
+    // Step 5: Check if "合并结果" sheet exists (outside Excel.run to allow DOM interaction)
     var existingSheets = context.workbook.worksheets;
     var targetSheet = existingSheets.getItemOrNullObject("合并结果");
     targetSheet.load("name");
@@ -267,7 +275,7 @@ function executeMerge() {
       // If overwrite, use same name
     }
 
-    // Step 5: Create or clear target sheet and write data (in a separate Excel.run after user choice)
+    // Step 6: Create or clear target sheet and write data (in a separate Excel.run after user choice)
     // IMPORTANT: Actually call .run() so the operation is executed
     (function createOrOverwriteSheet(targetName) {
       Excel.run(async function (context) {
