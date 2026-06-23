@@ -1,0 +1,42 @@
+.file-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.file-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+}
+
+.file-list-item:last-child {
+    border-bottom: none;
+}
+
+.file-list-item .remove-btn {
+    color: #d13438;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 14px;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: normal;
+    cursor: pointer;
+}

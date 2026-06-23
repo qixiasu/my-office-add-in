@@ -1,0 +1,95 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CSV 文件合并</title>
+
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <link rel="stylesheet" href="https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/office-ui-fabric-core/11.1.0/css/fabric.min.css"/>
+
+    <!-- Template styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+    <link href="csv-import-taskpane.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+    <div class="csv-import-container">
+        <!-- Taskpane header -->
+        <div class="taskpane-header">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="#0078d4">
+                <path d="M14 3a1 1 0 0 1 1 1v5.586l2.707 2.707A1 1 0 0 1 17 14.414V15a1 1 0 0 1-2 0v-1a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1a1 1 0 0 1-2 0v-.586a1 1 0 0 1 .293-.707L11 9.586V4a1 1 0 0 1 1-1h2z"/>
+            </svg>
+            <h1>CSV 文件合并</h1>
+        </div>
+
+        <!-- File selection section -->
+        <div class="guide-card">
+            <p id="fileCountText">已选择 0 个文件</p>
+        </div>
+
+        <div class="form-group">
+            <input type="file" id="fileInput" multiple accept=".csv,.tsv,.txt" />
+        </div>
+
+        <!-- File list -->
+        <div id="fileList" class="file-list"></div>
+
+        <!-- Header mode options -->
+        <div class="form-group">
+            <label>表头处理：</label>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="headerMode" value="skip" />
+                    <span>跳过所有表头行</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="headerMode" value="keep-first" checked />
+                    <span>保留第一个文件的表头 (默认)</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="headerMode" value="all-data" />
+                    <span>将所有表头行作为数据合并</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Output encoding -->
+        <div class="form-group">
+            <label for="outputEncoding">输出编码：</label>
+            <select id="outputEncoding">
+                <option value="utf-8" selected>UTF-8</option>
+                <option value="gbk">GBK</option>
+                <option value="gb18030">GB18030</option>
+            </select>
+        </div>
+
+        <!-- Output delimiter -->
+        <div class="form-group">
+            <label for="outputDelimiter">输出分隔符：</label>
+            <select id="outputDelimiter">
+                <option value="," selected>逗号 ,</option>
+                <option value="&#9;">制表符</option>
+                <option value=";">分号 ;</option>
+                <option value="|">单竖线 |</option>
+            </select>
+        </div>
+
+        <!-- Merge button -->
+        <div class="btn-row">
+            <button id="mergeBtn" class="concat-button" disabled>合并并下载</button>
+        </div>
+
+        <!-- Status message -->
+        <div id="status" class="status-message">状态：等待操作...</div>
+    </div>
+</body>
+
+</html>
