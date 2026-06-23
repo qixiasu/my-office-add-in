@@ -89,11 +89,15 @@ function bindEvents() {
     refreshSelection(false);
   });
   providerSelect.addEventListener("change", function () {
-    // 切换 provider：清空当前 Key 输入，刷新模型下拉
-    apiKeyInput.value = "";
-    settings.provider = providerSelect.value;
-    settings.model = aiUtils.getProvider(settings.provider).defaultModel;
+    var newProvider = providerSelect.value;
+    // Reload the new provider's saved key, model, and temperature from localStorage
+    apiKeyInput.value = localStorage.getItem("provider_" + newProvider + "_api_key") || "";
+    settings.provider = newProvider;
+    settings.model = localStorage.getItem("provider_" + newProvider + "_model")
+      || aiUtils.getProvider(newProvider).defaultModel;
+    settings.temperature = parseFloat(localStorage.getItem("provider_" + newProvider + "_temperature") || "0.3");
     populateModelSelect(settings.provider, settings.model);
+    temperatureInput.value = settings.temperature;
   });
 }
 
@@ -175,7 +179,7 @@ function refreshSelection(silent) {
 function handleSend() {
   if (isProcessing || !apiKey) {
     if (!apiKey) {
-addAssistantMessage("请先在设置中配置 AI 提供商的 API Key ⚙️");
+      addAssistantMessage("请先在设置中配置 AI 提供商的 API Key ⚙️");
     }
     return;
   }
