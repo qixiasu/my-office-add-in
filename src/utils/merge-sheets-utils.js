@@ -1,4 +1,9 @@
 /**
+ * Excel 最大行数限制
+ */
+var EXCEL_MAX_ROWS = 1048576;
+
+/**
  * 获取 Excel 列字母（A-Z, AA-ZZ, ...）
  * @param {number} colIndex - 0-based column index
  * @returns {string} Column letter(s)
@@ -40,6 +45,21 @@ function validateColumnConsistency(sheets) {
 }
 
 /**
+ * 验证合并数据行数是否超出 Excel 最大限制
+ * @param {number} rowCount - 合并后的数据行数
+ * @returns {{valid: boolean, error: string|null}}
+ */
+function validateRowCount(rowCount) {
+  if (rowCount > EXCEL_MAX_ROWS) {
+    return {
+      valid: false,
+      error: "合并结果共 " + rowCount + " 行，超出 Excel 最大行数限制（" + EXCEL_MAX_ROWS + " 行），无法存放。请减少所选 Sheet 的数据量后重试。"
+    };
+  }
+  return { valid: true, error: null };
+}
+
+/**
  * 生成唯一的 Sheet 名称
  * @param {string} baseName - 基础名称，如"合并结果"
  * @param {string[]} existingNames - 已存在的 Sheet 名称数组
@@ -61,5 +81,7 @@ function generateUniqueSheetName(baseName, existingNames) {
 module.exports = {
   getColumnLetter: getColumnLetter,
   validateColumnConsistency: validateColumnConsistency,
-  generateUniqueSheetName: generateUniqueSheetName
+  validateRowCount: validateRowCount,
+  generateUniqueSheetName: generateUniqueSheetName,
+  EXCEL_MAX_ROWS: EXCEL_MAX_ROWS
 };
