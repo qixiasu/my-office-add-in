@@ -27,7 +27,11 @@ Office.onReady(function (info) {
     var delimiterInput = document.getElementById("delimiterInput");
     var prevBtn = document.getElementById("prevBtn");
     var nextBtn = document.getElementById("nextBtn");
+    var selectFilesBtn = document.getElementById("selectFilesBtn");
 
+    selectFilesBtn.addEventListener("click", function() {
+      fileInput.click();
+    });
     fileInput.addEventListener("change", onFileSelected);
     delimiterInput.addEventListener("input", onDelimiterChanged);
     prevBtn.addEventListener("click", onPrev);
