@@ -28,9 +28,14 @@ var PROVIDERS = {
     id: "minimax",
     name: "MiniMax",
     apiKeyStorageKey: "provider_minimax_api_key",
-    apiUrl: "https://api.minimaxi.com/anthropic",
+    apiUrl: "https://api.minimaxi.com/anthropic/v1/messages",
+    apiFormat: "anthropic",
     defaultModel: "MiniMax-M3",
-    models: [{ id: "MiniMax-M3", name: "MiniMax M3" }],
+    models: [
+      { id: "MiniMax-M3", name: "MiniMax M3" },
+      { id: "MiniMax-M2.7", name: "MiniMax M2.7" },
+      { id: "MiniMax-M2.5", name: "MiniMax M2.5" },
+    ],
   },
 };
 
@@ -93,28 +98,110 @@ function sendChatRequest(apiKey, messages, tools, options) {
   var providerId = options.providerId || "deepseek";
   var provider = getProvider(providerId);
   var model = options.model || provider.defaultModel;
-  var temperature = options.temperature !== undefined ? options.temperature : 0.3;
   var maxTokens = options.maxTokens || 4096;
 
-  return fetch(provider.apiUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + apiKey,
-    },
-    body: JSON.stringify({
+  var requestBody;
+  var headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer " + apiKey,
+  };
+
+  // 根据 provider 格式选择不同的请求体结构
+  if (provider.apiFormat === "anthropic") {
+    // Anthropic 格式 (MiniMax Token Plan)
+    var systemPrompt = "";
+    var anthropicMessages = [];
+
+    // 分离 system prompt 和 messages
+    for (var i = 0; i < messages.length; i++) {
+      var msg = messages[i];
+      if (msg.role === "system") {
+        systemPrompt = msg.content;
+      } else if (msg.role === "tool") {
+        // Anthropic 格式：tool result 包含 tool_use_id 和 content
+        var toolResultContent = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
+        anthropicMessages.push({
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: msg.tool_call_id,
+              content: toolResultContent,
+            },
+          ],
+        });
+      } else if (msg.role === "assistant") {
+        // Anthropic 格式：assistant 消息的 content 可能是原始 content 块数组
+        var msgContent = msg.content;
+        if (Array.isArray(msgContent)) {
+          // 已经是 Anthropic 格式的 content 块数组，直接使用
+          anthropicMessages.push({
+            role: "assistant",
+            content: msgContent,
+          });
+        } else if (typeof msgContent === "string") {
+          // 字符串内容，转换为 Anthropic 格式
+          anthropicMessages.push({
+            role: "assistant",
+            content: [{ type: "text", text: msgContent }],
+          });
+        } else {
+          anthropicMessages.push(msg);
+        }
+      } else {
+        // user 消息：content 需要是 {type, text} 对象数组
+        var msgContent = msg.content;
+        if (typeof msgContent === "string") {
+          msgContent = [{ type: "text", text: msgContent }];
+        }
+        anthropicMessages.push({
+          role: msg.role,
+          content: msgContent,
+        });
+      }
+    }
+
+    requestBody = {
+      model: model,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: anthropicMessages,
+    };
+
+    // Anthropic 格式的 tools 需要转换
+    if (tools && tools.length > 0) {
+      var anthropicTools = tools.map(function (tool) {
+        return {
+          name: tool.function.name,
+          description: tool.function.description,
+          input_schema: tool.function.parameters,
+        };
+      });
+      requestBody.tools = anthropicTools;
+    }
+  } else {
+    // OpenAI 格式 (DeepSeek)
+    requestBody = {
       model: model,
       messages: messages,
       tools: tools,
-      temperature: temperature,
+      temperature: options.temperature !== undefined ? options.temperature : 0.3,
       max_tokens: maxTokens,
-    }),
+    };
+    // OpenAI 使用 Authorization header
+    headers["Authorization"] = "Bearer " + apiKey;
+    delete headers["x-api-key"];
+  }
+
+  return fetch(provider.apiUrl, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(requestBody),
   }).then(function (response) {
     if (!response.ok) {
       return response.json().then(function (err) {
-        throw new Error(
-          provider.name + " API 错误: " + ((err.error && err.error.message) || response.statusText)
-        );
+        var errorMsg = err.error?.message || err.base_resp?.status_msg || response.statusText;
+        throw new Error(provider.name + " API 错误: " + errorMsg);
       });
     }
     return response.json();
@@ -124,11 +211,60 @@ function sendChatRequest(apiKey, messages, tools, options) {
 /**
  * 解析 API 响应的 choice 内容
  * @param {Object} response - API 完整响应
- * @returns {Object} {message, toolCalls}
+ * @param {string} [providerId] - Provider 标识符（可选）
+ * @returns {Object} {message, toolCalls, rawContent}
  *   - message: AI 回复的消息对象
  *   - toolCalls: 如果有 tool_calls 则返回数组，否则 null
+ *   - rawContent: Anthropic 格式的原始 content 数组（如果适用）
  */
-function parseResponse(response) {
+function parseResponse(response, providerId) {
+  // 支持 OpenAI 和 Anthropic 两种响应格式
+
+  // Anthropic 格式 (MiniMax)
+  if (response.content && Array.isArray(response.content)) {
+    // 检查是否有 tool_use 类型的内容块（Anthropic 格式的工具调用）
+    var toolCalls = null;
+    var toolCallIndex = 0;
+    for (var j = 0; j < response.content.length; j++) {
+      var toolBlock = response.content[j];
+      if (toolBlock.type === "tool_use") {
+        toolCalls = toolCalls || [];
+        // MiniMax 可能没有返回 id，需要生成一个唯一的
+        var toolId = toolBlock.id || "tool_" + toolCallIndex++;
+        toolCalls.push({
+          id: toolId,
+          type: "function",
+          function: {
+            name: toolBlock.name,
+            arguments: JSON.stringify(toolBlock.input || {}),
+          },
+        });
+      }
+    }
+
+    // 提取文本内容用于显示
+    var textContent = "";
+    for (var i = 0; i < response.content.length; i++) {
+      var block = response.content[i];
+      if (block.type === "text") {
+        textContent += block.text || "";
+      }
+    }
+
+    // 对于 Anthropic，保持原始 content 块数组
+    var message = {
+      role: response.role || "assistant",
+      content: response.content, // 保留完整内容块
+    };
+
+    return {
+      message: message,
+      toolCalls: toolCalls,
+      rawContent: response.content, // 原始 content 数组
+    };
+  }
+
+  // OpenAI 格式 (DeepSeek)
   var choice = response.choices && response.choices[0];
   if (!choice) {
     throw new Error("API 返回为空");
@@ -140,6 +276,7 @@ function parseResponse(response) {
   return {
     message: message,
     toolCalls: toolCalls,
+    rawContent: null,
   };
 }
 
@@ -300,6 +437,7 @@ var MAX_HISTORY_ROUNDS = 3; // 保留最近 3 轮对话
  */
 function buildSystemPrompt(selectionSummary, providerId) {
   var modelInfo = "";
+  var isAnthropicFormat = false;
   if (providerId) {
     var provider = PROVIDERS[providerId];
     if (provider) {
@@ -312,6 +450,7 @@ function buildSystemPrompt(selectionSummary, providerId) {
         }
       }
       modelInfo = "你的底层模型是 " + modelName + "（由 " + provider.name + " 提供）。";
+      isAnthropicFormat = provider.apiFormat === "anthropic";
     }
   }
 
@@ -331,6 +470,16 @@ function buildSystemPrompt(selectionSummary, providerId) {
     "4. 分类/提取 → 使用 classify_data 工具",
     "5. 解释你的每一步操作，让用户知道发生了什么",
   ];
+
+  // Anthropic/MiniMax 格式需要特殊指令
+  if (isAnthropicFormat) {
+    prompt.push("");
+    prompt.push("【工具使用格式要求】（必须严格遵守）：");
+    prompt.push("当你调用工具时，必须返回以下格式的 tool_use 块：");
+    prompt.push('{ "type": "tool_use", "id": "唯一ID字符串", "name": "工具名称", "input": { 参数对象 } }');
+    prompt.push("重要：每个 tool_use 块必须包含唯一的 id 字符串（如 \"tool_1\", \"tool_2\"），");
+    prompt.push("这样在返回工具结果时才能正确引用。");
+  }
 
   if (selectionSummary) {
     prompt.push("");

@@ -11,6 +11,8 @@
   <SupportUrl DefaultValue="https://qixiasu.github.io/my-office-add-in/"/>
   <AppDomains>
     <AppDomain>https://qixiasu.github.io</AppDomain>
+    <AppDomain>https://api.minimaxi.com</AppDomain>
+    <AppDomain>https://api.deepseek.com</AppDomain>
   </AppDomains>
   <Hosts>
     <Host Name="Workbook"/>

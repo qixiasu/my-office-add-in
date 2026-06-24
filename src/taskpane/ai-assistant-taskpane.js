@@ -215,18 +215,33 @@ function handleSend() {
       }
     )
     .then(function (response) {
-      return aiUtils.parseResponse(response);
+      return aiUtils.parseResponse(response, settings.provider);
     })
     .then(function (parsed) {
       hideLoading();
+      // Anthropic 格式：使用 rawContent 提取显示文本，保留完整块用于后续请求
+      var displayContent = "";
+      if (parsed.rawContent && Array.isArray(parsed.rawContent)) {
+        // 从 rawContent 提取文本用于显示
+        for (var i = 0; i < parsed.rawContent.length; i++) {
+          var block = parsed.rawContent[i];
+          if (block.type === "text") {
+            displayContent += block.text || "";
+          }
+        }
+        // 保留完整 content 块用于后续请求
+        parsed.message.content = parsed.rawContent;
+      } else {
+        displayContent = parsed.message.content || "";
+      }
+
       context = aiUtils.addMessage(context, parsed.message);
 
       if (parsed.toolCalls && parsed.toolCalls.length > 0) {
         return handleToolCalls(parsed.toolCalls);
       }
 
-      var content = parsed.message.content || "";
-      addAssistantMessage(content);
+      addAssistantMessage(displayContent);
     })
     .catch(function (err) {
       hideLoading();
@@ -314,21 +329,35 @@ function handleToolCalls(toolCalls) {
       })
       .then(function (response) {
         hideLoading();
-        return aiUtils.parseResponse(response);
+        return aiUtils.parseResponse(response, settings.provider);
       })
       .then(function (parsed) {
+        // Anthropic 格式：使用 rawContent 提取显示文本，保留完整块用于后续请求
+        var displayContent = "";
+        if (parsed.rawContent && Array.isArray(parsed.rawContent)) {
+          for (var i = 0; i < parsed.rawContent.length; i++) {
+            var block = parsed.rawContent[i];
+            if (block.type === "text") {
+              displayContent += block.text || "";
+            }
+          }
+          parsed.message.content = parsed.rawContent;
+        } else {
+          displayContent = parsed.message.content || "";
+        }
+
         context = aiUtils.addMessage(context, parsed.message);
 
         if (parsed.toolCalls && parsed.toolCalls.length > 0) {
           // 先显示本轮文本内容（保持时间顺序），再递归处理新的 tool_calls
-          if (parsed.message.content) {
-            addAssistantMessage(parsed.message.content);
+          if (displayContent) {
+            addAssistantMessage(displayContent);
           }
           return handleToolCalls(parsed.toolCalls);
         }
 
         // 没有更多 tool_calls，显示文本并完成
-        addAssistantMessage(parsed.message.content || "");
+        addAssistantMessage(displayContent);
         setStatus("完成", "success");
       });
   }
