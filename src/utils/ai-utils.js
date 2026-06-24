@@ -295,11 +295,29 @@ var MAX_HISTORY_ROUNDS = 3; // 保留最近 3 轮对话
 /**
  * 构建 System Prompt（含数据上下文）
  * @param {Object|null} selectionSummary - Excel 选区摘要（可选）
+ * @param {string} [providerId] - Provider 标识符（可选，用于明确 AI 身份）
  * @returns {string} system prompt 字符串
  */
-function buildSystemPrompt(selectionSummary) {
+function buildSystemPrompt(selectionSummary, providerId) {
+  var modelInfo = "";
+  if (providerId) {
+    var provider = PROVIDERS[providerId];
+    if (provider) {
+      var modelName = provider.defaultModel;
+      var models = provider.models;
+      for (var i = 0; i < models.length; i++) {
+        if (models[i].id === modelName) {
+          modelName = models[i].name;
+          break;
+        }
+      }
+      modelInfo = "你的底层模型是 " + modelName + "（由 " + provider.name + " 提供）。";
+    }
+  }
+
   var prompt = [
     "你是 Excel 数据处理助手，运行在 Excel 加载项中。",
+    modelInfo,
     "你拥有以下工具可以使用：",
     "- generate_formula：根据用户描述生成 Excel 公式并写入单元格",
     "- analyze_data：分析选中的数据，返回分析结论",
@@ -349,10 +367,11 @@ function buildSystemPrompt(selectionSummary) {
 /**
  * 创建初始对话上下文
  * @param {Object|null} selectionSummary - Excel 选区摘要
+ * @param {string} [providerId] - Provider 标识符（可选）
  * @returns {Array} messages 数组
  */
-function createContext(selectionSummary) {
-  return [{ role: "system", content: buildSystemPrompt(selectionSummary) }];
+function createContext(selectionSummary, providerId) {
+  return [{ role: "system", content: buildSystemPrompt(selectionSummary, providerId) }];
 }
 
 /**
@@ -413,10 +432,11 @@ function trimContext(context) {
  * 更新上下文中的数据摘要（替换 system prompt + 保留历史）
  * @param {Array} context - 当前上下文
  * @param {Object} selectionSummary - 新的选区摘要
+ * @param {string} [providerId] - Provider 标识符（可选）
  * @returns {Array} 更新后的上下文
  */
-function updateSelection(context, selectionSummary) {
-  var systemMsg = { role: "system", content: buildSystemPrompt(selectionSummary) };
+function updateSelection(context, selectionSummary, providerId) {
+  var systemMsg = { role: "system", content: buildSystemPrompt(selectionSummary, providerId) };
   var others = [];
   for (var i = 0; i < context.length; i++) {
     if (context[i].role !== "system") {

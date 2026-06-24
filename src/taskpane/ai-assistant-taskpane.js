@@ -23,7 +23,7 @@ var settings = {
   ),
   maxTokens: 4096,
 };
-var context = aiUtils.createContext(null);
+var context = aiUtils.createContext(null, settings.provider);
 var isProcessing = false;
 var selectionTimer = null;
 
@@ -143,7 +143,7 @@ function refreshSelection(silent) {
   setStatus("正在获取选区...", "loading");
   Excel.run(function (ctx) {
     return aiUtils.getSelectionSummary(ctx).then(function (summary) {
-      context = aiUtils.updateSelection(context, summary);
+      context = aiUtils.updateSelection(context, summary, settings.provider);
       if (summary.rowCount === 0) {
         selectionInfo.textContent = "选区：" + summary.address + "（无数据）";
         setStatus("所选区域无数据，请选择有内容的单元格区域", "warning");
