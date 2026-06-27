@@ -19,7 +19,7 @@ async function loadSelectedRange() {
   try {
     await Excel.run(async (context) => {
       const range = context.workbook.getSelectedRange();
-      range.load(['values', 'mergedRanges', 'numberFormat']);
+      range.load(['values', 'mergedRanges', 'numberFormat', 'rowCount', 'columnCount']);
 
       await context.sync();
 
@@ -70,9 +70,12 @@ async function copyToClipboard() {
     textarea.style.position = 'fixed';
     textarea.style.opacity = '0';
     document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
+    try {
+      textarea.select();
+      document.execCommand('copy');
+    } finally {
+      document.body.removeChild(textarea);
+    }
     showToast();
   }
 }
@@ -105,5 +108,5 @@ function showWarning(message) {
 }
 
 function closePanel() {
-  Office.UI.close();
+  Office.context.ui.close();
 }
