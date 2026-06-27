@@ -47,7 +47,7 @@ describe("ModelProvider", function () {
 
     it("minimax has correct apiUrl", function () {
       expect(aiUtils.PROVIDERS.minimax.apiUrl).toBe(
-        "https://api.minimaxi.chat/v1/text/chatcompletion_v2"
+        "https://api.minimaxi.com/anthropic/v1/messages"
       );
     });
   });
