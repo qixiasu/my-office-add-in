@@ -47,6 +47,10 @@ module.exports = async (env, options) => {
         "./src/taskpane/cross-file-merge-taskpane.js",
         "./src/taskpane/cross-file-merge-taskpane.html",
       ],
+      "markdown-export-taskpane": [
+        "./src/taskpane/markdown-export-taskpane.js",
+        "./src/taskpane/markdown-export-taskpane.html",
+      ],
     },
     output: {
       clean: true,
@@ -175,6 +179,11 @@ module.exports = async (env, options) => {
         filename: "cross-file-merge-taskpane.html",
         template: "./src/taskpane/cross-file-merge-taskpane.html",
         chunks: ["polyfill", "cross-file-merge-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "markdown-export-taskpane.html",
+        template: "./src/taskpane/markdown-export-taskpane.html",
+        chunks: ["polyfill", "markdown-export-taskpane"],
       }),
       new HtmlWebpackPlugin({
         filename: "index.html",
