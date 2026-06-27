@@ -70,9 +70,9 @@ npm run watch        # 监听模式开发
 
 ## 生产部署
 
-已配置 GitHub Actions 自动部署到 GitHub Pages：
+已配置 Gitee Pages 提供 HTTP 服务（国内访问更稳定）：
 
-- 部署地址: https://qixiasu.github.io/my-office-add-in/
+- 部署地址: https://qinxuan1989.gitee.io/my-office-add-in/
 - manifest.xml 中的资源 URL 在构建时自动替换为生产地址
 
 ## 项目结构
