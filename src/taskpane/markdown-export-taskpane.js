@@ -11,7 +11,6 @@ Office.onReady(function (info) {
 });
 
 function initialize() {
-  document.getElementById("closeBtn").addEventListener("click", closePanel);
   document.getElementById("copyBtn").addEventListener("click", copyToClipboard);
 
   loadSelectedRange();
@@ -115,6 +114,3 @@ function showWarning(message) {
   document.getElementById("warningText").textContent = message;
 }
 
-function closePanel() {
-  Office.context.ui.close();
-}
