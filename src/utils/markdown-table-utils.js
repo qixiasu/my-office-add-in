@@ -15,19 +15,20 @@
 function generateMarkdownTable(values, options = {}) {
   const { mergedRanges = [], includeAlignment = true, preserveFormat = true } = options;
 
-  if (!values || !values.length) return '';
+  if (!values || !values.length) return "";
 
   // 过滤空行空列
   const cleaned = parseRange(values);
-  if (!cleaned.length) return '';
+  if (!cleaned.length) return "";
 
   // 检测每列对齐方式
   const alignment = detectAlignment(cleaned, includeAlignment);
 
   // 处理合并单元格
-  const mergedInfo = mergedRanges.length > 0
-    ? handleMergedCells(mergedRanges, cleaned.length, cleaned[0].length)
-    : new Map();
+  const mergedInfo =
+    mergedRanges.length > 0
+      ? handleMergedCells(mergedRanges, cleaned.length, cleaned[0].length)
+      : new Map();
 
   // 构建表格字符串
   return buildTableString(cleaned, alignment, mergedInfo);
@@ -87,7 +88,7 @@ function parseMergedRangeAddress(address) {
   const colToNum = (col) => {
     let num = 0;
     for (let i = 0; i < col.length; i++) {
-      num = num * 26 + (col.charCodeAt(i) - 'A'.charCodeAt(0) + 1);
+      num = num * 26 + (col.charCodeAt(i) - "A".charCodeAt(0) + 1);
     }
     return num - 1; // 0-indexed
   };
@@ -96,7 +97,7 @@ function parseMergedRangeAddress(address) {
     startCol: colToNum(match[1]),
     startRow: parseInt(match[2]) - 1, // 0-indexed
     endCol: colToNum(match[3]),
-    endRow: parseInt(match[4]) - 1   // 0-indexed
+    endRow: parseInt(match[4]) - 1, // 0-indexed
   };
 }
 
@@ -107,25 +108,27 @@ function parseMergedRangeAddress(address) {
  */
 function parseRange(values) {
   // 过滤全空行
-  const filteredRows = values.filter(row => row.some(cell => cell !== null && cell !== ''));
+  const filteredRows = values.filter((row) => row.some((cell) => cell !== null && cell !== ""));
 
   if (!filteredRows.length) return [];
 
   // 过滤尾随空列
-  const colCount = Math.max(...filteredRows.map(row => row.length));
+  const colCount = Math.max(...filteredRows.map((row) => row.length));
   const nonEmptyCols = new Set();
 
   for (let col = 0; col < colCount; col++) {
     for (const row of filteredRows) {
-      if (row[col] !== null && row[col] !== '') {
+      if (row[col] !== null && row[col] !== "") {
         nonEmptyCols.add(col);
         break;
       }
     }
   }
 
-  return filteredRows.map(row =>
-    Array.from(nonEmptyCols).sort((a, b) => a - b).map(col => row[col] ?? '')
+  return filteredRows.map((row) =>
+    Array.from(nonEmptyCols)
+      .sort((a, b) => a - b)
+      .map((col) => row[col] ?? "")
   );
 }
 
@@ -137,22 +140,24 @@ function parseRange(values) {
  */
 function detectAlignment(rows, includeAlignment) {
   if (!includeAlignment || rows.length < 2) {
-    return rows[0].map(() => '---');
+    return rows[0].map(() => "---");
   }
 
   // 第一行为表头，不用于类型检测
   const dataRows = rows.slice(1);
 
   return rows[0].map((_, colIndex) => {
-    const values = dataRows.map(row => row[colIndex]);
-    const numericCount = values.filter(v => typeof v === 'number' || (!isNaN(parseFloat(v)) && isFinite(v))).length;
-    const totalNonEmpty = values.filter(v => v !== null && v !== '').length;
+    const values = dataRows.map((row) => row[colIndex]);
+    const numericCount = values.filter(
+      (v) => typeof v === "number" || (!isNaN(parseFloat(v)) && isFinite(v))
+    ).length;
+    const totalNonEmpty = values.filter((v) => v !== null && v !== "").length;
 
     // 如果超过 50% 是数字，则右对齐
     if (totalNonEmpty > 0 && numericCount / totalNonEmpty > 0.5) {
-      return '---:';
+      return "---:";
     }
-    return ':---';
+    return ":---";
   });
 }
 
@@ -165,7 +170,7 @@ function detectAlignment(rows, includeAlignment) {
  */
 function buildTableString(rows, alignment, mergedInfo = new Map()) {
   const lines = [];
-  const separator = '|' + alignment.map(a => ` ${a} `).join('|') + '|';
+  const separator = "|" + alignment.map((a) => ` ${a} `).join("|") + "|";
 
   // 表头行
   const headerCells = rows[0].map((cell, colIndex) => {
@@ -175,41 +180,43 @@ function buildTableString(rows, alignment, mergedInfo = new Map()) {
       const attrs = [];
       if (info.colspan > 1) attrs.push(`<colspan=${info.colspan}>`);
       if (info.rowspan > 1) attrs.push(`<rowspan=${info.rowspan}>`);
-      return escapeCell(cell) + attrs.join('');
+      return escapeCell(cell) + attrs.join("");
     }
     return escapeCell(cell);
   });
-  lines.push('|' + headerCells.map(c => ` ${c} `).join('|') + '|');
+  lines.push("|" + headerCells.map((c) => ` ${c} `).join("|") + "|");
   lines.push(separator);
 
   // 数据行
   for (let i = 1; i < rows.length; i++) {
-    const rowCells = rows[i].map((cell, colIndex) => {
-      const key = `${i}-${colIndex}`;
-      const info = mergedInfo.get(key);
-      if (info && info.covered) {
-        return ''; // Skip covered cells
-      }
-      if (info && !info.covered) {
-        const attrs = [];
-        if (info.colspan > 1) attrs.push(`<colspan=${info.colspan}>`);
-        if (info.rowspan > 1) attrs.push(`<rowspan=${info.rowspan}>`);
-        return escapeCell(cell) + attrs.join('');
-      }
-      return escapeCell(cell);
-    }).filter((c, idx, arr) => {
-      // Filter out empty cells that are covered
-      const key = `${i}-${idx}`;
-      const info = mergedInfo.get(key);
-      return !info || !info.covered;
-    });
+    const rowCells = rows[i]
+      .map((cell, colIndex) => {
+        const key = `${i}-${colIndex}`;
+        const info = mergedInfo.get(key);
+        if (info && info.covered) {
+          return ""; // Skip covered cells
+        }
+        if (info && !info.covered) {
+          const attrs = [];
+          if (info.colspan > 1) attrs.push(`<colspan=${info.colspan}>`);
+          if (info.rowspan > 1) attrs.push(`<rowspan=${info.rowspan}>`);
+          return escapeCell(cell) + attrs.join("");
+        }
+        return escapeCell(cell);
+      })
+      .filter((c, idx, arr) => {
+        // Filter out empty cells that are covered
+        const key = `${i}-${idx}`;
+        const info = mergedInfo.get(key);
+        return !info || !info.covered;
+      });
 
     if (rowCells.length > 0) {
-      lines.push('|' + rowCells.map(c => ` ${c} `).join('|') + '|');
+      lines.push("|" + rowCells.map((c) => ` ${c} `).join("|") + "|");
     }
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -218,9 +225,17 @@ function buildTableString(rows, alignment, mergedInfo = new Map()) {
  * @returns {string}
  */
 function escapeCell(cell) {
-  if (cell === null || cell === undefined) return '';
+  if (cell === null || cell === undefined) return "";
   const str = String(cell);
-  return str.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, '<br>');
+  return str.replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/\n/g, "<br>");
 }
 
-export { generateMarkdownTable, parseRange, detectAlignment, buildTableString, escapeCell, handleMergedCells, parseMergedRangeAddress };
+export {
+  generateMarkdownTable,
+  parseRange,
+  detectAlignment,
+  buildTableString,
+  escapeCell,
+  handleMergedCells,
+  parseMergedRangeAddress,
+};

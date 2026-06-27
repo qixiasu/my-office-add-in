@@ -69,7 +69,10 @@ describe("detectAlignment", function () {
   });
 
   it("should return basic separator when includeAlignment is false", function () {
-    var rows = [["A", "B"], ["C", "D"]];
+    var rows = [
+      ["A", "B"],
+      ["C", "D"],
+    ];
     var result = detectAlignment(rows, false);
     expect(result).toEqual(["---", "---"]);
   });
@@ -123,7 +126,11 @@ describe("generateMarkdownTable", function () {
     ];
     // Mock merged range: B1:C2 (colspan=2, rowspan=2)
     var mergedRanges = [
-      { toString: function () { return "B1:C2"; } }
+      {
+        toString: function () {
+          return "B1:C2";
+        },
+      },
     ];
     var result = generateMarkdownTable(values, { mergedRanges: mergedRanges });
     // B1 should have colspan=2 and rowspan=2
@@ -148,7 +155,11 @@ describe("handleMergedCells", function () {
   it("should handle merged range with colspan", function () {
     // A1:B1 (colspan=2, rowspan=1)
     var mergedRanges = [
-      { toString: function () { return "A1:B1"; } }
+      {
+        toString: function () {
+          return "A1:B1";
+        },
+      },
     ];
     var result = handleMergedCells(mergedRanges, 3, 3);
     // Primary cell at 0-0 should have colspan=2
@@ -160,7 +171,11 @@ describe("handleMergedCells", function () {
   it("should handle merged range with rowspan", function () {
     // A1:A2 (colspan=1, rowspan=2)
     var mergedRanges = [
-      { toString: function () { return "A1:A2"; } }
+      {
+        toString: function () {
+          return "A1:A2";
+        },
+      },
     ];
     var result = handleMergedCells(mergedRanges, 3, 3);
     // Primary cell at 0-0 should have rowspan=2
@@ -172,7 +187,11 @@ describe("handleMergedCells", function () {
   it("should handle merged range with both colspan and rowspan", function () {
     // B2:C3 (colspan=2, rowspan=2)
     var mergedRanges = [
-      { toString: function () { return "B2:C3"; } }
+      {
+        toString: function () {
+          return "B2:C3";
+        },
+      },
     ];
     var result = handleMergedCells(mergedRanges, 4, 4);
     // Primary cell at 1-1 should have colspan=2, rowspan=2
@@ -186,7 +205,11 @@ describe("handleMergedCells", function () {
   it("should ignore single cell ranges", function () {
     // A1:A1 (no actual merge)
     var mergedRanges = [
-      { toString: function () { return "A1:A1"; } }
+      {
+        toString: function () {
+          return "A1:A1";
+        },
+      },
     ];
     var result = handleMergedCells(mergedRanges, 3, 3);
     expect(result.size).toBe(0);
@@ -209,9 +232,9 @@ describe("parseMergedRangeAddress", function () {
   it("should parse range with multi-letter columns", function () {
     var result = parseMergedRangeAddress("AA1:ZZ999");
     expect(result).toEqual({
-      startCol: 26,  // AA = 27th column, 0-indexed = 26
+      startCol: 26, // AA = 27th column, 0-indexed = 26
       startRow: 0,
-      endCol: 701,   // ZZ = 702nd column, 0-indexed = 701
+      endCol: 701, // ZZ = 702nd column, 0-indexed = 701
       endRow: 998,
     });
   });
