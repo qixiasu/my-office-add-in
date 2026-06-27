@@ -28,12 +28,13 @@
                     <FunctionFile resid="Commands.Url"/>
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <CustomTab id="MyAddInTab">
-              <Group id="DataProcessingGroup">
-                <Label resid="DataProcessingGroup.Label"/>
+              <!-- 连接合并分组 -->
+              <Group id="MergeCombineGroup">
+                <Label resid="MergeCombineGroup.Label"/>
                 <Icon>
-                  <bt:Image size="16" resid="ToolsIcon.16x16"/>
-                  <bt:Image size="32" resid="ToolsIcon.32x32"/>
-                  <bt:Image size="80" resid="ToolsIcon.80x80"/>
+                  <bt:Image size="16" resid="MergeCombineIcon.16x16"/>
+                  <bt:Image size="32" resid="MergeCombineIcon.32x32"/>
+                  <bt:Image size="80" resid="MergeCombineIcon.80x80"/>
                 </Icon>
                 <Control xsi:type="Button" id="ConcatenateButton">
                   <Label resid="ConcatenateButton.Label"/>
@@ -49,52 +50,6 @@
                   <Action xsi:type="ShowTaskpane">
                     <TaskpaneId>ConcatTaskpaneId</TaskpaneId>
                     <SourceLocation resid="ConcatTaskpane.Url"/>
-                  </Action>
-                </Control>
-                <Control xsi:type="Button" id="CountValuesButton">
-                  <Label resid="CountValuesButton.Label"/>
-                  <Supertip>
-                    <Title resid="CountValuesButton.Label"/>
-                    <Description resid="CountValuesButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="CountValuesIcon.16x16"/>
-                    <bt:Image size="32" resid="CountValuesIcon.32x32"/>
-                    <bt:Image size="80" resid="CountValuesIcon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>CountValuesTaskpaneId</TaskpaneId>
-                    <SourceLocation resid="CountValuesTaskpane.Url"/>
-                  </Action>
-                </Control>
-                <Control xsi:type="Button" id="SplitSheetButton">
-                  <Label resid="SplitSheetButton.Label"/>
-                  <Supertip>
-                    <Title resid="SplitSheetButton.Label"/>
-                    <Description resid="SplitSheetButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="SplitSheetIcon.16x16"/><bt:Image size="32" resid="SplitSheetIcon.32x32"/><bt:Image size="80" resid="SplitSheetIcon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>SplitSheetTaskpaneId</TaskpaneId>
-                    <SourceLocation resid="SplitSheetTaskpane.Url"/>
-                  </Action>
-                </Control>
-                <Control xsi:type="Button" id="DataCleaningButton">
-                  <Label resid="DataCleaningButton.Label"/>
-                  <Supertip>
-                    <Title resid="DataCleaningButton.Label"/>
-                    <Description resid="DataCleaningButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="DataCleaningIcon.16x16"/>
-                    <bt:Image size="32" resid="DataCleaningIcon.32x32"/>
-                    <bt:Image size="80" resid="DataCleaningIcon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>DataCleaningTaskpaneId</TaskpaneId>
-                    <SourceLocation resid="DataCleaningTaskpane.Url"/>
                   </Action>
                 </Control>
                 <Control xsi:type="Button" id="MergeSheetsButton">
@@ -129,29 +84,14 @@
                     <SourceLocation resid="CrossFileMergeTaskpane.Url"/>
                   </Action>
                 </Control>
-                <Control xsi:type="Button" id="MarkdownExportButton">
-                  <Label resid="MarkdownExportButton.Label"/>
-                  <Supertip>
-                    <Title resid="MarkdownExportButton.Label"/>
-                    <Description resid="MarkdownExportButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="ToolsIcon.16x16"/>
-                    <bt:Image size="32" resid="ToolsIcon.32x32"/>
-                    <bt:Image size="80" resid="ToolsIcon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>MarkdownExportTaskpaneId</TaskpaneId>
-                    <SourceLocation resid="MarkdownExportTaskpane.Url"/>
-                  </Action>
-                </Control>
               </Group>
-              <Group id="DataConversionGroup">
-                <Label resid="DataConversionGroup.Label"/>
+              <!-- 数据转换分组 -->
+              <Group id="DataTransformGroup">
+                <Label resid="DataTransformGroup.Label"/>
                 <Icon>
-                  <bt:Image size="16" resid="ToolsIcon.16x16"/>
-                  <bt:Image size="32" resid="ToolsIcon.32x32"/>
-                  <bt:Image size="80" resid="ToolsIcon.80x80"/>
+                  <bt:Image size="16" resid="DataTransformIcon.16x16"/>
+                  <bt:Image size="32" resid="DataTransformIcon.32x32"/>
+                  <bt:Image size="80" resid="DataTransformIcon.80x80"/>
                 </Icon>
                 <Control xsi:type="Button" id="ExpandColumnButton">
                   <Label resid="ExpandColumnButton.Label"/>
@@ -183,74 +123,54 @@
                   <Action xsi:type="ShowTaskpane"><TaskpaneId>FillSeriesTaskpaneId</TaskpaneId><SourceLocation resid="FillSeriesTaskpane.Url"/></Action>
                 </Control>
               </Group>
-              <Group id="DatabaseQueryGroup">
-                <Label resid="DatabaseQueryGroup.Label"/>
+              <!-- 数据统计分组 -->
+              <Group id="DataStatsGroup">
+                <Label resid="DataStatsGroup.Label"/>
                 <Icon>
+                  <bt:Image size="16" resid="DataStatsIcon.16x16"/>
+                  <bt:Image size="32" resid="DataStatsIcon.32x32"/>
+                  <bt:Image size="80" resid="DataStatsIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="CountValuesButton">
+                  <Label resid="CountValuesButton.Label"/>
+                  <Supertip>
+                    <Title resid="CountValuesButton.Label"/>
+                    <Description resid="CountValuesButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="CountValuesIcon.16x16"/>
+                    <bt:Image size="32" resid="CountValuesIcon.32x32"/>
+                    <bt:Image size="80" resid="CountValuesIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>CountValuesTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="CountValuesTaskpane.Url"/>
+                  </Action>
+                </Control>
+                <Control xsi:type="Button" id="SqlQueryButton">
+                  <Label resid="SqlQueryButton.Label"/>
+                  <Supertip>
+                    <Title resid="SqlQueryButton.Label"/>
+                    <Description resid="SqlQueryButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
                     <bt:Image size="16" resid="DbIcon.16x16"/>
                     <bt:Image size="32" resid="DbIcon.32x32"/>
                     <bt:Image size="80" resid="DbIcon.80x80"/>
-                </Icon>
-                <Control xsi:type="Button" id="SqlQueryButton">
-                    <Label resid="SqlQueryButton.Label"/>
-                    <Supertip>
-                        <Title resid="SqlQueryButton.Label"/>
-                        <Description resid="SqlQueryButton.Tooltip"/>
-                    </Supertip>
-                    <Icon>
-                        <bt:Image size="16" resid="DbIcon.16x16"/>
-                        <bt:Image size="32" resid="DbIcon.32x32"/>
-                        <bt:Image size="80" resid="DbIcon.80x80"/>
-                    </Icon>
-                    <Action xsi:type="ShowTaskpane">
-                        <TaskpaneId>SqlQueryTaskpaneId</TaskpaneId>
-                        <SourceLocation resid="SqlQueryTaskpane.Url"/>
-                    </Action>
-                </Control>
-              </Group>
-              <Group id="QuickSelectGroup">
-                <Label resid="QuickSelectGroup.Label"/>
-                <Icon>
-                  <bt:Image size="16" resid="ToolsIcon.16x16"/>
-                  <bt:Image size="32" resid="ToolsIcon.32x32"/>
-                  <bt:Image size="80" resid="ToolsIcon.80x80"/>
-                </Icon>
-                <Control xsi:type="Button" id="SelectToEndButton">
-                  <Label resid="SelectToEndButton.Label"/>
-                  <Supertip>
-                    <Title resid="SelectToEndButton.Label"/>
-                    <Description resid="SelectToEndButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="SelectToEndIcon.16x16"/>
-                    <bt:Image size="32" resid="SelectToEndIcon.32x32"/>
-                    <bt:Image size="80" resid="SelectToEndIcon.80x80"/>
                   </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>selectToEnd</FunctionName>
-                  </Action>
-                </Control>
-                <Control xsi:type="Button" id="SelectToRightButton">
-                  <Label resid="SelectToRightButton.Label"/>
-                  <Supertip>
-                    <Title resid="SelectToRightButton.Label"/>
-                    <Description resid="SelectToRightButton.Tooltip"/>
-                  </Supertip>
-                  <Icon>
-                    <bt:Image size="16" resid="SelectToRightIcon.16x16"/>
-                    <bt:Image size="32" resid="SelectToRightIcon.32x32"/>
-                    <bt:Image size="80" resid="SelectToRightIcon.80x80"/>
-                  </Icon>
-                  <Action xsi:type="ExecuteFunction">
-                    <FunctionName>selectToRight</FunctionName>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>SqlQueryTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="SqlQueryTaskpane.Url"/>
                   </Action>
                 </Control>
               </Group>
+              <!-- 查找导入分组 -->
               <Group id="LookupImportGroup">
                 <Label resid="LookupImportGroup.Label"/>
                 <Icon>
-                  <bt:Image size="16" resid="ToolsIcon.16x16"/>
-                  <bt:Image size="32" resid="ToolsIcon.32x32"/>
-                  <bt:Image size="80" resid="ToolsIcon.80x80"/>
+                  <bt:Image size="16" resid="LookupImportIcon.16x16"/>
+                  <bt:Image size="32" resid="LookupImportIcon.32x32"/>
+                  <bt:Image size="80" resid="LookupImportIcon.80x80"/>
                 </Icon>
                 <Control xsi:type="Button" id="EnhancedVlookupButton">
                   <Label resid="EnhancedVlookupButton.Label"/>
@@ -301,28 +221,134 @@
                   </Action>
                 </Control>
               </Group>
+              <!-- 表格操作分组 -->
+              <Group id="TableOpsGroup">
+                <Label resid="TableOpsGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="TableOpsIcon.16x16"/>
+                  <bt:Image size="32" resid="TableOpsIcon.32x32"/>
+                  <bt:Image size="80" resid="TableOpsIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="SplitSheetButton">
+                  <Label resid="SplitSheetButton.Label"/>
+                  <Supertip>
+                    <Title resid="SplitSheetButton.Label"/>
+                    <Description resid="SplitSheetButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="SplitSheetIcon.16x16"/>
+                    <bt:Image size="32" resid="SplitSheetIcon.32x32"/>
+                    <bt:Image size="80" resid="SplitSheetIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>SplitSheetTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="SplitSheetTaskpane.Url"/>
+                  </Action>
+                </Control>
+                <Control xsi:type="Button" id="MarkdownExportButton">
+                  <Label resid="MarkdownExportButton.Label"/>
+                  <Supertip>
+                    <Title resid="MarkdownExportButton.Label"/>
+                    <Description resid="MarkdownExportButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="MarkdownExportIcon.16x16"/>
+                    <bt:Image size="32" resid="MarkdownExportIcon.32x32"/>
+                    <bt:Image size="80" resid="MarkdownExportIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>MarkdownExportTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="MarkdownExportTaskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+              <!-- 数据清洗分组 -->
+              <Group id="DataCleanGroup">
+                <Label resid="DataCleanGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="DataCleaningIcon.16x16"/>
+                  <bt:Image size="32" resid="DataCleaningIcon.32x32"/>
+                  <bt:Image size="80" resid="DataCleaningIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="DataCleaningButton">
+                  <Label resid="DataCleaningButton.Label"/>
+                  <Supertip>
+                    <Title resid="DataCleaningButton.Label"/>
+                    <Description resid="DataCleaningButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="DataCleaningIcon.16x16"/>
+                    <bt:Image size="32" resid="DataCleaningIcon.32x32"/>
+                    <bt:Image size="80" resid="DataCleaningIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>DataCleaningTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="DataCleaningTaskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+              <!-- 快速选区分组 -->
+              <Group id="QuickSelectGroup">
+                <Label resid="QuickSelectGroup.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="QuickSelectIcon.16x16"/>
+                  <bt:Image size="32" resid="QuickSelectIcon.32x32"/>
+                  <bt:Image size="80" resid="QuickSelectIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="SelectToEndButton">
+                  <Label resid="SelectToEndButton.Label"/>
+                  <Supertip>
+                    <Title resid="SelectToEndButton.Label"/>
+                    <Description resid="SelectToEndButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="SelectToEndIcon.16x16"/>
+                    <bt:Image size="32" resid="SelectToEndIcon.32x32"/>
+                    <bt:Image size="80" resid="SelectToEndIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>selectToEnd</FunctionName>
+                  </Action>
+                </Control>
+                <Control xsi:type="Button" id="SelectToRightButton">
+                  <Label resid="SelectToRightButton.Label"/>
+                  <Supertip>
+                    <Title resid="SelectToRightButton.Label"/>
+                    <Description resid="SelectToRightButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="SelectToRightIcon.16x16"/>
+                    <bt:Image size="32" resid="SelectToRightIcon.32x32"/>
+                    <bt:Image size="80" resid="SelectToRightIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>selectToRight</FunctionName>
+                  </Action>
+                </Control>
+              </Group>
+              <!-- AI助手分组 -->
               <Group id="AiAssistantGroup">
                 <Label resid="AiAssistantGroup.Label"/>
                 <Icon>
+                  <bt:Image size="16" resid="AiIcon.16x16"/>
+                  <bt:Image size="32" resid="AiIcon.32x32"/>
+                  <bt:Image size="80" resid="AiIcon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="AiAssistantButton">
+                  <Label resid="AiAssistantButton.Label"/>
+                  <Supertip>
+                    <Title resid="AiAssistantButton.Label"/>
+                    <Description resid="AiAssistantButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
                     <bt:Image size="16" resid="AiIcon.16x16"/>
                     <bt:Image size="32" resid="AiIcon.32x32"/>
                     <bt:Image size="80" resid="AiIcon.80x80"/>
-                </Icon>
-                <Control xsi:type="Button" id="AiAssistantButton">
-                    <Label resid="AiAssistantButton.Label"/>
-                    <Supertip>
-                        <Title resid="AiAssistantButton.Label"/>
-                        <Description resid="AiAssistantButton.Tooltip"/>
-                    </Supertip>
-                    <Icon>
-                        <bt:Image size="16" resid="AiIcon.16x16"/>
-                        <bt:Image size="32" resid="AiIcon.32x32"/>
-                        <bt:Image size="80" resid="AiIcon.80x80"/>
-                    </Icon>
-                    <Action xsi:type="ShowTaskpane">
-                        <TaskpaneId>AiAssistantTaskpaneId</TaskpaneId>
-                        <SourceLocation resid="AiAssistantTaskpane.Url"/>
-                    </Action>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>AiAssistantTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="AiAssistantTaskpane.Url"/>
+                  </Action>
                 </Control>
               </Group>
               <Label resid="CustomTab.Label"/>
@@ -381,6 +407,28 @@
         <bt:Image id="CsvMergeIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/csv-merge-16.png"/>
         <bt:Image id="CsvMergeIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/csv-merge-32.png"/>
         <bt:Image id="CsvMergeIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/csv-merge-80.png"/>
+        <!-- 新分组图标 (复用现有图标作为占位) -->
+        <bt:Image id="MergeCombineIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/merge-sheets-16.png"/>
+        <bt:Image id="MergeCombineIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/merge-sheets-32.png"/>
+        <bt:Image id="MergeCombineIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/merge-sheets-80.png"/>
+        <bt:Image id="DataTransformIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/expand-16.png"/>
+        <bt:Image id="DataTransformIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/expand-32.png"/>
+        <bt:Image id="DataTransformIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/expand-80.png"/>
+        <bt:Image id="DataStatsIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/count-values-16.png"/>
+        <bt:Image id="DataStatsIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/count-values-32.png"/>
+        <bt:Image id="DataStatsIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/count-values-80.png"/>
+        <bt:Image id="LookupImportIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/lookup-16.png"/>
+        <bt:Image id="LookupImportIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/lookup-32.png"/>
+        <bt:Image id="LookupImportIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/lookup-80.png"/>
+        <bt:Image id="TableOpsIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/split-sheet-16.png"/>
+        <bt:Image id="TableOpsIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/split-sheet-32.png"/>
+        <bt:Image id="TableOpsIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/split-sheet-80.png"/>
+        <bt:Image id="QuickSelectIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/select-to-end-16.png"/>
+        <bt:Image id="QuickSelectIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/select-to-end-32.png"/>
+        <bt:Image id="QuickSelectIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/select-to-end-80.png"/>
+        <bt:Image id="MarkdownExportIcon.16x16" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/markdown-export-16.png"/>
+        <bt:Image id="MarkdownExportIcon.32x32" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/markdown-export-32.png"/>
+        <bt:Image id="MarkdownExportIcon.80x80" DefaultValue="https://qixiasu.github.io/my-office-add-in/assets/markdown-export-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://qixiasu.github.io/my-office-add-in/commands.html"/>
@@ -402,9 +450,13 @@
       <bt:ShortStrings>
         <bt:String id="CustomTab.Label" DefaultValue="Excel 工具箱"/>
         <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
-        <bt:String id="DataProcessingGroup.Label" DefaultValue="数据处理"/>
-        <bt:String id="DataConversionGroup.Label" DefaultValue="数据转换"/>
-        <bt:String id="LookupImportGroup.Label" DefaultValue="查找与导入"/>
+        <bt:String id="MergeCombineGroup.Label" DefaultValue="连接合并"/>
+        <bt:String id="DataTransformGroup.Label" DefaultValue="数据转换"/>
+        <bt:String id="DataStatsGroup.Label" DefaultValue="数据统计"/>
+        <bt:String id="LookupImportGroup.Label" DefaultValue="查找导入"/>
+        <bt:String id="TableOpsGroup.Label" DefaultValue="表格操作"/>
+        <bt:String id="DataCleanGroup.Label" DefaultValue="数据清洗"/>
+        <bt:String id="QuickSelectGroup.Label" DefaultValue="快速选区"/>
         <bt:String id="ConcatenateButton.Label" DefaultValue="连接列"/>
         <bt:String id="ImportCsvButton.Label" DefaultValue="导入CSV"/>
         <bt:String id="EnhancedVlookupButton.Label" DefaultValue="增强查找"/>
@@ -415,7 +467,6 @@
         <bt:String id="SelectToEndButton.Label" DefaultValue="向下选区"/>
         <bt:String id="SelectToRightButton.Label" DefaultValue="向右选区"/>
         <bt:String id="QuickSelectGroup.Label" DefaultValue="快速选区"/>
-        <bt:String id="DatabaseQueryGroup.Label" DefaultValue="数据库"/>
         <bt:String id="SqlQueryButton.Label" DefaultValue="数据库查询"/>
         <bt:String id="AiAssistantGroup.Label" DefaultValue="AI 助手"/>
         <bt:String id="AiAssistantButton.Label" DefaultValue="AI 助手"/>
