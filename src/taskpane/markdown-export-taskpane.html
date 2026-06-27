@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://localhost:*;">
+  <title>导出 Markdown</title>
+</head>
+<body>
+  <div class="markdown-export-container">
+    <div class="header">
+      <h2>导出 Markdown 表格</h2>
+      <button id="closeBtn" class="close-btn" aria-label="关闭">&times;</button>
+    </div>
+
+    <div id="warningBox" class="warning-box" style="display: none;">
+      <span class="warning-icon">⚠️</span>
+      <span id="warningText"></span>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-header">
+        <span>预览</span>
+        <button id="copyBtn" class="copy-btn">复制到剪贴板</button>
+      </div>
+      <pre id="markdownPreview" class="markdown-preview"></pre>
+    </div>
+
+    <div id="toast" class="toast">已复制到剪贴板</div>
+  </div>
+</body>
+</html>
