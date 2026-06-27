@@ -59,25 +59,29 @@ async function loadSelectedRange() {
 
 async function copyToClipboard() {
   const markdown = document.getElementById('markdownPreview').textContent;
+  let success = false;
 
   try {
     await navigator.clipboard.writeText(markdown);
-    showToast();
+    success = true;
   } catch (error) {
     // Fallback for IE11
-    const textarea = document.createElement('textarea');
-    textarea.value = markdown;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
     try {
+      const textarea = document.createElement('textarea');
+      textarea.value = markdown;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
-    } finally {
       document.body.removeChild(textarea);
+      success = true;
+    } catch (e) {
+      try { document.body.removeChild(textarea); } catch (e2) {}
     }
-    showToast();
   }
+
+  if (success) showToast();
 }
 
 function showToast() {
