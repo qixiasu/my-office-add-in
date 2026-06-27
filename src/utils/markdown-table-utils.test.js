@@ -3,6 +3,8 @@ var {
   parseRange,
   detectAlignment,
   escapeCell,
+  handleMergedCells,
+  parseMergedRangeAddress,
 } = require("./markdown-table-utils");
 
 // ── parseRange ─────────────────────────────────────────────────────────
@@ -111,5 +113,112 @@ describe("generateMarkdownTable", function () {
   it("should return empty string for empty input", function () {
     expect(generateMarkdownTable([])).toBe("");
     expect(generateMarkdownTable(null)).toBe("");
+  });
+
+  it("should handle merged cells with colspan and rowspan", function () {
+    var values = [
+      ["A", "B", "C"],
+      ["D", "E", "F"],
+      ["G", "H", "I"],
+    ];
+    // Mock merged range: B1:C2 (colspan=2, rowspan=2)
+    var mergedRanges = [
+      { toString: function () { return "B1:C2"; } }
+    ];
+    var result = generateMarkdownTable(values, { mergedRanges: mergedRanges });
+    // B1 should have colspan=2 and rowspan=2
+    expect(result).toContain("<colspan=2>");
+    expect(result).toContain("<rowspan=2>");
+  });
+});
+
+// ── handleMergedCells ──────────────────────────────────────────────────
+
+describe("handleMergedCells", function () {
+  it("should return empty Map when no merged ranges", function () {
+    var result = handleMergedCells([], 3, 3);
+    expect(result.size).toBe(0);
+  });
+
+  it("should return empty Map when mergedRanges is null", function () {
+    var result = handleMergedCells(null, 3, 3);
+    expect(result.size).toBe(0);
+  });
+
+  it("should handle merged range with colspan", function () {
+    // A1:B1 (colspan=2, rowspan=1)
+    var mergedRanges = [
+      { toString: function () { return "A1:B1"; } }
+    ];
+    var result = handleMergedCells(mergedRanges, 3, 3);
+    // Primary cell at 0-0 should have colspan=2
+    expect(result.get("0-0")).toEqual({ colspan: 2, rowspan: 1 });
+    // Covered cell at 0-1 should be marked as covered
+    expect(result.get("0-1")).toEqual({ covered: true });
+  });
+
+  it("should handle merged range with rowspan", function () {
+    // A1:A2 (colspan=1, rowspan=2)
+    var mergedRanges = [
+      { toString: function () { return "A1:A2"; } }
+    ];
+    var result = handleMergedCells(mergedRanges, 3, 3);
+    // Primary cell at 0-0 should have rowspan=2
+    expect(result.get("0-0")).toEqual({ colspan: 1, rowspan: 2 });
+    // Covered cell at 1-0 should be marked as covered
+    expect(result.get("1-0")).toEqual({ covered: true });
+  });
+
+  it("should handle merged range with both colspan and rowspan", function () {
+    // B2:C3 (colspan=2, rowspan=2)
+    var mergedRanges = [
+      { toString: function () { return "B2:C3"; } }
+    ];
+    var result = handleMergedCells(mergedRanges, 4, 4);
+    // Primary cell at 1-1 should have colspan=2, rowspan=2
+    expect(result.get("1-1")).toEqual({ colspan: 2, rowspan: 2 });
+    // Covered cells
+    expect(result.get("1-2")).toEqual({ covered: true });
+    expect(result.get("2-1")).toEqual({ covered: true });
+    expect(result.get("2-2")).toEqual({ covered: true });
+  });
+
+  it("should ignore single cell ranges", function () {
+    // A1:A1 (no actual merge)
+    var mergedRanges = [
+      { toString: function () { return "A1:A1"; } }
+    ];
+    var result = handleMergedCells(mergedRanges, 3, 3);
+    expect(result.size).toBe(0);
+  });
+});
+
+// ── parseMergedRangeAddress ────────────────────────────────────────────
+
+describe("parseMergedRangeAddress", function () {
+  it("should parse simple range", function () {
+    var result = parseMergedRangeAddress("A1:C3");
+    expect(result).toEqual({
+      startCol: 0,
+      startRow: 0,
+      endCol: 2,
+      endRow: 2,
+    });
+  });
+
+  it("should parse range with multi-letter columns", function () {
+    var result = parseMergedRangeAddress("AA1:ZZ999");
+    expect(result).toEqual({
+      startCol: 26,  // AA = 27th column, 0-indexed = 26
+      startRow: 0,
+      endCol: 701,   // ZZ = 702nd column, 0-indexed = 701
+      endRow: 998,
+    });
+  });
+
+  it("should return null for invalid range format", function () {
+    expect(parseMergedRangeAddress("invalid")).toBe(null);
+    expect(parseMergedRangeAddress("A1")).toBe(null);
+    expect(parseMergedRangeAddress("A1:B")).toBe(null);
   });
 });
