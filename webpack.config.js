@@ -19,14 +19,38 @@ module.exports = async (env, options) => {
     entry: {
       polyfill: ["core-js/stable", "regenerator-runtime/runtime"],
       commands: "./src/commands/commands.js",
-      "concat-taskpane": ["./src/taskpane/concat-taskpane.js", "./src/taskpane/concat-taskpane.html"],
-      "csv-import-taskpane": ["./src/taskpane/csv-import-taskpane.js", "./src/taskpane/csv-import-taskpane.html"],
-      "csv-merge-taskpane": ["./src/taskpane/csv-merge-taskpane.js", "./src/taskpane/csv-merge-taskpane.html"],
-      "vlookup-taskpane": ["./src/taskpane/vlookup-taskpane.js", "./src/taskpane/vlookup-taskpane.html"],
-      "fill-series-taskpane": ["./src/taskpane/fill-series-taskpane.js", "./src/taskpane/fill-series-taskpane.html"],
-      "count-values-taskpane": ["./src/taskpane/count-values-taskpane.js", "./src/taskpane/count-values-taskpane.html"],
-      "expand-taskpane": ["./src/taskpane/expand-taskpane.js", "./src/taskpane/expand-taskpane.html"],
-      "split-sheet-taskpane": ["./src/taskpane/split-sheet-taskpane.js", "./src/taskpane/split-sheet-taskpane.html"],
+      "concat-taskpane": [
+        "./src/taskpane/concat-taskpane.js",
+        "./src/taskpane/concat-taskpane.html",
+      ],
+      "csv-import-taskpane": [
+        "./src/taskpane/csv-import-taskpane.js",
+        "./src/taskpane/csv-import-taskpane.html",
+      ],
+      "csv-merge-taskpane": [
+        "./src/taskpane/csv-merge-taskpane.js",
+        "./src/taskpane/csv-merge-taskpane.html",
+      ],
+      "vlookup-taskpane": [
+        "./src/taskpane/vlookup-taskpane.js",
+        "./src/taskpane/vlookup-taskpane.html",
+      ],
+      "fill-series-taskpane": [
+        "./src/taskpane/fill-series-taskpane.js",
+        "./src/taskpane/fill-series-taskpane.html",
+      ],
+      "count-values-taskpane": [
+        "./src/taskpane/count-values-taskpane.js",
+        "./src/taskpane/count-values-taskpane.html",
+      ],
+      "expand-taskpane": [
+        "./src/taskpane/expand-taskpane.js",
+        "./src/taskpane/expand-taskpane.html",
+      ],
+      "split-sheet-taskpane": [
+        "./src/taskpane/split-sheet-taskpane.js",
+        "./src/taskpane/split-sheet-taskpane.html",
+      ],
       "sql-query-taskpane": [
         "./src/taskpane/sql-query-taskpane.js",
         "./src/taskpane/sql-query-taskpane.html",
@@ -46,6 +70,10 @@ module.exports = async (env, options) => {
       "cross-file-merge-taskpane": [
         "./src/taskpane/cross-file-merge-taskpane.js",
         "./src/taskpane/cross-file-merge-taskpane.html",
+      ],
+      "markdown-export-taskpane": [
+        "./src/taskpane/markdown-export-taskpane.js",
+        "./src/taskpane/markdown-export-taskpane.html",
       ],
     },
     output: {
@@ -177,6 +205,11 @@ module.exports = async (env, options) => {
         chunks: ["polyfill", "cross-file-merge-taskpane"],
       }),
       new HtmlWebpackPlugin({
+        filename: "markdown-export-taskpane.html",
+        template: "./src/taskpane/markdown-export-taskpane.html",
+        chunks: ["polyfill", "markdown-export-taskpane"],
+      }),
+      new HtmlWebpackPlugin({
         filename: "index.html",
         template: "./src/index.html",
         chunks: [],
@@ -188,7 +221,10 @@ module.exports = async (env, options) => {
       },
       server: {
         type: "https",
-        options: env.WEBPACK_BUILD || options.https !== undefined ? options.https : await getHttpsOptions(),
+        options:
+          env.WEBPACK_BUILD || options.https !== undefined
+            ? options.https
+            : await getHttpsOptions(),
       },
       port: process.env.npm_package_config_dev_server_port || 3000,
       static: [

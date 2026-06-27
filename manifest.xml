@@ -129,6 +129,22 @@
                     <SourceLocation resid="CrossFileMergeTaskpane.Url"/>
                   </Action>
                 </Control>
+                <Control xsi:type="Button" id="MarkdownExportButton">
+                  <Label resid="MarkdownExportButton.Label"/>
+                  <Supertip>
+                    <Title resid="MarkdownExportButton.Label"/>
+                    <Description resid="MarkdownExportButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="ToolsIcon.16x16"/>
+                    <bt:Image size="32" resid="ToolsIcon.32x32"/>
+                    <bt:Image size="80" resid="ToolsIcon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>MarkdownExportTaskpaneId</TaskpaneId>
+                    <SourceLocation resid="MarkdownExportTaskpane.Url"/>
+                  </Action>
+                </Control>
               </Group>
               <Group id="DataConversionGroup">
                 <Label resid="DataConversionGroup.Label"/>
@@ -381,6 +397,7 @@
         <bt:Url id="MergeSheetsTaskpane.Url" DefaultValue="https://localhost:3000/merge-sheets-taskpane.html"/>
         <bt:Url id="CrossFileMergeTaskpane.Url" DefaultValue="https://localhost:3000/cross-file-merge-taskpane.html"/>
         <bt:Url id="CsvMergeTaskpane.Url" DefaultValue="https://localhost:3000/csv-merge-taskpane.html"/>
+        <bt:Url id="MarkdownExportTaskpane.Url" DefaultValue="https://localhost:3000/markdown-export-taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="CustomTab.Label" DefaultValue="Excel 工具箱"/>
@@ -406,6 +423,7 @@
         <bt:String id="MergeSheetsButton.Label" DefaultValue="合并 Sheet"/>
         <bt:String id="CrossFileMergeButton.Label" DefaultValue="跨文件合并"/>
         <bt:String id="CsvMergeButton.Label" DefaultValue="合并CSV"/>
+        <bt:String id="MarkdownExportButton.Label" DefaultValue="导出 Markdown"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ConcatenateButton.Tooltip" DefaultValue="选中两列后点击，将数据用连接符合并到新列"/>
@@ -423,6 +441,7 @@
         <bt:String id="MergeSheetsButton.Tooltip" DefaultValue="将多个工作表合并为一个新工作表，支持自定义表头行号"/>
         <bt:String id="CrossFileMergeButton.Tooltip" DefaultValue="选择多个 Excel 文件，合并它们的当前激活 sheet"/>
         <bt:String id="CsvMergeButton.Tooltip" DefaultValue="选择多个 CSV 文件，按表头对齐后合并为一个新文件并下载"/>
+        <bt:String id="MarkdownExportButton.Tooltip" DefaultValue="将选中区域转换为 Markdown 表格"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
