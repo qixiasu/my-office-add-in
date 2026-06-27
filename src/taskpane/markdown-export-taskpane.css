@@ -1,45 +1,41 @@
+/* Markdown Export Taskpane Styles - 蓝色主题 */
+
 .markdown-export-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  padding: 16px;
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #fff;
-  position: relative;
+  padding: 20px;
 }
 
-.header {
+.md-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0078d4;
+  margin-bottom: 16px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
+}
+
+.md-title svg {
+  flex-shrink: 0;
+}
+
+.guide-card {
+  background: #f0f7ff;
+  border-left: 3px solid #0078d4;
+  padding: 12px;
+  border-radius: 4px;
   margin-bottom: 16px;
 }
 
-.header h2 {
+.guide-card p {
+  font-size: 13px;
+  color: #005a9e;
+  line-height: 1.6;
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-  padding: 0;
-  line-height: 1;
-}
-
-.close-btn:hover {
-  color: #333;
 }
 
 .warning-box {
-  background: #fff3cd;
-  border: 1px solid #ffc107;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
   border-radius: 4px;
   padding: 10px 12px;
   margin-bottom: 16px;
@@ -47,7 +43,61 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #856404;
+  color: #721c24;
+}
+
+.warning-icon {
+  font-size: 16px;
+}
+
+.md-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.md-button {
+  padding: 10px 16px;
+  background: transparent;
+  color: #0078d4;
+  border: 2px solid #0078d4;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.md-button:hover {
+  background: #0078d4;
+  color: white;
+}
+
+.md-button:active {
+  background: #005a9e;
+  border-color: #005a9e;
+}
+
+.md-button:disabled {
+  background: #f5f5f5;
+  color: #999;
+  border-color: #999;
+  cursor: not-allowed;
+}
+
+.md-button--primary {
+  background: #0078d4;
+  color: white;
+}
+
+.md-button--primary:hover {
+  background: #005a9e;
+  border-color: #005a9e;
+}
+
+.md-button--copy {
+  width: 100%;
+  margin-top: 12px;
 }
 
 .preview-section {
@@ -57,6 +107,7 @@
   border: 1px solid #ddd;
   border-radius: 6px;
   overflow: hidden;
+  min-height: 200px;
 }
 
 .preview-header {
@@ -71,35 +122,32 @@
   color: #333;
 }
 
-.copy-btn {
-  background: #2ea44f;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+.preview-info {
+  font-size: 12px;
+  color: #666;
+  font-weight: 400;
 }
 
-.copy-btn:hover {
-  background: #2c974b;
-}
-
-.markdown-preview {
+.md-preview {
   flex: 1;
   margin: 0;
   padding: 12px;
   overflow: auto;
-  font-family: 'Consolas', 'Monaco', monospace;
+  font-family: "Consolas", "Monaco", monospace;
   font-size: 13px;
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
   background: #fff;
+  min-height: 100px;
 }
 
-.toast {
+.md-preview:empty::before {
+  content: '点击"生成 Markdown"预览效果';
+  color: #999;
+}
+
+.md-toast {
   position: fixed;
   bottom: 20px;
   left: 50%;
@@ -110,11 +158,13 @@
   border-radius: 6px;
   font-size: 14px;
   opacity: 0;
-  transition: transform 0.3s, opacity 0.3s;
+  transition:
+    transform 0.3s,
+    opacity 0.3s;
   z-index: 1000;
 }
 
-.toast.show {
+.md-toast.show {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
