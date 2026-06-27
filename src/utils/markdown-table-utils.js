@@ -114,7 +114,7 @@ function buildTableString(rows, alignment) {
 function escapeCell(cell) {
   if (cell === null || cell === undefined) return '';
   const str = String(cell);
-  return str.replace(/\|/g, '\\|').replace(/\n/g, '<br>');
+  return str.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, '<br>');
 }
 
 export { generateMarkdownTable, parseRange, detectAlignment, buildTableString, escapeCell };
