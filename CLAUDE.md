@@ -98,7 +98,7 @@ assets/                   # 清单引用的图标文件
 | 快速选区 | 向下选区、向右选区 | ExecuteFunction |
 | AI 助手 | AI 助手 | ShowTaskpane |
 
-所有开发环境资源 URL 使用 `https://localhost:3000/`，生产构建时替换为 `https://qinxuan1989.gitee.io/my-office-add-in/`。
+所有开发环境资源 URL 使用 `https://localhost:3000/`，生产构建时替换为 `https://qixiasu.github.io/my-office-add-in/`。
 
 ## 关键依赖
 

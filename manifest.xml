@@ -8,9 +8,9 @@
   <Description DefaultValue="一组实用的 Excel 数据处理工具，包含连接列、导入CSV、增强查找、填充序列、字段计数、展开列、按列拆分、向下选区等功能。"/>
   <IconUrl DefaultValue="https://localhost:3000/assets/tools-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/tools-32.png"/>
-  <SupportUrl DefaultValue="https://qinxuan1989.gitee.io/my-office-add-in/"/>
+  <SupportUrl DefaultValue="https://qixiasu.github.io/my-office-add-in/"/>
   <AppDomains>
-    <AppDomain>https://qinxuan1989.gitee.io</AppDomain>
+    <AppDomain>https://qixiasu.github.io</AppDomain>
     <AppDomain>https://api.minimaxi.com</AppDomain>
     <AppDomain>https://api.deepseek.com</AppDomain>
   </AppDomains>
